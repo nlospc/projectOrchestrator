@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PMO Orchestrator Prototype</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">PMO</div>
+          <div>
+            <strong>PMO Orchestrator</strong>
+            <span>Project Office Control</span>
+          </div>
+        </div>
+        <nav class="nav" id="nav"></nav>
+        <div class="sidebar-foot">
+          <span>Data batch</span>
+          <strong>2026-W23 Weekly Upload</strong>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="section-eyebrow">Project Office</p>
+            <h1 id="page-title">项目总览</h1>
+          </div>
+          <div class="topbar-actions">
+            <button class="ghost-button" id="reset-filters">重置筛选</button>
+            <button class="primary-button" data-route="upload">上传 Excel</button>
+          </div>
+        </header>
+
+        <section class="filter-bar" aria-label="全局筛选">
+          <label>
+            时间范围
+            <select id="filter-period">
+              <option value="all">全部周期</option>
+              <option value="month">本月</option>
+              <option value="quarter">本季度</option>
+            </select>
+          </label>
+          <label>
+            部门组织
+            <select id="filter-dept"></select>
+          </label>
+          <label>
+            业务部门
+            <select id="filter-biz"></select>
+          </label>
+          <label>
+            项目状态
+            <select id="filter-status"></select>
+          </label>
+          <label>
+            健康状态
+            <select id="filter-health">
+              <option value="all">全部</option>
+              <option value="R">红灯</option>
+              <option value="Y">黄灯</option>
+              <option value="G">绿灯</option>
+            </select>
+          </label>
+          <label>
+            项目经理
+            <select id="filter-pm"></select>
+          </label>
+        </section>
+
+        <section class="content" id="view"></section>
+      </main>
+    </div>
+
+    <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+    <aside class="drawer" id="drawer" aria-label="项目详情" aria-hidden="true"></aside>
+    <div class="toast" id="toast" hidden></div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
