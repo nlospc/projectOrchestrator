@@ -27,3 +27,9 @@ when you need to design data structure, you could find it from @./docs/data-sequ
 ## Export
 - Ask questions only if a blocker exists.
 - Otherwise make reasonable assumptions and mark them.
+
+
+## Code architecture workflow
+- Before optimization, debugging, or refactor work, read `./docs/architecture.md` first and then open only the owning route/shared modules.
+- Use the project skill at `./skills/code-architecture-guard/SKILL.md` for this workflow.
+- When route boundaries or shared module ownership change, run `node ./scripts/sync-architecture.mjs`. A repo pre-commit hook also refreshes `docs/architecture.md`.

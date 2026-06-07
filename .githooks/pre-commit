@@ -1,0 +1,4 @@
+#!/bin/sh
+node scripts/sync-architecture.mjs
+git add docs/architecture.md
+

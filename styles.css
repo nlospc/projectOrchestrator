@@ -1129,10 +1129,19 @@ button.cell:hover {
   display: flex;
   align-items: center;
   gap: 10px;
+  justify-content: space-between;
   min-height: 46px;
   padding: 0 14px;
   cursor: pointer;
   font-weight: 800;
+}
+
+.resource-config summary > span {
+  min-width: 0;
+}
+
+.resource-config summary .small-button {
+  flex: 0 0 auto;
 }
 
 .resource-config .threshold-row {
@@ -1443,23 +1452,53 @@ button.person-chip:hover {
   max-width: none;
 }
 
+.resource-insight-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.82fr) minmax(520px, 1.18fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.resource-insight-grid > .panel {
+  min-width: 0;
+  height: 100%;
+}
+
+.resource-insight-grid .role-composition-panel,
+.resource-insight-grid .busy-ranking {
+  display: flex;
+  flex-direction: column;
+  max-height: 540px;
+  overflow: hidden;
+}
+
+.resource-insight-grid .busy-ranking .matrix-toolbar {
+  flex: 0 0 auto;
+}
+
+.resource-insight-grid .busy-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 6px;
+}
+
 .role-pie-layout {
   display: grid;
-  grid-template-columns: minmax(210px, 280px) minmax(260px, 1fr);
-  gap: 18px;
-  align-items: center;
+  grid-template-columns: 1fr;
+  gap: 14px;
 }
 
 .role-pie-wrap {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 230px;
+  min-height: 188px;
 }
 
 .role-pie-chart {
-  width: 220px;
-  height: 220px;
+  width: 176px;
+  height: 176px;
   filter: drop-shadow(0 1px 2px rgba(22, 31, 42, 0.08));
 }
 
@@ -1475,7 +1514,7 @@ button.person-chip:hover {
 }
 
 .role-pie-total strong {
-  font-size: 28px;
+  font-size: 26px;
 }
 
 .role-pie-total span {
@@ -1485,7 +1524,10 @@ button.person-chip:hover {
 
 .role-pie-legend {
   display: grid;
-  gap: 7px;
+  gap: 6px;
+  max-height: 276px;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .role-pie-legend-row {
@@ -1493,10 +1535,21 @@ button.person-chip:hover {
   grid-template-columns: 12px minmax(120px, 1fr) 36px 44px;
   gap: 8px;
   align-items: center;
-  padding: 6px 8px;
+  min-height: 30px;
+  padding: 5px 8px;
   border-radius: 6px;
   background: var(--surface-2);
   font-size: 12px;
+}
+
+.resource-insight-grid .busy-row {
+  grid-template-columns: 32px minmax(128px, 1fr) minmax(140px, 1.1fr) 56px 70px 58px;
+  gap: 8px;
+  min-width: 560px;
+}
+
+.resource-insight-grid .busy-person .person-chip {
+  max-width: 118px;
 }
 
 .role-pie-legend-row strong {
@@ -1948,8 +2001,7 @@ button.chart-bar:hover strong {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .resource-chart-grid,
-  .overalloc-grid {
+  .resource-chart-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1981,6 +2033,7 @@ button.chart-bar:hover strong {
   .matrix-summary,
   .resource-kpi-strip,
   .resource-chart-grid,
+  .resource-insight-grid,
   .overalloc-grid,
   .resource-filter-panel,
   .detail-grid {
