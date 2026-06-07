@@ -1,4 +1,4 @@
-﻿const routeGroups = [
+const routeGroups = [
   {
     label: "项目",
     routes: [
@@ -98,7 +98,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.04
   },
@@ -113,7 +113,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -128,7 +128,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "Agent开发",
-    "person": "瀛欐祻娣?",
+    "person": "孙浏淘",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -143,7 +143,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "Agent开发",
-    "person": "鍒樺浗鎳?",
+    "person": "刘国懿",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -158,7 +158,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.04
   },
@@ -173,7 +173,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -188,7 +188,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "Agent开发",
-    "person": "瀛欐祻娣?",
+    "person": "孙浏淘",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -203,7 +203,7 @@ const allocations = [
     "complexity": 5,
     "status": "产品开发",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.04
   },
@@ -218,7 +218,7 @@ const allocations = [
     "complexity": 5,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -233,7 +233,7 @@ const allocations = [
     "complexity": 5,
     "status": "产品开发",
     "role": "Agent开发",
-    "person": "瀛欐祻娣?",
+    "person": "孙浏淘",
     "outsourced": false,
     "timeRatio": 0.4
   },
@@ -248,7 +248,7 @@ const allocations = [
     "complexity": 2,
     "status": "部署上线",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.06
   },
@@ -263,7 +263,7 @@ const allocations = [
     "complexity": 2,
     "status": "部署上线",
     "role": "产品经理",
-    "person": "鏅瓱鍗?",
+    "person": "景孟博",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -278,7 +278,7 @@ const allocations = [
     "complexity": 2,
     "status": "部署上线",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -293,7 +293,7 @@ const allocations = [
     "complexity": 2,
     "status": "部署上线",
     "role": "UI/UX",
-    "person": "寰愭湀娆?",
+    "person": "徐月欢",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -308,7 +308,7 @@ const allocations = [
     "complexity": 2,
     "status": "部署上线",
     "role": "全栈开发工程师",
-    "person": "鐜嬪皯濞?",
+    "person": "王少威",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -323,7 +323,7 @@ const allocations = [
     "complexity": 2,
     "status": "部署上线",
     "role": "全栈开发工程师",
-    "person": "涓佸畤缁?",
+    "person": "丁宇统",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -338,7 +338,7 @@ const allocations = [
     "complexity": 2,
     "status": "部署上线",
     "role": "测试",
-    "person": "鐜嬪鏂?",
+    "person": "王学文",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -353,7 +353,7 @@ const allocations = [
     "complexity": 2,
     "status": "部署上线",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.01
   },
@@ -368,7 +368,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.06
   },
@@ -383,7 +383,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "产品经理",
-    "person": "鏅瓱鍗?",
+    "person": "景孟博",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -398,7 +398,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -413,7 +413,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "Agent开发",
-    "person": "寮犳槉鏄?",
+    "person": "张昊明",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -428,7 +428,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "UI/UX",
-    "person": "寰愭湀娆?",
+    "person": "徐月欢",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -443,7 +443,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "全栈开发工程师",
-    "person": "鐜嬪皯濞?",
+    "person": "王少威",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -458,7 +458,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "全栈开发工程师",
-    "person": "鐜嬮珮灞?",
+    "person": "王高山",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -473,7 +473,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "测试",
-    "person": "鐜嬪鏂?",
+    "person": "王学文",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -488,7 +488,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -503,7 +503,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.06
   },
@@ -518,7 +518,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "产品经理",
-    "person": "鑳℃磥",
+    "person": "胡洁",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -533,7 +533,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.4
   },
@@ -548,7 +548,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "Agent开发",
-    "person": "寮犳槉鏄?",
+    "person": "张昊明",
     "outsourced": false,
     "timeRatio": 0.4
   },
@@ -563,7 +563,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "UI/UX",
-    "person": "寰愭湀娆?",
+    "person": "徐月欢",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -578,7 +578,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "UI/UX",
-    "person": "娌堝ぉ楠?",
+    "person": "沈天骄",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -593,7 +593,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "全栈开发工程师",
-    "person": "鐜嬪皯濞?",
+    "person": "王少威",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -608,7 +608,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "全栈开发工程师",
-    "person": "鐜嬮珮灞?",
+    "person": "王高山",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -623,7 +623,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "测试",
-    "person": "鐜嬪鏂?",
+    "person": "王学文",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -638,7 +638,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -653,7 +653,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.06
   },
@@ -668,7 +668,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "产品经理",
-    "person": "鑳℃磥",
+    "person": "胡洁",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -683,7 +683,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -698,7 +698,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "Agent开发",
-    "person": "寮犳槉鏄?",
+    "person": "张昊明",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -713,7 +713,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "UI/UX",
-    "person": "娌堝ぉ楠?",
+    "person": "沈天骄",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -728,7 +728,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "全栈开发工程师",
-    "person": "鐜嬪皯濞?",
+    "person": "王少威",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -743,7 +743,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "全栈开发工程师",
-    "person": "涓佸畤缁?",
+    "person": "丁宇统",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -758,7 +758,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "测试",
-    "person": "鐜嬪鏂?",
+    "person": "王学文",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -773,7 +773,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -788,7 +788,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.06
   },
@@ -803,7 +803,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "鑳℃磥",
+    "person": "胡洁",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -818,7 +818,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -833,7 +833,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "Agent开发",
-    "person": "寮犳槉鏄?",
+    "person": "张昊明",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -848,7 +848,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鐜嬪皯濞?",
+    "person": "王少威",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -863,7 +863,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "绔ュ皬搴?",
+    "person": "童小康",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -878,7 +878,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "测试",
-    "person": "鐜嬪鏂?",
+    "person": "王学文",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -893,7 +893,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.03
   },
@@ -908,7 +908,7 @@ const allocations = [
     "complexity": 2,
     "status": "系统运维",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -923,7 +923,7 @@ const allocations = [
     "complexity": 2,
     "status": "系统运维",
     "role": "全栈开发工程师",
-    "person": "涓佸畤缁?",
+    "person": "丁宇统",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -953,7 +953,7 @@ const allocations = [
     "complexity": 6,
     "status": "系统运维",
     "role": "产品经理",
-    "person": "鏈辨€濆",
+    "person": "朱思婕",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -968,7 +968,7 @@ const allocations = [
     "complexity": 6,
     "status": "系统运维",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -983,7 +983,7 @@ const allocations = [
     "complexity": 6,
     "status": "系统运维",
     "role": "全栈开发工程师",
-    "person": "寮犱咕",
+    "person": "张乾",
     "outsourced": false,
     "timeRatio": 0.03
   },
@@ -998,7 +998,7 @@ const allocations = [
     "complexity": 6,
     "status": "系统运维",
     "role": "测试",
-    "person": "楠嗚埅鐕?",
+    "person": "骆航燕",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -1013,7 +1013,7 @@ const allocations = [
     "complexity": 6,
     "status": "系统运维",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.03
   },
@@ -1028,7 +1028,7 @@ const allocations = [
     "complexity": 6,
     "status": "UAT",
     "role": "Agent开发",
-    "person": "鏉庢ⅵ鐝?",
+    "person": "李梦珂",
     "outsourced": false,
     "timeRatio": 0.9
   },
@@ -1043,7 +1043,7 @@ const allocations = [
     "complexity": 6,
     "status": "UAT",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -1073,7 +1073,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "Agent开发",
-    "person": "鍒樺浗鎳?",
+    "person": "刘国懿",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -1088,7 +1088,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "全栈开发工程师",
-    "person": "寮犱咕",
+    "person": "张乾",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -1103,7 +1103,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "全栈开发工程师",
-    "person": "鍙剁粏寤?",
+    "person": "叶细建",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -1118,7 +1118,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "模型",
-    "person": "璐逛粫蹇?",
+    "person": "费仕忆",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -1133,7 +1133,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "测试",
-    "person": "楠嗚埅鐕?",
+    "person": "骆航燕",
     "outsourced": false,
     "timeRatio": 0.35
   },
@@ -1148,7 +1148,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -1178,7 +1178,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "Agent开发",
-    "person": "鍒樺浗鎳?",
+    "person": "刘国懿",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -1193,7 +1193,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "全栈开发工程师",
-    "person": "寮犱咕",
+    "person": "张乾",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -1208,7 +1208,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "模型",
-    "person": "璐逛粫蹇?",
+    "person": "费仕忆",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -1223,7 +1223,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "测试",
-    "person": "楠嗚埅鐕?",
+    "person": "骆航燕",
     "outsourced": false,
     "timeRatio": 0.35
   },
@@ -1238,7 +1238,7 @@ const allocations = [
     "complexity": 4,
     "status": "部署上线",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -1268,7 +1268,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "鑳℃磥",
+    "person": "胡洁",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -1283,7 +1283,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "寮犱咕",
+    "person": "张乾",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -1298,7 +1298,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "模型",
-    "person": "璐逛粫蹇?",
+    "person": "费仕忆",
     "outsourced": false,
     "timeRatio": 0.5
   },
@@ -1313,7 +1313,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "测试",
-    "person": "楠嗚埅鐕?",
+    "person": "骆航燕",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -1328,7 +1328,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.03
   },
@@ -1358,7 +1358,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "鑳℃磥",
+    "person": "胡洁",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -1373,7 +1373,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "寮犱咕",
+    "person": "张乾",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -1388,7 +1388,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鍙剁粏寤?",
+    "person": "叶细建",
     "outsourced": false,
     "timeRatio": 0.5
   },
@@ -1403,7 +1403,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "模型",
-    "person": "璋风传鍚?",
+    "person": "谷紫君",
     "outsourced": false,
     "timeRatio": 0.9
   },
@@ -1418,7 +1418,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "测试",
-    "person": "楠嗚埅鐕?",
+    "person": "骆航燕",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -1433,7 +1433,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.03
   },
@@ -1463,7 +1463,7 @@ const allocations = [
     "complexity": 3,
     "status": "部署上线",
     "role": "全栈开发工程师",
-    "person": "寮犱咕",
+    "person": "张乾",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -1478,7 +1478,7 @@ const allocations = [
     "complexity": 3,
     "status": "部署上线",
     "role": "模型",
-    "person": "璐逛粫蹇?",
+    "person": "费仕忆",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -1493,7 +1493,7 @@ const allocations = [
     "complexity": 3,
     "status": "部署上线",
     "role": "测试",
-    "person": "楠嗚埅鐕?",
+    "person": "骆航燕",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -1508,7 +1508,7 @@ const allocations = [
     "complexity": 3,
     "status": "部署上线",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.02
   },
@@ -1523,7 +1523,7 @@ const allocations = [
     "complexity": 2,
     "status": "系统运维",
     "role": "产品经理",
-    "person": "鏅瓱鍗?",
+    "person": "景孟博",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -1538,7 +1538,7 @@ const allocations = [
     "complexity": 2,
     "status": "系统运维",
     "role": "UI/UX",
-    "person": "寰愭湀娆?",
+    "person": "徐月欢",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -1553,7 +1553,7 @@ const allocations = [
     "complexity": 2,
     "status": "系统运维",
     "role": "全栈开发工程师",
-    "person": "鎻槉",
+    "person": "揭昊",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -1568,7 +1568,7 @@ const allocations = [
     "complexity": 2,
     "status": "系统运维",
     "role": "测试",
-    "person": "楠嗚埅鐕?",
+    "person": "骆航燕",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -1583,7 +1583,7 @@ const allocations = [
     "complexity": 2,
     "status": "系统运维",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.01
   },
@@ -1613,7 +1613,7 @@ const allocations = [
     "complexity": 5,
     "status": "项目暂停",
     "role": "UI/UX",
-    "person": "寰愭湀娆?",
+    "person": "徐月欢",
     "outsourced": false,
     "timeRatio": 0.01
   },
@@ -1628,7 +1628,7 @@ const allocations = [
     "complexity": 5,
     "status": "项目暂停",
     "role": "模型",
-    "person": "鏉ㄤ匠娆?",
+    "person": "杨佳欣",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -1643,7 +1643,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.2
   },
@@ -1658,7 +1658,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -1673,7 +1673,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鏉ㄧ儴绾?",
+    "person": "杨烨红",
     "outsourced": false,
     "timeRatio": 0.8
   },
@@ -1688,7 +1688,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "测试",
-    "person": "鍚存枃杈?",
+    "person": "吴文辉",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -1703,7 +1703,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -1718,7 +1718,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.2
   },
@@ -1733,7 +1733,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "产品经理",
-    "person": "鐢板墤",
+    "person": "田剑",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -1748,7 +1748,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "产品经理",
-    "person": "閲戜亥绁?",
+    "person": "金亥祺",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -1763,7 +1763,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "UI/UX",
-    "person": "寰愭湀娆?",
+    "person": "徐月欢",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -1778,7 +1778,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "全栈开发工程师",
-    "person": "鎻槉",
+    "person": "揭昊",
     "outsourced": false,
     "timeRatio": 0.9
   },
@@ -1793,7 +1793,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "全栈开发工程师",
-    "person": "璋㈡櫤闇?",
+    "person": "谢智霖",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -1808,7 +1808,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "测试",
-    "person": "榛勯箯绋?",
+    "person": "黄鹏程",
     "outsourced": false,
     "timeRatio": 0.7
   },
@@ -1823,7 +1823,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.01
   },
@@ -1838,7 +1838,7 @@ const allocations = [
     "complexity": 8,
     "status": "UAT",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.1
   },
@@ -1853,7 +1853,7 @@ const allocations = [
     "complexity": 8,
     "status": "UAT",
     "role": "产品经理",
-    "person": "鍙舵緧鏅?",
+    "person": "叶澍晟",
     "outsourced": false,
     "timeRatio": 0.6
   },
@@ -1868,7 +1868,7 @@ const allocations = [
     "complexity": 8,
     "status": "UAT",
     "role": "产品经理",
-    "person": "閲戜亥绁?",
+    "person": "金亥祺",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -1883,7 +1883,7 @@ const allocations = [
     "complexity": 8,
     "status": "UAT",
     "role": "Agent开发",
-    "person": "鏉ㄩ懌",
+    "person": "杨鑫",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -1898,7 +1898,7 @@ const allocations = [
     "complexity": 8,
     "status": "UAT",
     "role": "全栈开发工程师",
-    "person": "浣曚慨寮?",
+    "person": "何修强",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -1913,7 +1913,7 @@ const allocations = [
     "complexity": 1,
     "status": "系统运维",
     "role": "全栈开发工程师",
-    "person": "鎻槉",
+    "person": "揭昊",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -1928,7 +1928,7 @@ const allocations = [
     "complexity": 1,
     "status": "系统运维",
     "role": "全栈开发工程师",
-    "person": "浣曚慨寮?",
+    "person": "何修强",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -1943,7 +1943,7 @@ const allocations = [
     "complexity": 1,
     "status": "系统运维",
     "role": "测试",
-    "person": "榛勯箯绋?",
+    "person": "黄鹏程",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -1958,7 +1958,7 @@ const allocations = [
     "complexity": 1,
     "status": "系统运维",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.01
   },
@@ -1973,7 +1973,7 @@ const allocations = [
     "complexity": 2,
     "status": "项目暂停",
     "role": "Agent开发",
-    "person": "鏉ㄩ懌",
+    "person": "杨鑫",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -1988,7 +1988,7 @@ const allocations = [
     "complexity": 2,
     "status": "项目暂停",
     "role": "全栈开发工程师",
-    "person": "浣曚慨寮?",
+    "person": "何修强",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -2003,7 +2003,7 @@ const allocations = [
     "complexity": 2,
     "status": "项目暂停",
     "role": "测试",
-    "person": "榛勯箯绋?",
+    "person": "黄鹏程",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -2018,7 +2018,7 @@ const allocations = [
     "complexity": 2,
     "status": "项目暂停",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -2033,7 +2033,7 @@ const allocations = [
     "complexity": 5,
     "status": "项目暂停",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0
   },
@@ -2048,7 +2048,7 @@ const allocations = [
     "complexity": 5,
     "status": "项目暂停",
     "role": "产品经理",
-    "person": "鍙舵緧鏅?",
+    "person": "叶澍晟",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -2063,7 +2063,7 @@ const allocations = [
     "complexity": 5,
     "status": "项目暂停",
     "role": "Agent开发",
-    "person": "鏉ㄩ懌",
+    "person": "杨鑫",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -2078,7 +2078,7 @@ const allocations = [
     "complexity": 5,
     "status": "项目暂停",
     "role": "全栈开发工程师",
-    "person": "浣曚慨寮?",
+    "person": "何修强",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -2093,7 +2093,7 @@ const allocations = [
     "complexity": 3,
     "status": "项目暂停",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -2108,7 +2108,7 @@ const allocations = [
     "complexity": 3,
     "status": "系统运维",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -2123,7 +2123,7 @@ const allocations = [
     "complexity": 3,
     "status": "系统运维",
     "role": "全栈开发工程师",
-    "person": "宕旀灄",
+    "person": "崔林",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -2138,7 +2138,7 @@ const allocations = [
     "complexity": 3,
     "status": "系统运维",
     "role": "模型",
-    "person": "璐逛粫蹇?",
+    "person": "费仕忆",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -2153,7 +2153,7 @@ const allocations = [
     "complexity": 3,
     "status": "系统运维",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -2168,7 +2168,7 @@ const allocations = [
     "complexity": 8,
     "status": "项目暂停",
     "role": "产品经理",
-    "person": "鐢板墤",
+    "person": "田剑",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -2183,7 +2183,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "项目经理",
-    "person": "闄堥楣?",
+    "person": "陈飞鹏",
     "outsourced": true,
     "timeRatio": 1
   },
@@ -2198,7 +2198,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "鎵嶈瘲",
+    "person": "才诗",
     "outsourced": false,
     "timeRatio": 0.6
   },
@@ -2213,7 +2213,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "鍙舵緧鏅?",
+    "person": "叶澍晟",
     "outsourced": false,
     "timeRatio": 0.5
   },
@@ -2228,7 +2228,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "閲戜亥绁?",
+    "person": "金亥祺",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -2243,7 +2243,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "严昊元",
+    "person": "严曙光",
     "outsourced": true,
     "timeRatio": 1
   },
@@ -2258,7 +2258,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "架构师",
-    "person": "浣曟尟鍕?",
+    "person": "何振勇",
     "outsourced": false,
     "timeRatio": 0.9
   },
@@ -2273,7 +2273,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "前端",
-    "person": "鍚夋灄",
+    "person": "吉林",
     "outsourced": true,
     "timeRatio": 0.7
   },
@@ -2288,7 +2288,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "前端",
-    "person": "闄堟稕",
+    "person": "陈涛",
     "outsourced": true,
     "timeRatio": 1
   },
@@ -2303,7 +2303,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "后端",
-    "person": "渚繚淇?",
+    "person": "侯保保",
     "outsourced": true,
     "timeRatio": 1
   },
@@ -2318,7 +2318,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "后端",
-    "person": "瀛欐潵瓒?",
+    "person": "孙来超",
     "outsourced": true,
     "timeRatio": 0.7
   },
@@ -2333,7 +2333,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "测试",
-    "person": "鑳″▏濞?",
+    "person": "胡娇娇",
     "outsourced": true,
     "timeRatio": 0.7
   },
@@ -2348,7 +2348,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "测试",
-    "person": "浣曚繆鐢?",
+    "person": "何俊生",
     "outsourced": true,
     "timeRatio": 0.7
   },
@@ -2363,7 +2363,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "测试",
-    "person": "瀹嬪媷鍐?",
+    "person": "宋勇军",
     "outsourced": true,
     "timeRatio": 1
   },
@@ -2378,7 +2378,7 @@ const allocations = [
     "complexity": 10,
     "status": "产品开发",
     "role": "运维",
-    "person": "灞堢伩",
+    "person": "屈灿",
     "outsourced": true,
     "timeRatio": 0.7
   },
@@ -2393,7 +2393,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "鎵嶈瘲",
+    "person": "才诗",
     "outsourced": false,
     "timeRatio": 0.4
   },
@@ -2408,7 +2408,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "閲戜亥绁?",
+    "person": "金亥祺",
     "outsourced": false,
     "timeRatio": 0.5
   },
@@ -2423,7 +2423,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "严昊元",
+    "person": "严曙光",
     "outsourced": true,
     "timeRatio": 1
   },
@@ -2438,7 +2438,7 @@ const allocations = [
     "complexity": 6,
     "status": "系统运维",
     "role": "产品经理",
-    "person": "鎵嶈瘲",
+    "person": "才诗",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -2453,7 +2453,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "閲戜亥绁?",
+    "person": "金亥祺",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -2468,7 +2468,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "鐢樺欢婢?",
+    "person": "甘延澍",
     "outsourced": true,
     "timeRatio": 0.2
   },
@@ -2483,7 +2483,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "架构师",
-    "person": "浣曟尟鍕?",
+    "person": "何振勇",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -2498,7 +2498,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "前端",
-    "person": "鍚夋灄",
+    "person": "吉林",
     "outsourced": true,
     "timeRatio": 0.3
   },
@@ -2513,7 +2513,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "后端",
-    "person": "瀛欐潵瓒?",
+    "person": "孙来超",
     "outsourced": true,
     "timeRatio": 0.3
   },
@@ -2528,7 +2528,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "后端",
-    "person": "寮犳瘏鑱?",
+    "person": "张毅聪",
     "outsourced": true,
     "timeRatio": 1
   },
@@ -2543,7 +2543,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "后端",
-    "person": "浣欐柊鐢?",
+    "person": "余新生",
     "outsourced": true,
     "timeRatio": 1
   },
@@ -2558,7 +2558,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "测试",
-    "person": "鑳″▏濞?",
+    "person": "胡娇娇",
     "outsourced": true,
     "timeRatio": 0.3
   },
@@ -2573,7 +2573,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "测试",
-    "person": "浣曚繆鐢?",
+    "person": "何俊生",
     "outsourced": true,
     "timeRatio": 0.3
   },
@@ -2588,7 +2588,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "运维",
-    "person": "灞堢伩",
+    "person": "屈灿",
     "outsourced": true,
     "timeRatio": 0.3
   },
@@ -2603,7 +2603,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "项目经理",
-    "person": "鏅瓱鍗?",
+    "person": "景孟博",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -2618,7 +2618,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -2633,7 +2633,7 @@ const allocations = [
     "complexity": 4,
     "status": "UAT",
     "role": "全栈开发工程师",
-    "person": "鍖呭浗瀹?",
+    "person": "包国宇",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -2648,7 +2648,7 @@ const allocations = [
     "complexity": 3,
     "status": "系统运维",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0.05
   },
@@ -2663,7 +2663,7 @@ const allocations = [
     "complexity": 3,
     "status": "系统运维",
     "role": "产品经理",
-    "person": "鐢板墤",
+    "person": "田剑",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -2678,7 +2678,7 @@ const allocations = [
     "complexity": 3,
     "status": "系统运维",
     "role": "全栈开发工程师",
-    "person": "浣曞",
+    "person": "何奕",
     "outsourced": false,
     "timeRatio": 0.4
   },
@@ -2693,7 +2693,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -2708,7 +2708,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "Agent开发",
-    "person": "鏉ㄩ懌",
+    "person": "杨鑫",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -2723,7 +2723,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鏉ㄧ儴绾?",
+    "person": "杨烨红",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -2738,7 +2738,7 @@ const allocations = [
     "complexity": 4,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -2753,7 +2753,7 @@ const allocations = [
     "complexity": 4,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -2768,7 +2768,7 @@ const allocations = [
     "complexity": 4,
     "status": "产品开发",
     "role": "Agent开发",
-    "person": "鏉ㄩ懌",
+    "person": "杨鑫",
     "outsourced": false,
     "timeRatio": 0.25
   },
@@ -2783,7 +2783,7 @@ const allocations = [
     "complexity": 3,
     "status": "系统运维",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -2798,7 +2798,7 @@ const allocations = [
     "complexity": 3,
     "status": "系统运维",
     "role": "Agent开发",
-    "person": "鏉ㄩ懌",
+    "person": "杨鑫",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -2813,7 +2813,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品设计",
     "role": "模型",
-    "person": "鏉ㄤ匠娆?",
+    "person": "杨佳欣",
     "outsourced": false,
     "timeRatio": 0.5
   },
@@ -2828,7 +2828,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -2843,7 +2843,7 @@ const allocations = [
     "complexity": 3,
     "status": "UAT",
     "role": "Agent开发",
-    "person": "瀛欐祻娣?",
+    "person": "孙浏淘",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -2858,7 +2858,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "项目经理",
-    "person": "鏅瓱鍗?",
+    "person": "景孟博",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -2873,7 +2873,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "鏈辨€濆",
+    "person": "朱思婕",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -2888,7 +2888,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "Agent开发",
-    "person": "瀛欐祻娣?",
+    "person": "孙浏淘",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -2903,7 +2903,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "Agent开发",
-    "person": "鏉ㄩ懌",
+    "person": "杨鑫",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -2918,7 +2918,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "Agent开发",
-    "person": "鍒樺浗鎳?",
+    "person": "刘国懿",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -2933,7 +2933,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "架构师",
-    "person": "鑼冧簹娴?",
+    "person": "范亚浩",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -2948,7 +2948,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "UI/UX",
-    "person": "寰愭湀娆?",
+    "person": "徐月欢",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -2963,7 +2963,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "寮犱咕",
+    "person": "张乾",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -2978,7 +2978,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鍖呭浗瀹?",
+    "person": "包国宇",
     "outsourced": false,
     "timeRatio": 0.8
   },
@@ -2993,7 +2993,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "宕旀灄",
+    "person": "崔林",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -3008,7 +3008,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "测试",
-    "person": "鐜嬪鏂?",
+    "person": "王学文",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3023,7 +3023,7 @@ const allocations = [
     "complexity": 8,
     "status": "产品开发",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3038,7 +3038,7 @@ const allocations = [
     "complexity": 2,
     "status": "项目暂停",
     "role": "产品经理",
-    "person": "閲戦懌",
+    "person": "金鑫",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -3053,7 +3053,7 @@ const allocations = [
     "complexity": 2,
     "status": "项目暂停",
     "role": "全栈开发工程师",
-    "person": "璋㈡櫤闇?",
+    "person": "谢智霖",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -3068,7 +3068,7 @@ const allocations = [
     "complexity": 2,
     "status": "项目暂停",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.02
   },
@@ -3083,7 +3083,7 @@ const allocations = [
     "complexity": 5,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "閲戦懌",
+    "person": "金鑫",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3098,7 +3098,7 @@ const allocations = [
     "complexity": 5,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "宕旀灄",
+    "person": "崔林",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -3113,7 +3113,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "閲戦懌",
+    "person": "金鑫",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -3128,7 +3128,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "架构师",
-    "person": "鑼冧簹娴?",
+    "person": "范亚浩",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -3143,7 +3143,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -3158,7 +3158,7 @@ const allocations = [
     "complexity": 7,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "閲戦懌",
+    "person": "金鑫",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3173,7 +3173,7 @@ const allocations = [
     "complexity": 7,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鍖呭浗瀹?",
+    "person": "包国宇",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3188,7 +3188,7 @@ const allocations = [
     "complexity": 7,
     "status": "产品开发",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -3203,7 +3203,7 @@ const allocations = [
     "complexity": 7,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "閲戦懌",
+    "person": "金鑫",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3218,7 +3218,7 @@ const allocations = [
     "complexity": 7,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鐜嬪皯濞?",
+    "person": "王少威",
     "outsourced": false,
     "timeRatio": 0.6
   },
@@ -3233,7 +3233,7 @@ const allocations = [
     "complexity": 7,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "涓佸畤缁?",
+    "person": "丁宇统",
     "outsourced": false,
     "timeRatio": 0.5
   },
@@ -3248,7 +3248,7 @@ const allocations = [
     "complexity": 7,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鐜嬮珮灞?",
+    "person": "王高山",
     "outsourced": false,
     "timeRatio": 0.4
   },
@@ -3263,7 +3263,7 @@ const allocations = [
     "complexity": 7,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "绔ュ皬搴?",
+    "person": "童小康",
     "outsourced": false,
     "timeRatio": 0.7
   },
@@ -3278,7 +3278,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "閲戦懌",
+    "person": "金鑫",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -3293,7 +3293,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "架构师",
-    "person": "鑼冧簹娴?",
+    "person": "范亚浩",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -3308,7 +3308,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "璋㈡櫤闇?",
+    "person": "谢智霖",
     "outsourced": false,
     "timeRatio": 0.9
   },
@@ -3323,7 +3323,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "测试",
-    "person": "楠嗚埅鐕?",
+    "person": "骆航燕",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3338,7 +3338,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3353,7 +3353,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "閲戦懌",
+    "person": "金鑫",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3368,7 +3368,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鍚存枃杈?",
+    "person": "吴文辉",
     "outsourced": false,
     "timeRatio": 0.4
   },
@@ -3383,7 +3383,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鐜嬪鏂?",
+    "person": "王学文",
     "outsourced": false,
     "timeRatio": 0.5
   },
@@ -3398,7 +3398,7 @@ const allocations = [
     "complexity": 5,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "閲戦懌",
+    "person": "金鑫",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3413,7 +3413,7 @@ const allocations = [
     "complexity": 5,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鍙剁粏寤?",
+    "person": "叶细建",
     "outsourced": false,
     "timeRatio": 0.4
   },
@@ -3428,7 +3428,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "閲戦懌",
+    "person": "金鑫",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3443,7 +3443,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鍚存枃杈?",
+    "person": "吴文辉",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3458,7 +3458,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "楠嗚埅鐕?",
+    "person": "骆航燕",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3473,7 +3473,7 @@ const allocations = [
     "complexity": 6,
     "status": "产品开发",
     "role": "模型",
-    "person": "璐逛粫蹇?",
+    "person": "费仕忆",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3488,7 +3488,7 @@ const allocations = [
     "complexity": 8,
     "status": "需求调研",
     "role": "模型",
-    "person": "鏉ㄤ匠娆?",
+    "person": "杨佳欣",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -3503,7 +3503,7 @@ const allocations = [
     "complexity": 2,
     "status": "产品自测",
     "role": "项目经理",
-    "person": "閲戦懌",
+    "person": "金鑫",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3518,7 +3518,7 @@ const allocations = [
     "complexity": 2,
     "status": "产品自测",
     "role": "架构师",
-    "person": "鑼冧簹娴?",
+    "person": "范亚浩",
     "outsourced": false,
     "timeRatio": 0.25
   },
@@ -3533,7 +3533,7 @@ const allocations = [
     "complexity": 2,
     "status": "产品自测",
     "role": "测试",
-    "person": "榛勯箯绋?",
+    "person": "黄鹏程",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -3548,7 +3548,7 @@ const allocations = [
     "complexity": 2,
     "status": "产品自测",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3563,7 +3563,7 @@ const allocations = [
     "complexity": 3,
     "status": "部署上线",
     "role": "架构师",
-    "person": "鑼冧簹娴?",
+    "person": "范亚浩",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -3578,7 +3578,7 @@ const allocations = [
     "complexity": 3,
     "status": "部署上线",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3593,7 +3593,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "项目经理",
-    "person": "娈靛瓙鐞?",
+    "person": "段子琪",
     "outsourced": true,
     "timeRatio": 0
   },
@@ -3608,7 +3608,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "产品经理",
-    "person": "鏈辨€濆",
+    "person": "朱思婕",
     "outsourced": false,
     "timeRatio": 0.75
   },
@@ -3623,7 +3623,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "Agent开发",
-    "person": "瀛欐祻娣?",
+    "person": "孙浏淘",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3638,7 +3638,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "UI/UX",
-    "person": "娌堝ぉ楠?",
+    "person": "沈天骄",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -3653,7 +3653,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "全栈开发工程师",
-    "person": "浣曞",
+    "person": "何奕",
     "outsourced": false,
     "timeRatio": 0.6
   },
@@ -3668,7 +3668,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "测试",
-    "person": "鍚存枃杈?",
+    "person": "吴文辉",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -3683,7 +3683,7 @@ const allocations = [
     "complexity": 5,
     "status": "UAT",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3698,7 +3698,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "产品经理",
-    "person": "璐逛粫蹇?",
+    "person": "费仕忆",
     "outsourced": false,
     "timeRatio": 0.3
   },
@@ -3713,7 +3713,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "全栈开发工程师",
-    "person": "鍖呭浗瀹?",
+    "person": "包国宇",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3728,7 +3728,7 @@ const allocations = [
     "complexity": 3,
     "status": "产品开发",
     "role": "运维",
-    "person": "娈甸暱瀹?",
+    "person": "段长安",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3743,7 +3743,7 @@ const allocations = [
     "complexity": 10,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "鎵嶈瘲",
+    "person": "才诗",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -3758,7 +3758,7 @@ const allocations = [
     "complexity": 9,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "鎵嶈瘲",
+    "person": "才诗",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3773,7 +3773,7 @@ const allocations = [
     "complexity": 9,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "閲戜亥绁?",
+    "person": "金亥祺",
     "outsourced": false,
     "timeRatio": 0.4
   },
@@ -3788,7 +3788,7 @@ const allocations = [
     "complexity": 9,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "鐢樺欢婢?",
+    "person": "甘延澍",
     "outsourced": true,
     "timeRatio": 0.9
   },
@@ -3803,7 +3803,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "鐢板墤",
+    "person": "田剑",
     "outsourced": false,
     "timeRatio": 0.5
   },
@@ -3818,7 +3818,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "閲戜亥绁?",
+    "person": "金亥祺",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3833,7 +3833,7 @@ const allocations = [
     "complexity": 8,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "鐢板墤",
+    "person": "田剑",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -3848,7 +3848,7 @@ const allocations = [
     "complexity": 8,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "閲戜亥绁?",
+    "person": "金亥祺",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3863,7 +3863,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -3878,7 +3878,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "鑳℃磥",
+    "person": "胡洁",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -3893,7 +3893,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "鑳℃磥",
+    "person": "胡洁",
     "outsourced": false,
     "timeRatio": 0.15
   },
@@ -3908,7 +3908,7 @@ const allocations = [
     "complexity": 3,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "鑳℃磥",
+    "person": "胡洁",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3923,7 +3923,7 @@ const allocations = [
     "complexity": 3,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "鑳℃磥",
+    "person": "胡洁",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3938,7 +3938,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "鑳℃磥",
+    "person": "胡洁",
     "outsourced": false,
     "timeRatio": 0.5
   },
@@ -3953,7 +3953,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0
   },
@@ -3968,7 +3968,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -3983,7 +3983,7 @@ const allocations = [
     "complexity": 4,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -3998,7 +3998,7 @@ const allocations = [
     "complexity": 4,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -4013,7 +4013,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -4028,7 +4028,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.05
   },
@@ -4043,7 +4043,7 @@ const allocations = [
     "complexity": 5,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.2
   },
@@ -4058,7 +4058,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "寮犻瓒?",
+    "person": "张颖超",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -4073,7 +4073,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "鏅瓱鍗?",
+    "person": "景孟博",
     "outsourced": false,
     "timeRatio": 0.1
   },
@@ -4088,7 +4088,7 @@ const allocations = [
     "complexity": 6,
     "status": "需求调研",
     "role": "产品经理",
-    "person": "闄堟斁缇?",
+    "person": "陈放群",
     "outsourced": false,
     "timeRatio": 0.1
   }
