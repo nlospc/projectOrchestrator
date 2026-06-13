@@ -25,36 +25,51 @@ export const roleWeights = {
 };
 
 export const projects = [
-  { id: "P-2401", category: "数字化", dept: "研发中心", biz: "临床研究", family: "R2", name: "临床试验资源驾驶舱", health: "R", override: "R", overrideNote: "UAT 验收环境阻塞，PMO 标记红灯", gate: "Gate 4", complexity: 5, status: "UAT", init: "已立项", level: "A", pm: "陈安", product: "林琪", tech: "周远", batch: "2026-W23" },
-  { id: "P-2402", category: "平台", dept: "技术平台部", biz: "数据平台", family: "DataHub", name: "项目组合数据中台", health: "Y", override: "", overrideNote: "", gate: "Gate 3", complexity: 4, status: "产品开发", init: "已立项", level: "A", pm: "何洁", product: "蒋宁", tech: "杨森", batch: "2026-W23" },
-  { id: "P-2403", category: "流程", dept: "运营管理部", biz: "供应链", family: "SCM", name: "供应链里程碑监管", health: "G", override: "", overrideNote: "", gate: "Gate 2", complexity: 3, status: "产品设计", init: "已立项", level: "B", pm: "吴缨", product: "黄蕾", tech: "宋林", batch: "2026-W23" },
-  { id: "P-2404", category: "AI", dept: "智能应用部", biz: "医学事务", family: "Agent", name: "医学资料智能审核", health: "Y", override: "Y", overrideNote: "模型评估完成，法规审批待排期", gate: "Gate 3", complexity: 5, status: "产品开发", init: "已立项", level: "A", pm: "赵川", product: "马晓", tech: "唐铮", batch: "2026-W23" },
-  { id: "P-2405", category: "运维", dept: "信息技术部", biz: "商业运营", family: "CRM", name: "CRM 稳定性治理", health: "G", override: "", overrideNote: "", gate: "Gate 5", complexity: 2, status: "系统运维", init: "已立项", level: "C", pm: "陈安", product: "罗晨", tech: "梁越", batch: "2026-W23" },
-  { id: "P-2406", category: "合规", dept: "质量合规部", biz: "质量管理", family: "QMS", name: "电子审计追踪升级", health: "R", override: "", overrideNote: "", gate: "Gate 4", complexity: 4, status: "部署上线", init: "已立项", level: "A", pm: "方思", product: "苏曼", tech: "杨森", batch: "2026-W23" },
+  { id: "P-2401", code: "CLN-01", category: "数字化", dept: "研发中心", biz: "临床研究", family: "R2", name: "临床试验资源驾驶舱", summary: "多项目里程碑监控与过程亮灯", owner: { name: "陈安", avatar: "👤" }, programGroup: null, planned_start_date: "2026-01-01", planned_end_date: "2026-08-31", health: "R", override: "R", overrideNote: "UAT 验收环境阻塞，PMO 标记红灯", gate: "Gate 4", complexity: 5, status: "UAT", init: "已立项", level: "A", pm: "陈安", product: "林琪", tech: "周远", batch: "2026-W23", archived: false },
+  { id: "P-2402", code: "DAT-02", category: "平台", dept: "技术平台部", biz: "数据平台", family: "DataHub", name: "项目组合数据中台", summary: "跨域数据聚合与关联", owner: { name: "何洁", avatar: "👤" }, programGroup: null, planned_start_date: "2026-01-15", planned_end_date: "2026-09-30", health: "Y", override: "", overrideNote: "", gate: "Gate 3", complexity: 4, status: "产品开发", init: "已立项", level: "A", pm: "何洁", product: "蒋宁", tech: "杨森", batch: "2026-W23", archived: false },
+  { id: "P-2403", code: "SCM-03", category: "流程", dept: "运营管理部", biz: "供应链", family: "SCM", name: "供应链里程碑监管", summary: "端到端供应链可视化", owner: { name: "吴缨", avatar: "👤" }, programGroup: null, planned_start_date: "2026-02-01", planned_end_date: "2026-10-15", health: "G", override: "", overrideNote: "", gate: "Gate 2", complexity: 3, status: "产品设计", init: "已立项", level: "B", pm: "吴缨", product: "黄蕾", tech: "宋林", batch: "2026-W23", archived: false },
+  { id: "P-2404", code: "MED-04", category: "AI", dept: "智能应用部", biz: "医学事务", family: "Agent", name: "医学资料智能审核", summary: "LLM 驱动的文献审核", owner: { name: "赵川", avatar: "👤" }, programGroup: null, planned_start_date: "2026-01-01", planned_end_date: "2026-08-15", health: "Y", override: "Y", overrideNote: "模型评估完成，法规审批待排期", gate: "Gate 3", complexity: 5, status: "产品开发", init: "已立项", level: "A", pm: "赵川", product: "马晓", tech: "唐铮", batch: "2026-W23", archived: false },
+  { id: "P-2405", code: "CRM-05", category: "运维", dept: "信息技术部", biz: "商业运营", family: "CRM", name: "CRM 稳定性治理", summary: "遗留系统可靠性升级", owner: { name: "陈安", avatar: "👤" }, programGroup: null, planned_start_date: "2026-03-01", planned_end_date: "2026-09-30", health: "G", override: "", overrideNote: "", gate: "Gate 5", complexity: 2, status: "系统运维", init: "已立项", level: "C", pm: "陈安", product: "罗晨", tech: "梁越", batch: "2026-W23", archived: true },
+  { id: "P-2406", code: "QMS-06", category: "合规", dept: "质量合规部", biz: "质量管理", family: "QMS", name: "电子审计追踪升级", summary: "法规合规性数据保留", owner: { name: "方思", avatar: "👤" }, programGroup: null, planned_start_date: "2026-02-15", planned_end_date: "2026-11-30", health: "R", override: "", overrideNote: "", gate: "Gate 4", complexity: 4, status: "部署上线", init: "已立项", level: "A", pm: "方思", product: "苏曼", tech: "杨森", batch: "2026-W23", archived: false },
 ];
 
-export const milestoneNames = ["立项", "需求确认", "方案设计", "开发完成", "测试完成", "UAT完成", "部署上线", "验收关闭"];
 export const milestones = [
-  ["P-2401", ["G", "G", "G", "Y", "Y", "R", "R", "R"]],
-  ["P-2402", ["G", "G", "Y", "Y", "Y", "Y", "Y", "Y"]],
-  ["P-2403", ["G", "G", "G", "G", "G", "G", "G", "G"]],
-  ["P-2404", ["G", "G", "Y", "Y", "Y", "Y", "Y", "Y"]],
-  ["P-2405", ["G", "G", "G", "G", "G", "G", "G", "G"]],
-  ["P-2406", ["G", "G", "G", "Y", "Y", "R", "R", "R"]],
-].flatMap(([projectId, states]) =>
-  states.map((state, index) => ({
-    id: `${projectId}-M${index + 1}`,
-    projectId,
-    name: milestoneNames[index],
-    plannedStart: `2026-${String(index + 1).padStart(2, "0")}-05`,
-    plannedEnd: `2026-${String(index + 1).padStart(2, "0")}-26`,
-    actualStart: index < 6 ? `2026-${String(index + 1).padStart(2, "0")}-08` : "",
-    actualEnd: index < 5 ? `2026-${String(index + 1).padStart(2, "0")}-${state === "R" ? "30" : "24"}` : "",
-    state,
-    delay: state === "R" ? 12 : state === "Y" ? 4 : 0,
-    note: state === "R" ? "已超过计划窗口，需要 PMO 干预" : state === "Y" ? "存在排期或资源风险" : "按计划推进",
-  }))
-);
+  // P-2401: Scenario ② (延期) + Scenario ③ (未来在轨)
+  { id: "P-2401-M1", projectId: "P-2401", name: "需求确认", sortOrder: 1, planned_start_date: "2026-02-01", planned_end_date: "2026-02-15", actual_start_date: "2026-02-01", actual_end_date: "2026-02-20", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-02-20T10:00:00Z" },
+  { id: "P-2401-M2", projectId: "P-2401", name: "方案设计", sortOrder: 2, planned_start_date: "2026-02-20", planned_end_date: "2026-04-15", actual_start_date: null, actual_end_date: null, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
+
+  // P-2402: Scenario ① (按期) + Scenario ④ (逾期未填)
+  { id: "P-2402-M1", projectId: "P-2402", name: "立项", sortOrder: 1, planned_start_date: "2026-01-15", planned_end_date: "2026-02-15", actual_start_date: "2026-01-15", actual_end_date: "2026-02-15", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-02-15T10:00:00Z" },
+  { id: "P-2402-M2", projectId: "P-2402", name: "需求确认", sortOrder: 2, planned_start_date: "2026-04-01", planned_end_date: "2026-05-30", actual_start_date: "2026-04-05", actual_end_date: null, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-04-05T09:00:00Z" },
+
+  // P-2403: Scenario ① + Scenario ② + Scenario ⑤ (工期被侵蚀)
+  { id: "P-2403-M1", projectId: "P-2403", name: "立项", sortOrder: 1, planned_start_date: "2026-01-01", planned_end_date: "2026-01-31", actual_start_date: "2026-01-01", actual_end_date: "2026-02-15", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-02-15T10:00:00Z" },
+  { id: "P-2403-M2", projectId: "P-2403", name: "需求确认", sortOrder: 2, planned_start_date: "2026-02-01", planned_end_date: "2026-03-15", actual_start_date: "2026-02-15", actual_end_date: "2026-04-20", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-04-20T10:00:00Z" },
+  { id: "P-2403-M3", projectId: "P-2403", name: "方案设计", sortOrder: 3, planned_start_date: "2026-03-15", planned_end_date: "2026-04-10", actual_start_date: null, actual_end_date: null, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
+
+  // P-2404: Scenario ① (早期完成) + Scenario ① (早期完成) + Scenario ③ (未来在轨)
+  { id: "P-2404-M1", projectId: "P-2404", name: "立项", sortOrder: 1, planned_start_date: "2026-01-01", planned_end_date: "2026-02-15", actual_start_date: "2026-01-01", actual_end_date: "2026-02-10", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-02-10T10:00:00Z" },
+  { id: "P-2404-M2", projectId: "P-2404", name: "需求确认", sortOrder: 2, planned_start_date: "2026-02-15", planned_end_date: "2026-04-15", actual_start_date: "2026-02-10", actual_end_date: "2026-04-12", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-04-12T10:00:00Z" },
+  { id: "P-2404-M3", projectId: "P-2404", name: "方案设计", sortOrder: 3, planned_start_date: "2026-04-15", planned_end_date: "2026-07-30", actual_start_date: "2026-04-12", actual_end_date: null, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-04-12T09:00:00Z" },
+
+  // P-2405 (archived): Scenario ① + ③
+  { id: "P-2405-M1", projectId: "P-2405", name: "立项", sortOrder: 1, planned_start_date: "2026-03-01", planned_end_date: "2026-04-01", actual_start_date: "2026-03-01", actual_end_date: "2026-03-28", createdAt: "2026-02-01T00:00:00Z", updatedAt: "2026-03-28T10:00:00Z" },
+  { id: "P-2405-M2", projectId: "P-2405", name: "需求确认", sortOrder: 2, planned_start_date: "2026-04-01", planned_end_date: "2026-09-30", actual_start_date: null, actual_end_date: null, createdAt: "2026-02-01T00:00:00Z", updatedAt: "2026-02-01T00:00:00Z" },
+
+  // P-2406: Scenario ① + ③
+  { id: "P-2406-M1", projectId: "P-2406", name: "立项", sortOrder: 1, planned_start_date: "2026-02-15", planned_end_date: "2026-03-31", actual_start_date: "2026-02-15", actual_end_date: "2026-03-25", createdAt: "2026-01-15T00:00:00Z", updatedAt: "2026-03-25T10:00:00Z" },
+  { id: "P-2406-M2", projectId: "P-2406", name: "需求确认", sortOrder: 2, planned_start_date: "2026-03-25", planned_end_date: "2026-11-30", actual_start_date: null, actual_end_date: null, createdAt: "2026-01-15T00:00:00Z", updatedAt: "2026-01-15T00:00:00Z" },
+];
+
+export const milestoneChangeLogs = [
+  { id: "CL-001", milestoneId: "P-2401-M1", field: "planned_end_date", oldValue: "2026-02-10", newValue: "2026-02-15", reason: "UAT 环境就绪延迟，下推 5 天补偿", changedBy: "陈安", changedAt: "2026-01-28T14:30:00Z" },
+  { id: "CL-002", milestoneId: "P-2403-M2", field: "planned_end_date", oldValue: "2026-02-28", newValue: "2026-03-15", reason: "需求调研周期延长，产品确认期加长", changedBy: "吴缨", changedAt: "2026-01-20T09:15:00Z" },
+];
+
+export const comments = [
+  { id: "CM-001", projectId: "P-2401", body: "@陈安 M1 延期的根本原因是依赖的测试环境未就绪。已与基础设施团队对齐，预计 2 月中旬可恢复计划。", mentions: ["陈安"], authorId: "u-pmo", authorName: "PMO Admin", createdAt: "2026-02-21T10:00:00Z" },
+  { id: "CM-002", projectId: "P-2403", body: "M2 本周已提交代码，@吴缨 的测试计划是否可以提前启动？", mentions: ["吴缨"], authorId: "u-tech", authorName: "Tech Lead", createdAt: "2026-04-21T15:30:00Z" },
+];
 
 export const allocations = [
   {
