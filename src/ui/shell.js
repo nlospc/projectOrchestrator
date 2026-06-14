@@ -4,7 +4,9 @@ import { $ } from "../core/utils.js";
 import { projects } from "../data/mock-data.js";
 import { state } from "../state/app-state.js";
 import { downloadProjectTemplate, downloadResourceTemplate, settingsView, uploadView } from "../views/admin.js";
-import { dashboardView, openProject, projectsView, timeline } from "../views/projects.js";
+import { dashboardView, drawerTabContent, openProject, projectsView, timeline } from "../views/projects.js";
+import { appendComment, updateMilestone } from "../core/mutations.js";
+import { openReasonModal } from "../ui/reason-modal.js";
 import {
   busFactorView,
   exportBusFactorPeople,
@@ -131,7 +133,14 @@ function bindEvents() {
   if (eventsBound) return;
   eventsBound = true;
 
-  document.addEventListener("click", (event) => {
+  function refreshDrawerTab() {
+    const content = document.getElementById("drawer-tab-content");
+    if (content && state.drawer.projectId) {
+      content.innerHTML = drawerTabContent(state.drawer.projectId, state.drawer.activeTab, state.today);
+    }
+  }
+
+  document.addEventListener("click", async (event) => {
     const routeButton = event.target.closest("[data-route]");
     if (routeButton) {
       goToRoute(routeButton.dataset.route);
@@ -157,6 +166,91 @@ function bindEvents() {
     if (actionName === "save-settings") return toast("??????");
     if (actionName === "add-milestone-template") return toast("???????????");
     if (actionName === "save-override") return toast("??? PMO ????????");
+
+    // ── T7: drawer tab switch ──────────────────────────────────────────────
+    const tabBtn = event.target.closest("[data-drawer-tab]");
+    if (tabBtn) {
+      state.drawer.activeTab = tabBtn.dataset.drawerTab;
+      document.querySelectorAll(".drawer-tab-btn").forEach(btn => {
+        const active = btn.dataset.drawerTab === state.drawer.activeTab;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-selected", String(active));
+      });
+      refreshDrawerTab();
+      return;
+    }
+
+    // ── T7: inline planned-date edit flow ─────────────────────────────────
+    const editPlannedBtn = event.target.closest("[data-edit-planned]");
+    if (editPlannedBtn) {
+      const [milestoneId, field] = editPlannedBtn.dataset.editPlanned.split(":");
+      const m = milestones.find(x => x.id === milestoneId);
+      if (!m) return;
+      const cell = document.querySelector(`[data-planned-cell="${milestoneId}:${field}"]`);
+      if (!cell) return;
+      const current = m[field] || "";
+      cell.innerHTML = `
+        <input type="date" id="planned-date-edit" value="${current}" style="width:130px">
+        <button class="small-button" data-confirm-planned="${milestoneId}:${field}">确认</button>
+        <button class="small-button" data-cancel-planned>取消</button>`;
+      return;
+    }
+
+    const confirmPlannedBtn = event.target.closest("[data-confirm-planned]");
+    if (confirmPlannedBtn) {
+      const [milestoneId, field] = confirmPlannedBtn.dataset.confirmPlanned.split(":");
+      const m = milestones.find(x => x.id === milestoneId);
+      const input = document.getElementById("planned-date-edit");
+      const newValue = input?.value;
+      if (!newValue || !m) return;
+      const result = await openReasonModal({
+        field,
+        oldValue: m[field],
+        newValue,
+        required: true,
+      });
+      if (!result) { refreshDrawerTab(); return; }
+      try {
+        updateMilestone(milestoneId, { [field]: newValue }, result.reason);
+        refreshDrawerTab();
+        toast("计划日期已更新");
+      } catch (err) {
+        toast(err.message);
+        refreshDrawerTab();
+      }
+      return;
+    }
+
+    if (event.target.closest("[data-cancel-planned]")) {
+      refreshDrawerTab();
+      return;
+    }
+
+    // ── T7: comment submit ────────────────────────────────────────────────
+    const submitCommentBtn = event.target.closest("[data-submit-comment]");
+    if (submitCommentBtn) {
+      const projectId = submitCommentBtn.dataset.submitComment;
+      const input = document.getElementById("comment-input");
+      if (!input?.value.trim()) return toast("评论内容不能为空");
+      try {
+        appendComment(projectId, input.value.trim());
+        state.drawer.activeTab = "comments";
+        refreshDrawerTab();
+        toast("评论已提交");
+      } catch (err) {
+        toast(err.message);
+      }
+      return;
+    }
+
+    // ── T9 stub: goto matrix with projectFocus ────────────────────────────
+    const gotoMatrixBtn = event.target.closest("[data-goto-matrix]");
+    if (gotoMatrixBtn) {
+      state.resourceFilters.projectFocus = gotoMatrixBtn.dataset.gotoMatrix;
+      closeDrawer();
+      goToRoute("matrix");
+      return;
+    }
 
     const projectButton = event.target.closest("[data-open-project]");
     if (projectButton) return openProject(projectButton.dataset.openProject);
@@ -196,6 +290,25 @@ function bindEvents() {
   });
 
   document.addEventListener("change", (event) => {
+    // ── T7: actual date inputs ─────────────────────────────────────────────
+    const { actualStart, actualEnd } = event.target.dataset;
+    const milestoneIdForActual = actualStart ?? actualEnd;
+    if (milestoneIdForActual) {
+      const field = actualStart ? "actual_start_date" : "actual_end_date";
+      const newValue = event.target.value || null;
+      try {
+        updateMilestone(milestoneIdForActual, { [field]: newValue });
+        refreshDrawerTab();
+        toast(newValue ? "日期已更新" : "日期已清除");
+      } catch (err) {
+        toast(err.message);
+        // Revert the input to the stored value
+        const m = milestones.find(x => x.id === milestoneIdForActual);
+        event.target.value = m?.[field] || "";
+      }
+      return;
+    }
+
     const resourceFilter = event.target.closest("[data-resource-filter]");
     if (!resourceFilter) return;
     state.resourceFilters[resourceFilter.dataset.resourceFilter] = resourceFilter.value;

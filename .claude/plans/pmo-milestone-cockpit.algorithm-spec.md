@@ -67,14 +67,14 @@ Pre-conditions enforced by `mutations.js`, not by `computeSegments`:
 
 ---
 
-## 3. seg_start formula (PRD §4.1.3 literal)
+## 3. seg_start formula (revised per user decision 2026-06-14)
 
 ```
 i = 1:   seg_start(M₁)  = M₁.actual_start_date ?? M₁.planned_start_date
-i > 1:   seg_start(Mᵢ)  = M_{i-1}.actual_end_date ?? Mᵢ.planned_start_date
+i > 1:   seg_start(Mᵢ)  = M_{i-1}.actual_end_date ?? Mᵢ.actual_start_date ?? Mᵢ.planned_start_date
 ```
 
-> **Locked decision A** — for i > 1 we do **not** fall back to `Mᵢ.actual_start_date`. PRD §4.1.3 omits it from the formula. We treat `actual_start_date` on i > 1 milestones as metadata only (visible in drawer editor, not in Gantt). See "Locked Calls" §6.
+> **Locked decision A (revised)** — `actual_start_date` is used at every level. For i > 1, if the upstream milestone has no `actual_end_date`, fall back to the current milestone's own `actual_start_date` before falling back to `planned_start_date`. Rationale: if someone recorded when they actually started M_i, that is more accurate than the plan. See "Locked Calls" §6.
 
 ---
 
@@ -262,7 +262,7 @@ P-2404-M3: planned 2026-04-15..2026-07-30, actual_start = 2026-04-12, actual_end
 - actualAnchorAt = null
 - deviationDays = 0, eroded = false, scenario = 3 ✓
 
-Note: `actual_start_date = 2026-04-12` on M3 is **not used** by the algorithm (Locked Decision A). It surfaces in the drawer editor only.
+Note: `actual_start_date = 2026-04-12` on M3 **is used** as middle fallback if `M2.actual_end_date` were null (Locked Decision A revised). In this seed M2.actual_end_date = 2026-04-12 is identical, so the output is the same — but the path through the formula is now `M_{i-1}.actual_end_date` (non-null) → short-circuits, no change to result.
 
 ---
 
@@ -270,7 +270,7 @@ Note: `actual_start_date = 2026-04-12` on M3 is **not used** by the algorithm (L
 
 | ID | Question raised by PRD ambiguity | Decision locked here | Reversible? |
 |---|---|---|---|
-| **A** | For i > 1, does seg_start fall back to `Mᵢ.actual_start_date` before `Mᵢ.planned_start_date`? | **No.** Strict 2-level fallback `M_{i-1}.actual_end_date ?? Mᵢ.planned_start_date` per PRD §4.1.3 literal. `actual_start_date` on i > 1 is metadata only. | Yes, by adding one `??` clause in §3 |
+| **A** | For i > 1, does seg_start fall back to `Mᵢ.actual_start_date` before `Mᵢ.planned_start_date`? | **Yes (revised 2026-06-14).** 3-level fallback: `M_{i-1}.actual_end_date ?? Mᵢ.actual_start_date ?? Mᵢ.planned_start_date`. `actual_start_date` is used at every level — not metadata-only. | No — user-confirmed |
 | **B** | When ④ and ⑤ conditions both hold (A absent, S ≥ P, today > P), which scenario wins? | **⑤ wins.** The "upstream erosion" narrative is more specific and more actionable for PMO than the generic "逾期未填". | Yes, by reordering the dispatch in §4 |
 | **C** | `deviationDays` units and sign convention vary by scenario — is one global definition possible? | **No.** Locked per-scenario semantics (see §4 table). Single label "偏差天数 N" in drawer is rendered by a small adapter that picks wording: "早 5 天 / 晚 5 天 / 当前逾期 14 天 / 侵蚀 10 天". | Yes, but coordinated with badge copy |
 | **D** | Should drag-reorder validation block the drop or accept-then-toast-rollback? | **Block the drop** (Open Question Q1 in plan; same decision). Mutation throws → drag handler reverts DOM position before render. | Yes — UX preference |

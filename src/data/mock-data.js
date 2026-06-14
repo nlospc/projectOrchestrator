@@ -62,13 +62,13 @@ export const milestones = [
 ];
 
 export const milestoneChangeLogs = [
-  { id: "CL-001", milestoneId: "P-2401-M1", field: "planned_end_date", oldValue: "2026-02-10", newValue: "2026-02-15", reason: "UAT 环境就绪延迟，下推 5 天补偿", changedBy: "陈安", changedAt: "2026-01-28T14:30:00Z" },
-  { id: "CL-002", milestoneId: "P-2403-M2", field: "planned_end_date", oldValue: "2026-02-28", newValue: "2026-03-15", reason: "需求调研周期延长，产品确认期加长", changedBy: "吴缨", changedAt: "2026-01-20T09:15:00Z" },
+  { id: "CL-001", milestoneId: "P-2401-M1", field: "planned_end_date", oldValue: "2026-02-10", newValue: "2026-02-15", reason: "UAT 环境就绪延迟，下推 5 天补偿", changedAt: "2026-01-28T14:30:00Z" },
+  { id: "CL-002", milestoneId: "P-2403-M2", field: "planned_end_date", oldValue: "2026-02-28", newValue: "2026-03-15", reason: "需求调研周期延长，产品确认期加长", changedAt: "2026-01-20T09:15:00Z" },
 ];
 
 export const comments = [
-  { id: "CM-001", projectId: "P-2401", body: "@陈安 M1 延期的根本原因是依赖的测试环境未就绪。已与基础设施团队对齐，预计 2 月中旬可恢复计划。", mentions: ["陈安"], authorId: "u-pmo", authorName: "PMO Admin", createdAt: "2026-02-21T10:00:00Z" },
-  { id: "CM-002", projectId: "P-2403", body: "M2 本周已提交代码，@吴缨 的测试计划是否可以提前启动？", mentions: ["吴缨"], authorId: "u-tech", authorName: "Tech Lead", createdAt: "2026-04-21T15:30:00Z" },
+  { id: "CM-001", projectId: "P-2401", body: "M1 延期的根本原因是依赖的测试环境未就绪。已与基础设施团队对齐，预计 2 月中旬可恢复计划。", authorName: "PMO Admin", createdAt: "2026-02-21T10:00:00Z" },
+  { id: "CM-002", projectId: "P-2403", body: "M2 本周已提交代码，测试计划是否可以提前启动？", authorName: "Tech Lead", createdAt: "2026-04-21T15:30:00Z" },
 ];
 
 export const allocations = [
