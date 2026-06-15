@@ -89,6 +89,9 @@ export function personRow(person) {
 
 export function projectsView() {
   const list = filteredProjects();
+  const { groupBy, includeArchived } = state.filters;
+  const opt = (val, label) =>
+    `<option value="${val}" ${groupBy === val ? "selected" : ""}>${label}</option>`;
   return `<section class="panel project-monitor">
       <div class="project-monitor-head">
         <div>
@@ -96,6 +99,23 @@ export function projectsView() {
           <p class="muted">里程碑连续段甘特图 · 5场景算法 · 点击项目行查看详情</p>
         </div>
         <input id="project-search" placeholder="搜索项目、编号、负责人" />
+      </div>
+      <div class="gantt-toolbar">
+        <label class="gantt-toolbar-label">
+          分组
+          <select data-project-filter="groupBy">
+            ${opt("none", "不分组")}${opt("dept", "按部门")}${opt("owner", "按负责人")}${opt("rag", "按状态")}
+          </select>
+        </label>
+        <label class="gantt-toolbar-label gantt-toolbar-check">
+          <input type="checkbox" data-project-filter="includeArchived" ${includeArchived ? "checked" : ""}>
+          包含已归档
+        </label>
+        <div class="granularity-chips">
+          <span class="granularity-chip active" title="当前视图模式">月</span>
+          <span class="granularity-chip disabled" title="v1.1 功能">周</span>
+          <span class="granularity-chip disabled" title="v1.1 功能">季度</span>
+        </div>
       </div>
       <div class="table-wrap" id="project-timeline-wrap">${timeline(list)}</div>
     </section>`;

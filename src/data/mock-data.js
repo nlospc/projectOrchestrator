@@ -61,6 +61,8 @@ export const milestones = [
   { id: "P-2406-M2", projectId: "P-2406", name: "需求确认", sortOrder: 2, planned_start_date: "2026-03-25", planned_end_date: "2026-11-30", actual_start_date: null, actual_end_date: null, createdAt: "2026-01-15T00:00:00Z", updatedAt: "2026-01-15T00:00:00Z" },
 ];
 
+export const milestoneNames = [...new Set(milestones.map(m => m.name))];
+
 export const milestoneChangeLogs = [
   { id: "CL-001", milestoneId: "P-2401-M1", field: "planned_end_date", oldValue: "2026-02-10", newValue: "2026-02-15", reason: "UAT 环境就绪延迟，下推 5 天补偿", changedAt: "2026-01-28T14:30:00Z" },
   { id: "CL-002", milestoneId: "P-2403-M2", field: "planned_end_date", oldValue: "2026-02-28", newValue: "2026-03-15", reason: "需求调研周期延长，产品确认期加长", changedAt: "2026-01-20T09:15:00Z" },

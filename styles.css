@@ -372,6 +372,82 @@ textarea {
   margin-bottom: 0;
 }
 
+/* ── Gantt toolbar (T8) ──────────────────────────────────────────────────── */
+.gantt-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  flex-wrap: wrap;
+}
+
+.gantt-toolbar-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary, #6b7280);
+  white-space: nowrap;
+}
+
+.gantt-toolbar-label select {
+  font-size: 13px;
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.gantt-toolbar-check {
+  cursor: pointer;
+  user-select: none;
+}
+
+.granularity-chips {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.granularity-chip {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: default;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.granularity-chip.active {
+  background: var(--brand, #2563eb);
+  color: #fff;
+  border-color: var(--brand, #2563eb);
+}
+
+.granularity-chip.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Project focus banner (T9) ───────────────────────────────────────────── */
+.project-focus-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
 .panel,
 .kpi,
 .table-panel {

@@ -155,6 +155,11 @@ function bindEvents() {
       goToRoute("projects");
       return;
     }
+    if (actionName === "clear-project-focus") {
+      state.resourceFilters.projectFocus = null;
+      render();
+      return;
+    }
     if (actionName === "mock-upload") return toast("????? Excel??? 8 ??????");
     if (actionName === "mock-project-upload") return toast("??????? Excel?Project ? Milestone Sheet ?????");
     if (actionName === "mock-resource-upload") return toast(`??????? Excel?${personStats().length} ?????????`);
@@ -309,6 +314,14 @@ function bindEvents() {
       return;
     }
 
+    const projectFilter = event.target.closest("[data-project-filter]");
+    if (projectFilter) {
+      const key = projectFilter.dataset.projectFilter;
+      state.filters[key] = projectFilter.type === "checkbox" ? projectFilter.checked : projectFilter.value;
+      render();
+      return;
+    }
+
     const resourceFilter = event.target.closest("[data-resource-filter]");
     if (!resourceFilter) return;
     state.resourceFilters[resourceFilter.dataset.resourceFilter] = resourceFilter.value;
@@ -316,8 +329,8 @@ function bindEvents() {
   });
 
   $("#reset-filters").addEventListener("click", () => {
-    state.filters = { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all" };
-    state.resourceFilters = { system: "all", role: "all", outsource: "all" };
+    state.filters = { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "none", includeArchived: false };
+    state.resourceFilters = { system: "all", role: "all", outsource: "all", projectFocus: null };
     render();
   });
 }

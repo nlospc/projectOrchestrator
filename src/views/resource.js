@@ -337,9 +337,35 @@ export function peopleFromRoleEntries(entries) {
 }
 
 export function matrixView() {
-  const list = resourceProjects();
+  const focus = state.resourceFilters.projectFocus;
+  const focusProject = focus ? projects.find(p => p.id === focus) : null;
+
+  // When focused, filter allocation list to only show the target project's people.
+  // Allocations use legacy projectId strings — fall back to name matching if needed.
+  let list = resourceProjects();
+  let focusBanner = "";
+  if (focus) {
+    const focusedAllocs = allocations.filter(a =>
+      a.projectId === focus ||
+      (focusProject && a.projectName === focusProject.name)
+    );
+    list = list.filter(p =>
+      p.id === focus ||
+      (focusProject && p.name === focusProject.name) ||
+      focusedAllocs.some(a => a.projectId === p.id)
+    );
+    const projectLabel = focusProject
+      ? escapeHtml(`${focusProject.code || focus} · ${focusProject.name}`)
+      : escapeHtml(focus);
+    focusBanner = `<div class="project-focus-banner">
+      <span>当前聚焦项目：<strong>${projectLabel}</strong></span>
+      <button class="ghost-button" data-action="clear-project-focus">清除聚焦</button>
+    </div>`;
+  }
+
   const groups = businessProjectGroups(list);
   return `<div class="resource-workspace people-project-workspace">
+    ${focusBanner}
     ${resourceFilterBar()}
     <section class="panel benchmark-panel">
       <div class="matrix-toolbar">
@@ -359,7 +385,12 @@ export function matrixView() {
         </div>
         <span class="muted">${groups.reduce((sum, group) => sum + group.projects.length, 0)} 个项目</span>
       </div>
-      ${businessProjectGroupsView(groups)}
+      ${groups.length
+        ? businessProjectGroupsView(groups)
+        : focus
+          ? `<p class="muted" style="padding:16px">资源数据中暂无与该 PMO 项目直接关联的记录（allocation.projectId 尚未与 PMO 项目 ID 对齐）。</p>`
+          : '<p class="muted" style="padding:16px">当前筛选范围内暂无人员项目分组。</p>'
+      }
     </section>
   </div>`;
 }
