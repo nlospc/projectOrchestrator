@@ -111,7 +111,7 @@ export function render() {
   syncFiltersFromState();
   const routeLabel = routes.find(([id]) => id === state.route)?.[1] || "Dashboard";
   const showProjectFilters = projectFilterRoutes.includes(state.route);
-  document.body.dataset.route = state.route;
+  document.body.dataset.activeRoute = state.route;
   $("#page-title").textContent = routeLabel;
   $("#section-eyebrow").textContent = state.route === "dashboard" ? "Project Office" : "PMO Prototype";
   document.body.classList.toggle("settings-route", state.route === "settings");

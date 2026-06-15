@@ -271,7 +271,7 @@ h3 {
   display: none;
 }
 
-body:not([data-route="dashboard"]):not([data-route="projects"]) .filter-bar {
+body:not([data-active-route="dashboard"]):not([data-active-route="projects"]) .filter-bar {
   display: none !important;
 }
 
