@@ -53,10 +53,10 @@ function syncFiltersFromState() {
   const sourceProjects = projects;
   const uniqueValues = (items) => [...new Set(items)].filter(Boolean);
 
-  fillSelect("#filter-dept", ["all", ...uniqueValues(sourceProjects.map((project) => project.dept))], "????");
-  fillSelect("#filter-biz", ["all", ...uniqueValues(sourceProjects.map((project) => project.biz))], "????");
-  fillSelect("#filter-status", ["all", ...uniqueValues(sourceProjects.map((project) => project.status))], "????");
-  fillSelect("#filter-pm", ["all", ...uniqueValues(sourceProjects.map((project) => project.pm))], "?? PM");
+  fillSelect("#filter-dept", ["all", ...uniqueValues(sourceProjects.map((project) => project.dept))], "全部组织");
+  fillSelect("#filter-biz", ["all", ...uniqueValues(sourceProjects.map((project) => project.biz))], "全部业务部门");
+  fillSelect("#filter-status", ["all", ...uniqueValues(sourceProjects.map((project) => project.status))], "全部项目状态");
+  fillSelect("#filter-pm", ["all", ...uniqueValues(sourceProjects.map((project) => project.pm))], "全部项目经理");
 
   Object.entries(globalFilterConfig).forEach(([key, selector]) => {
     const element = $(selector);
@@ -141,6 +141,31 @@ function bindEvents() {
   }
 
   document.addEventListener("click", async (event) => {
+    const groupByToggle = event.target.closest("[data-groupby-toggle]");
+    if (groupByToggle) {
+      const menu = groupByToggle.parentElement?.querySelector("[data-groupby-menu]");
+      if (!menu) return;
+      const nextOpen = menu.hidden;
+      document.querySelectorAll("[data-groupby-menu]").forEach((item) => { item.hidden = true; });
+      menu.hidden = !nextOpen;
+      groupByToggle.setAttribute("aria-expanded", String(nextOpen));
+      return;
+    }
+
+    const groupByOption = event.target.closest("[data-groupby-option]");
+    if (groupByOption) {
+      state.filters.groupBy = groupByOption.dataset.groupbyOption;
+      render();
+      return;
+    }
+
+    if (!event.target.closest(".gantt-group-control")) {
+      document.querySelectorAll("[data-groupby-menu]").forEach((menu) => { menu.hidden = true; });
+      document.querySelectorAll("[data-groupby-toggle]").forEach((toggle) => {
+        toggle.setAttribute("aria-expanded", "false");
+      });
+    }
+
     const routeButton = event.target.closest("[data-route]");
     if (routeButton) {
       goToRoute(routeButton.dataset.route);

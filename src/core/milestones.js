@@ -134,10 +134,10 @@ export function computeSegments(milestones, project, today) {
       scenario = 4;
       segEnd = today;
       hue = "red";
-      tone = "mixed";
+      tone = "ghost";
       deviationDays = diffDays(today, P); // > 0
       eroded = false;
-      overdueGrowSplitAt = P;
+      overdueGrowSplitAt = null;
     } else {
       // ③ 未来在轨
       scenario = 3;

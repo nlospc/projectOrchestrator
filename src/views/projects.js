@@ -90,8 +90,13 @@ export function personRow(person) {
 export function projectsView() {
   const list = filteredProjects();
   const { groupBy, includeArchived } = state.filters;
-  const opt = (val, label) =>
-    `<option value="${val}" ${groupBy === val ? "selected" : ""}>${label}</option>`;
+  const groupOptions = [
+    ["none", "不分组"],
+    ["dept", "按部门"],
+    ["owner", "按负责人"],
+    ["rag", "按状态"],
+  ];
+  const groupLabel = groupOptions.find(([value]) => value === groupBy)?.[1] ?? "不分组";
   return `<section class="panel project-monitor">
       <div class="project-monitor-head">
         <div>
@@ -101,12 +106,22 @@ export function projectsView() {
         <input id="project-search" placeholder="搜索项目、编号、负责人" />
       </div>
       <div class="gantt-toolbar">
-        <label class="gantt-toolbar-label">
-          分组
-          <select data-project-filter="groupBy">
-            ${opt("none", "不分组")}${opt("dept", "按部门")}${opt("owner", "按负责人")}${opt("rag", "按状态")}
-          </select>
-        </label>
+        <div class="gantt-toolbar-label gantt-group-control">
+          <span>分组</span>
+          <button class="gantt-group-toggle" type="button" data-groupby-toggle aria-haspopup="listbox" aria-expanded="false">
+            ${groupLabel}
+          </button>
+          <div class="gantt-group-menu" data-groupby-menu role="listbox" hidden>
+            ${groupOptions.map(([value, label]) => `
+              <button type="button"
+                class="gantt-group-option${groupBy === value ? " active" : ""}"
+                data-groupby-option="${value}"
+                role="option"
+                aria-selected="${groupBy === value}">
+                ${label}
+              </button>`).join("")}
+          </div>
+        </div>
         <label class="gantt-toolbar-label gantt-toolbar-check">
           <input type="checkbox" data-project-filter="includeArchived" ${includeArchived ? "checked" : ""}>
           包含已归档
@@ -333,6 +348,11 @@ function renderSegment(seg, milestone, projectId, pct, wPct, addDivider) {
   const actualPct  = seg.actualAnchorAt
     ? segPct(seg.actualAnchorAt, seg.segStart, seg.segEnd).toFixed(1)
     : null;
+  const plannedAnchorClass = actualPct === null ? " seg-anchor-incomplete" : "";
+  const plannedAnchor = actualPct === null
+    ? `<span class="seg-anchor seg-anchor-planned${plannedAnchorClass}" style="left:${plannedPct}%"
+          title="计划完成：${escapeHtml(milestone?.planned_end_date || "")}">◇</span>`
+    : "";
 
   const name  = milestone?.name || "";
   const title = buildSegTitle(seg, milestone);
@@ -347,8 +367,7 @@ function renderSegment(seg, milestone, projectId, pct, wPct, addDivider) {
        data-milestone-id="${escapeHtml(seg.milestoneId)}"
        title="${escapeHtml(title)}">
     <span class="seg-label">${escapeHtml(name)}</span>
-    <span class="seg-anchor seg-anchor-planned" style="left:${plannedPct}%"
-          title="计划完成：${escapeHtml(milestone?.planned_end_date || "")}">◇</span>
+    ${plannedAnchor}
     ${actualPct !== null
       ? `<span class="seg-anchor seg-anchor-actual" style="left:${actualPct}%"
               title="实际完成：${escapeHtml(milestone?.actual_end_date || "")}">◆</span>`

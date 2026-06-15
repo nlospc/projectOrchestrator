@@ -402,6 +402,73 @@ textarea {
   cursor: pointer;
 }
 
+.gantt-group-control {
+  position: relative;
+  z-index: 5;
+}
+
+.gantt-group-toggle {
+  position: relative;
+  min-width: 86px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 3px 24px 3px 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.gantt-group-toggle::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-65%) rotate(45deg);
+}
+
+.gantt-group-menu {
+  position: absolute;
+  left: 32px;
+  top: calc(100% + 4px);
+  display: grid;
+  gap: 2px;
+  min-width: 112px;
+  padding: 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  z-index: 20;
+}
+
+.gantt-group-menu[hidden] {
+  display: none;
+}
+
+.gantt-group-option {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 4px;
+  padding: 7px 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+}
+
+.gantt-group-option:hover,
+.gantt-group-option.active {
+  background: #efede8;
+}
+
 .gantt-toolbar-check {
   cursor: pointer;
   user-select: none;
@@ -2210,6 +2277,21 @@ button.chart-bar:hover strong {
 .seg-anchor-planned {
   top: -15px;
   color: rgba(55, 53, 47, 0.5);
+}
+
+.seg-anchor-planned.seg-anchor-incomplete {
+  color: var(--seg-ghost-border);
+  font-size: 11px;
+}
+
+.seg-anchor-planned.seg-anchor-incomplete::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 11px;
+  height: 15px;
+  border-left: 1px dashed currentColor;
+  transform: translateX(-50%);
 }
 
 .seg-anchor-actual {
