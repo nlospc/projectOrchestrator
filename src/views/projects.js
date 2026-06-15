@@ -493,6 +493,7 @@ export function drawerTabContent(projectId, activeTab, today = state.today) {
       return `<tr>
         <td class="muted" style="width:28px">${i + 1}</td>
         <td><strong>${escapeHtml(m.name)}</strong></td>
+        <td data-planned-cell="${escapeHtml(m.id)}:planned_start_date">${m.planned_start_date || "—"}</td>
         <td data-planned-cell="${escapeHtml(m.id)}:planned_end_date">${m.planned_end_date}</td>
         <td><input type="date" class="date-input-inline"
               data-actual-start="${escapeHtml(m.id)}"
@@ -502,14 +503,17 @@ export function drawerTabContent(projectId, activeTab, today = state.today) {
               value="${m.actual_end_date || ""}"></td>
         <td><span class="badge seg-badge-${hue}" title="${escapeHtml(buildSegTitle(seg, m))}">${icon}</span></td>
         <td class="${devClass}">${dev}</td>
-        <td><button class="small-button" data-edit-planned="${escapeHtml(m.id)}:planned_end_date">改计划</button></td>
+        <td>
+          <button class="small-button" data-edit-planned="${escapeHtml(m.id)}:planned_start_date">改开始</button>
+          <button class="small-button" data-edit-planned="${escapeHtml(m.id)}:planned_end_date">改完成</button>
+        </td>
       </tr>`;
     }).join("");
 
     return `<div class="table-wrap">
       <table class="milestone-detail-table">
         <thead><tr>
-          <th>#</th><th>里程碑</th><th>计划完成</th>
+          <th>#</th><th>里程碑</th><th>计划开始</th><th>计划完成</th>
           <th>实际开始</th><th>实际完成</th>
           <th>场景</th><th>偏差</th><th></th>
         </tr></thead>
