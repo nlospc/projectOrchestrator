@@ -1,4 +1,5 @@
-import { projects, roleWeights, statusWeights } from "../data/mock-data.js";
+import { projects } from "./data-store.js";
+import { roleWeights, statusWeights } from "../data/mock-data.js";
 
 
 

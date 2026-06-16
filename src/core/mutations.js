@@ -1,17 +1,27 @@
 /**
  * mutations.js — single write-path for all milestone and comment data.
  *
- * ALL UI code must go through these exports. Direct assignment to
- * milestone.planned_* or milestone.actual_* fields is a bug (no audit trail).
+ * Each function does an optimistic local update first (instant UI response),
+ * then persists via the REST API. On API failure the local change is rolled
+ * back and the error is re-thrown so the shell.js try/catch → toast() shows it.
  *
- * // TODO(audit): PR review checklist — grep for `milestone\.planned_` or
- * // `milestone\.actual_` followed by `=` outside this file and mock-data.js.
- *
- * v1.0 identity: no auth system. authorName is always "PMO Admin".
- * changedBy is intentionally absent from milestoneChangeLogs (deferred to v1.1).
+ * v1.0: no auth; authorName is always "PMO Admin".
  */
 
-import { milestoneChangeLogs, milestones, comments } from "../data/mock-data.js";
+import {
+  milestoneChangeLogs,
+  milestones,
+  comments,
+  projects,
+  apiPatchMilestone,
+  apiInsertMilestone,
+  apiRemoveMilestone,
+  apiReorderMilestones,
+  apiAppendComment,
+  apiPatchProject,
+} from "./data-store.js";
+
+const HEALTH_VALUES = new Set(["R", "Y", "G"]);
 
 const PLANNED_FIELDS = new Set([
   "planned_start_date",
@@ -39,15 +49,10 @@ function prevMilestone(m) {
 
 /**
  * Update one or more fields on a milestone.
- * Any change to a `planned_*` field requires a non-empty reason.
- *
- * @param {string} id
- * @param {object} patch
- * @param {string} reason  — required when patch touches planned_* fields
- * @throws {Error} if reason is empty for planned_* changes
- * @throws {Error} if actual_end_date would precede previous milestone's actual_end_date
+ * planned_* changes require a non-empty reason.
+ * Optimistic: updates local cache instantly, then persists via API (rollback on failure).
  */
-export function updateMilestone(id, patch, reason = "") {
+export async function updateMilestone(id, patch, reason = "") {
   const m = getMilestone(id);
 
   const touchesPlanned = Object.keys(patch).some((k) => PLANNED_FIELDS.has(k));
@@ -55,13 +60,10 @@ export function updateMilestone(id, patch, reason = "") {
     throw new Error(`planned 字段修改必须填写原因 (milestone: ${id})`);
   }
 
-  // actual_end_date ordering check
   if (patch.actual_end_date != null) {
     const prev = prevMilestone(m);
     if (prev?.actual_end_date) {
-      const prevEnd = new Date(prev.actual_end_date);
-      const newEnd = new Date(patch.actual_end_date);
-      if (newEnd < prevEnd) {
+      if (new Date(patch.actual_end_date) < new Date(prev.actual_end_date)) {
         throw new Error(
           `actual_end_date (${patch.actual_end_date}) 不能早于上一里程碑的 actual_end_date (${prev.actual_end_date})`
         );
@@ -69,11 +71,14 @@ export function updateMilestone(id, patch, reason = "") {
     }
   }
 
+  // Optimistic update
+  const snapshot = { ...m };
   const now = new Date().toISOString();
+  const addedLogs = [];
   for (const [field, newValue] of Object.entries(patch)) {
     const oldValue = m[field] ?? null;
     m[field] = newValue;
-    milestoneChangeLogs.push({
+    const log = {
       id: uid("CL"),
       milestoneId: id,
       field,
@@ -81,65 +86,40 @@ export function updateMilestone(id, patch, reason = "") {
       newValue: newValue === null ? null : String(newValue),
       reason: PLANNED_FIELDS.has(field) ? reason.trim() : (reason.trim() || ""),
       changedAt: now,
-    });
+    };
+    milestoneChangeLogs.push(log);
+    addedLogs.push(log);
   }
   m.updatedAt = now;
+
+  try {
+    await apiPatchMilestone(id, patch, reason, snapshot.rev);
+  } catch (err) {
+    // Rollback
+    Object.assign(m, snapshot);
+    for (const log of addedLogs) {
+      const i = milestoneChangeLogs.indexOf(log);
+      if (i !== -1) milestoneChangeLogs.splice(i, 1);
+    }
+    throw err;
+  }
 }
 
 /**
- * Insert a new milestone into a project, after the milestone with id `afterId`.
- * Pass `afterId = null` to append at the end.
- *
- * @param {string}      projectId
- * @param {string|null} afterId
- * @param {object}      init  — must include planned_start_date and planned_end_date
+ * Insert a new milestone after `afterId` (null = append).
+ * Delegates fully to the API — server returns authoritative sort orders.
  */
-export function insertMilestone(projectId, afterId, init) {
+export async function insertMilestone(projectId, afterId, init) {
   if (!init.planned_start_date || !init.planned_end_date) {
     throw new Error("insertMilestone requires planned_start_date and planned_end_date");
   }
-
-  const peers = milestones
-    .filter((x) => x.projectId === projectId)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
-
-  const insertAfterIdx = afterId == null
-    ? peers.length - 1
-    : peers.findIndex((x) => x.id === afterId);
-
-  const newSortOrder = insertAfterIdx < 0
-    ? 1
-    : (peers[insertAfterIdx]?.sortOrder ?? 0) + 1;
-
-  // Shift sortOrder of milestones that follow the insertion point
-  for (const peer of peers) {
-    if (peer.sortOrder >= newSortOrder) {
-      peer.sortOrder += 1;
-    }
-  }
-
-  const now = new Date().toISOString();
-  milestones.push({
-    id: uid("M"),
-    projectId,
-    name: init.name ?? "新里程碑",
-    sortOrder: newSortOrder,
-    planned_start_date: init.planned_start_date,
-    planned_end_date: init.planned_end_date,
-    actual_start_date: null,
-    actual_end_date: null,
-    createdAt: now,
-    updatedAt: now,
-  });
+  return await apiInsertMilestone(projectId, afterId, init);
 }
 
 /**
- * Remove a milestone. Blocked if actual_start_date or actual_end_date is present.
- *
- * @param {string} id
- * @throws {Error} if milestone has any actual dates recorded
+ * Remove a milestone. Blocked if actual dates are present.
  */
-export function removeMilestone(id) {
+export async function removeMilestone(id) {
   const m = getMilestone(id);
   if (m.actual_start_date || m.actual_end_date) {
     throw new Error(
@@ -148,17 +128,18 @@ export function removeMilestone(id) {
   }
   const idx = milestones.indexOf(m);
   milestones.splice(idx, 1);
+  try {
+    await apiRemoveMilestone(id);
+  } catch (err) {
+    milestones.splice(idx, 0, m);
+    throw err;
+  }
 }
 
 /**
- * Reorder milestones within a project. Dry-runs the new order against the
- * actual_end_date chain before applying. Throws on violation (blocks the drop).
- *
- * @param {string}   projectId
- * @param {string[]} newOrder  — ordered array of milestone ids
- * @throws {Error} if the new order violates the actual_end_date chain
+ * Reorder milestones within a project. Dry-runs before applying.
  */
-export function reorderMilestones(projectId, newOrder) {
+export async function reorderMilestones(projectId, newOrder) {
   const peers = milestones.filter((x) => x.projectId === projectId);
   const byId = Object.fromEntries(peers.map((x) => [x.id, x]));
 
@@ -166,7 +147,6 @@ export function reorderMilestones(projectId, newOrder) {
     throw new Error("reorderMilestones: newOrder length mismatch");
   }
 
-  // Dry-run: validate actual_end_date chain in proposed new order
   let lastActualEnd = null;
   for (const id of newOrder) {
     const m = byId[id];
@@ -181,26 +161,71 @@ export function reorderMilestones(projectId, newOrder) {
     }
   }
 
-  // Apply — only reached if dry-run passed
-  newOrder.forEach((id, i) => {
-    byId[id].sortOrder = i + 1;
-  });
+  // Optimistic apply
+  const prevOrders = peers.map(p => ({ id: p.id, sortOrder: p.sortOrder }));
+  newOrder.forEach((id, i) => { byId[id].sortOrder = i + 1; });
+
+  try {
+    await apiReorderMilestones(projectId, newOrder);
+  } catch (err) {
+    for (const { id, sortOrder } of prevOrders) byId[id].sortOrder = sortOrder;
+    throw err;
+  }
 }
 
 /**
- * Append a comment to a project. No @mention parsing in v1.0.
- *
- * @param {string} projectId
- * @param {string} body
- * @param {string} [authorName]
+ * Append a comment to a project.
  */
-export function appendComment(projectId, body, authorName = "PMO Admin") {
+export async function appendComment(projectId, body, authorName = "PMO Admin") {
   if (!body.trim()) throw new Error("评论内容不能为空");
-  comments.push({
+  const optimistic = {
     id: uid("CM"),
     projectId,
     body: body.trim(),
     authorName,
     createdAt: new Date().toISOString(),
-  });
+  };
+  comments.push(optimistic);
+  try {
+    const confirmed = await apiAppendComment(projectId, body, authorName);
+    const idx = comments.indexOf(optimistic);
+    if (idx !== -1) comments[idx] = confirmed;
+  } catch (err) {
+    const idx = comments.indexOf(optimistic);
+    if (idx !== -1) comments.splice(idx, 1);
+    throw err;
+  }
+}
+
+/**
+ * Set (or clear) a project's manual health override.
+ * `overrideHealth` is "R" | "Y" | "G", or "" to clear the override.
+ * Optimistic: updates local cache instantly, then persists via API (rollback on failure).
+ */
+export async function setProjectOverride(projectId, overrideHealth, note = "", by = "PMO Admin") {
+  const p = projects.find((x) => x.id === projectId);
+  if (!p) throw new Error(`Project not found: ${projectId}`);
+  const value = (overrideHealth || "").trim();
+  if (value && !HEALTH_VALUES.has(value)) {
+    throw new Error(`无效的覆盖健康度: ${value}（应为 R / Y / G）`);
+  }
+
+  // Optimistic update — cache uses `override` / `overrideNote`; DB uses the
+  // override_* column names (see server/repositories/projects.js rowToProject).
+  const snapshot = { override: p.override, overrideNote: p.overrideNote, rev: p.rev };
+  const at = value ? new Date().toISOString() : "";
+  p.override = value;
+  p.overrideNote = value ? note.trim() : "";
+
+  try {
+    await apiPatchProject(projectId, {
+      override_health: value,
+      override_note: value ? note.trim() : "",
+      override_by: value ? by : "",
+      override_at: at,
+    }, snapshot.rev);
+  } catch (err) {
+    Object.assign(p, snapshot);
+    throw err;
+  }
 }

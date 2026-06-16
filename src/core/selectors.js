@@ -1,4 +1,4 @@
-import { allocations, milestones, projects } from "../data/mock-data.js";
+import { allocations, milestones, projects } from "./data-store.js";
 import { state } from "../state/app-state.js";
 import { computeSegments } from "./milestones.js";
 import { effectiveHealth, loadFor, parseDate } from "./utils.js";

@@ -1,4 +1,5 @@
-import { allocations, milestoneNames, milestones, projects, roleWeights, statusWeights } from "../data/mock-data.js";
+import { allocations, milestoneNames, milestones, projects } from "../core/data-store.js";
+import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { downloadCsvTemplate } from "../core/files.js";
 import { milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, resourceTemplateSchema } from "../core/template-schemas.js";
 import { badge, loadFor } from "../core/utils.js";
@@ -13,7 +14,7 @@ export function uploadView() {
         </div>
         <button class="ghost-button" data-action="download-project-template">下载项目模板</button>
       </div>
-      <div class="dropzone"><div><strong>上传项目 Excel</strong><p class="muted">建议包含 Project 与 Milestone 两张表；模板内已放入当前设计案例。</p><button class="primary-button" data-action="mock-project-upload">模拟解析项目文件</button></div></div>
+      <div class="dropzone"><div><strong>上传项目 Excel</strong><p class="muted">建议包含 Project 与 Milestone 两张表；模板内已放入当前设计案例。</p><label class="primary-button" style="cursor:pointer">解析并导入项目 CSV<input type="file" accept=".csv" data-import="project" hidden></label></div></div>
       <div class="stack" style="margin-top:14px">
         ${uploadRow("Project Sheet", `${projects.length} 行样例`, "项目主数据字段完整", "G")}
         ${uploadRow("Milestone Sheet", `${milestones.length} 行样例`, "按项目编号关联里程碑", "G")}
@@ -28,7 +29,7 @@ export function uploadView() {
         </div>
         <button class="ghost-button" data-action="download-resource-template">下载资源模板</button>
       </div>
-      <div class="dropzone"><div><strong>上传资源 Excel</strong><p class="muted">用于人员 x 项目、人员负载和 Bus Factor 统计。</p><button class="primary-button" data-action="mock-resource-upload">模拟解析资源文件</button></div></div>
+      <div class="dropzone"><div><strong>上传资源 Excel</strong><p class="muted">用于人员 x 项目、人员负载和 Bus Factor 统计。</p><label class="primary-button" style="cursor:pointer">解析并导入资源 CSV<input type="file" accept=".csv" data-import="resource" hidden></label></div></div>
       <div class="stack" style="margin-top:14px">
         ${uploadRow("ResourceAllocation Sheet", `${allocations.length} 行 R2 数据`, "可直接用于当前资源视图", "G")}
         ${uploadRow("必填字段", "项目 / 角色 / 人员 / 工时投入占比", "缺失会阻断导入", "Y")}

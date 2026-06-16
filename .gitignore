@@ -1,0 +1,6 @@
+node_modules/
+
+# SQLite runtime database (seeded from src/data/mock-data.js on first boot)
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal

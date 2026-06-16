@@ -1,4 +1,5 @@
-import { allocations, projects, roleWeights, statusWeights } from "../data/mock-data.js";
+import { allocations, projects } from "../core/data-store.js";
+import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { downloadTextFile } from "../core/files.js";
 import { $, badge, detail, escapeHtml, loadClass, loadFor, unique } from "../core/utils.js";
 import { dashboardMetrics, personStats, projectAllocations, resourceProjects } from "../core/selectors.js";

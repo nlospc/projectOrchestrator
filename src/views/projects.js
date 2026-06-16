@@ -1,4 +1,4 @@
-import { comments, milestoneChangeLogs, milestones, projects } from "../data/mock-data.js";
+import { comments, milestoneChangeLogs, milestones, projects } from "../core/data-store.js";
 import {
   $, addMonths, badge, detail, effectiveHealth, escapeHtml,
   monthEnd, monthLabel, monthStart,
@@ -444,6 +444,20 @@ export function openProject(projectId) {
       ${detail("项目健康", badge(rag))}
       ${detail("手动覆盖", project.override ? badge(project.override) : '<span class="badge gray">无</span>')}
       ${detail("阶段", escapeHtml(project.status || "—"))}
+    </div>
+    <div class="panel override-editor" style="margin:12px 0;padding:12px">
+      <h3 style="margin-bottom:8px;font-size:14px">手动健康度覆盖</h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="override-health-select">
+          ${[["", "无覆盖（按系统）"], ["G", "G 绿"], ["Y", "Y 黄"], ["R", "R 红"]]
+            .map(([v, label]) => `<option value="${v}"${(project.override || "") === v ? " selected" : ""}>${label}</option>`)
+            .join("")}
+        </select>
+        <input id="override-note-input" type="text" placeholder="覆盖原因（可选）"
+          value="${escapeHtml(project.overrideNote || "")}" style="flex:1;min-width:160px">
+        <button class="primary-button" data-action="save-override"
+          data-project-id="${escapeHtml(projectId)}">保存覆盖</button>
+      </div>
     </div>
     <div class="drawer-tabs" role="tablist">${tabButtons}</div>
     <div id="drawer-tab-content" role="tabpanel">

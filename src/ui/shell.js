@@ -1,11 +1,12 @@
 import { projectFilterRoutes, routeGroups, routes } from "../config/routes.js";
 import { filteredProjects, personStats } from "../core/selectors.js";
 import { $ } from "../core/utils.js";
-import { projects } from "../data/mock-data.js";
+import { apiImportAllocations, apiImportProjects, bootstrap, milestones, projects } from "../core/data-store.js";
+import { parseProjectCsv, parseResourceAllocationCsv } from "../core/importers.js";
 import { state } from "../state/app-state.js";
 import { downloadProjectTemplate, downloadResourceTemplate, settingsView, uploadView } from "../views/admin.js";
 import { dashboardView, drawerTabContent, openProject, projectsView, timeline } from "../views/projects.js";
-import { appendComment, updateMilestone } from "../core/mutations.js";
+import { appendComment, setProjectOverride, updateMilestone } from "../core/mutations.js";
 import { openReasonModal } from "../ui/reason-modal.js";
 import {
   busFactorView,
@@ -195,7 +196,19 @@ function bindEvents() {
     if (actionName === "export-bf-people") return exportBusFactorPeople();
     if (actionName === "save-settings") return toast("??????");
     if (actionName === "add-milestone-template") return toast("???????????");
-    if (actionName === "save-override") return toast("??? PMO ????????");
+    if (actionName === "save-override") {
+      const projectId = action.dataset.projectId;
+      const value = document.getElementById("override-health-select")?.value ?? "";
+      const note = document.getElementById("override-note-input")?.value ?? "";
+      try {
+        await setProjectOverride(projectId, value, note);
+        openProject(projectId);
+        toast(value ? "已保存手动覆盖" : "已清除手动覆盖");
+      } catch (err) {
+        toast(err.message);
+      }
+      return;
+    }
 
     // ── T7: drawer tab switch ──────────────────────────────────────────────
     const tabBtn = event.target.closest("[data-drawer-tab]");
@@ -241,7 +254,7 @@ function bindEvents() {
       });
       if (!result) { refreshDrawerTab(); return; }
       try {
-        updateMilestone(milestoneId, { [field]: newValue }, result.reason);
+        await updateMilestone(milestoneId, { [field]: newValue }, result.reason);
         refreshDrawerTab();
         toast("计划日期已更新");
       } catch (err) {
@@ -263,7 +276,7 @@ function bindEvents() {
       const input = document.getElementById("comment-input");
       if (!input?.value.trim()) return toast("评论内容不能为空");
       try {
-        appendComment(projectId, input.value.trim());
+        await appendComment(projectId, input.value.trim());
         state.drawer.activeTab = "comments";
         refreshDrawerTab();
         toast("评论已提交");
@@ -301,6 +314,31 @@ function bindEvents() {
     }
   });
 
+  // ── Multi-user re-sync ───────────────────────────────────────────────────
+  // The DB is shared across PMO users, so this tab's cache can go stale. Re-pull
+  // the whole bootstrap when the tab regains focus (cheap for a cockpit), and
+  // immediately after a `REV_CONFLICT` write (someone else saved first).
+  let syncing = false;
+  let lastSyncAt = Date.now();
+  async function syncFromServer({ force = false } = {}) {
+    if (syncing) return;
+    if (!force && Date.now() - lastSyncAt < 1500) return; // de-dupe focus+visibility
+    syncing = true;
+    try {
+      await bootstrap();
+      lastSyncAt = Date.now();
+      render();
+      refreshDrawerTab();
+    } catch {
+      // Network blip — keep showing the current cache rather than blanking out.
+    } finally {
+      syncing = false;
+    }
+  }
+  window.addEventListener("focus", () => syncFromServer());
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) syncFromServer(); });
+  window.addEventListener("pmo:stale", () => syncFromServer({ force: true }));
+
   document.addEventListener("input", (event) => {
     if (event.target.id === "project-search") {
       const term = event.target.value.trim().toLowerCase();
@@ -319,7 +357,35 @@ function bindEvents() {
     }
   });
 
-  document.addEventListener("change", (event) => {
+  document.addEventListener("change", async (event) => {
+    // ── CSV import (admin upload dropzones) ────────────────────────────────
+    const importKind = event.target.dataset.import;
+    if (importKind) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = importKind === "project"
+          ? parseProjectCsv(text)
+          : parseResourceAllocationCsv(text);
+        if (parsed.errors.length) {
+          const e = parsed.errors[0];
+          throw new Error(`第 ${e.row} 行 ${e.field}：${e.message}`);
+        }
+        const count = importKind === "project"
+          ? await apiImportProjects(parsed.validRows, file.name)
+          : await apiImportAllocations(parsed.validRows, file.name);
+        render();
+        const warn = parsed.warnings.length ? `（${parsed.warnings.length} 条警告）` : "";
+        toast(`已导入 ${count} 行${warn}`);
+      } catch (err) {
+        toast(`导入失败：${err.message}`);
+      } finally {
+        event.target.value = ""; // allow re-selecting the same file
+      }
+      return;
+    }
+
     // ── T7: actual date inputs ─────────────────────────────────────────────
     const { actualStart, actualEnd } = event.target.dataset;
     const milestoneIdForActual = actualStart ?? actualEnd;
@@ -327,7 +393,7 @@ function bindEvents() {
       const field = actualStart ? "actual_start_date" : "actual_end_date";
       const newValue = event.target.value || null;
       try {
-        updateMilestone(milestoneIdForActual, { [field]: newValue });
+        await updateMilestone(milestoneIdForActual, { [field]: newValue });
         refreshDrawerTab();
         toast(newValue ? "日期已更新" : "日期已清除");
       } catch (err) {
