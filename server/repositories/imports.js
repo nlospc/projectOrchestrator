@@ -67,6 +67,81 @@ export function replaceAllocations(rows, filename, importedBy) {
  * pm, category, dept, biz, family, gate, init, level, product, tech, batch,
  * override }).
  */
+export function upsertMilestones(rows, filename, importedBy) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const upsert = db.prepare(`
+    INSERT INTO milestones (
+      id, project_id, name, sort_order,
+      planned_start_date, planned_end_date,
+      actual_start_date, actual_end_date,
+      rev, created_at, updated_at
+    ) VALUES (
+      @id, @project_id, @name, @sort_order,
+      @planned_start, @planned_end,
+      @actual_start, @actual_end,
+      1, @now, @now
+    )
+    ON CONFLICT(id) DO UPDATE SET
+      name = excluded.name,
+      planned_start_date = excluded.planned_start_date,
+      planned_end_date = excluded.planned_end_date,
+      actual_start_date = excluded.actual_start_date,
+      actual_end_date = excluded.actual_end_date,
+      updated_at = @now, rev = milestones.rev + 1
+  `);
+  const orderCounters = new Map();
+  db.transaction(() => {
+    for (const m of rows) {
+      const seq = (orderCounters.get(m.projectId) ?? 0) + 1;
+      orderCounters.set(m.projectId, seq);
+      upsert.run({
+        id: m.id,
+        project_id: m.projectId,
+        name: m.name,
+        sort_order: seq,
+        planned_start: m.plannedStart ?? null,
+        planned_end: m.plannedEnd,
+        actual_start: m.actualStart ?? null,
+        actual_end: m.actualEnd ?? null,
+        now,
+      });
+    }
+    recordBatch(db, 'milestone', filename, rows.length, importedBy);
+  })();
+  return rows.length;
+}
+
+export function applyOverrides(rows, filename, importedBy) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const update = db.prepare(`
+    UPDATE projects SET
+      override_health = @override_health,
+      override_note = @override_note,
+      override_by = @override_by,
+      override_at = @now,
+      rev = rev + 1,
+      updated_at = @now
+    WHERE id = @id
+  `);
+  let applied = 0;
+  db.transaction(() => {
+    for (const o of rows) {
+      const info = update.run({
+        id: o.projectId,
+        override_health: o.override ?? '',
+        override_note: o.overrideNote ?? '',
+        override_by: o.updatedBy ?? 'PMO Admin',
+        now,
+      });
+      if (info.changes > 0) applied++;
+    }
+    recordBatch(db, 'override', filename, rows.length, importedBy);
+  })();
+  return applied;
+}
+
 export function upsertProjects(rows, filename, importedBy) {
   const db = getDb();
   const now = new Date().toISOString();

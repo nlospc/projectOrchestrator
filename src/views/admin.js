@@ -15,10 +15,12 @@ export function uploadView() {
         </div>
         <button class="ghost-button" data-action="download-project-template">下载项目模板</button>
       </div>
-      <div class="dropzone"><div><strong>上传项目 Excel</strong><p class="muted">建议包含 Project 与 Milestone 两张表；模板内已放入当前设计案例。</p><label class="primary-button" style="cursor:pointer">解析并导入项目 CSV<input type="file" accept=".csv" data-import="project" hidden></label></div></div>
+      <div class="dropzone"><div><strong>上传项目主数据</strong><p class="muted">项目编号 / 名称 / 健康度 / PM 等字段。</p><label class="primary-button" style="cursor:pointer">解析并导入项目 CSV<input type="file" accept=".csv" data-import="project" hidden></label></div></div>
+      <div class="dropzone" style="margin-top:8px"><div><strong>上传里程碑</strong><p class="muted">按项目编号关联，需先导入项目主数据。</p><label class="primary-button" style="cursor:pointer">解析并导入里程碑 CSV<input type="file" accept=".csv" data-import="milestone" hidden></label></div></div>
+      <div class="dropzone" style="margin-top:8px"><div><strong>上传健康覆盖</strong><p class="muted">可选，PMO 手动标记红 / 黄 / 绿灯。</p><label class="primary-button" style="cursor:pointer">解析并导入覆盖 CSV<input type="file" accept=".csv" data-import="override" hidden></label></div></div>
       <div class="stack" style="margin-top:14px">
-        ${uploadRow("Project Sheet", `${projects.length} 行样例`, "项目主数据字段完整", "G")}
-        ${uploadRow("Milestone Sheet", `${milestones.length} 行样例`, "按项目编号关联里程碑", "G")}
+        ${uploadRow("Project Sheet", `${projects.length} 行`, "项目主数据字段完整", "G")}
+        ${uploadRow("Milestone Sheet", `${milestones.length} 行`, "按项目编号关联里程碑", "G")}
         ${uploadRow("PMO Override", "可选", "手动健康度覆盖仍由系统保存", "Y")}
       </div>
     </section>
@@ -37,6 +39,7 @@ export function uploadView() {
         ${uploadRow("计算字段", "负荷值 / 角色状态键", "系统根据模板字段自动计算", "G")}
       </div>
     </section>
+    <div id="import-result" class="panel import-result" hidden></div>
   </div>`;
 }
 

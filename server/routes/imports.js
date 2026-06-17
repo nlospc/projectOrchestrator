@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { replaceAllocations, upsertProjects } from '../repositories/imports.js';
+import { applyOverrides, replaceAllocations, upsertMilestones, upsertProjects } from '../repositories/imports.js';
 
 const router = Router();
 
@@ -21,6 +21,30 @@ router.post('/import/projects', (req, res) => {
     const { rows, filename = null } = req.body;
     if (!Array.isArray(rows)) return res.status(422).json({ error: 'rows array required' });
     const count = upsertProjects(rows, filename);
+    res.json({ ok: true, count });
+  } catch (err) {
+    res.status(409).json({ error: err.message });
+  }
+});
+
+// POST /api/import/milestones  — upsert milestones by id
+router.post('/import/milestones', (req, res) => {
+  try {
+    const { rows, filename = null } = req.body;
+    if (!Array.isArray(rows)) return res.status(422).json({ error: 'rows array required' });
+    const count = upsertMilestones(rows, filename);
+    res.json({ ok: true, count });
+  } catch (err) {
+    res.status(409).json({ error: err.message });
+  }
+});
+
+// POST /api/import/overrides  — apply health overrides to existing projects
+router.post('/import/overrides', (req, res) => {
+  try {
+    const { rows, filename = null } = req.body;
+    if (!Array.isArray(rows)) return res.status(422).json({ error: 'rows array required' });
+    const count = applyOverrides(rows, filename);
     res.json({ ok: true, count });
   } catch (err) {
     res.status(409).json({ error: err.message });

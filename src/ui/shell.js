@@ -1,8 +1,8 @@
 import { projectFilterRoutes, routeGroups, routes } from "../config/routes.js";
 import { filteredProjects, personStats } from "../core/selectors.js";
 import { $ } from "../core/utils.js";
-import { apiImportAllocations, apiImportProjects, bootstrap, milestones, projects } from "../core/data-store.js";
-import { parseProjectCsv, parseResourceAllocationCsv } from "../core/importers.js";
+import { apiImportAllocations, apiImportMilestones, apiImportOverrides, apiImportProjects, bootstrap, milestones, projects } from "../core/data-store.js";
+import { parseMilestoneCsv, parseOverrideCsv, parseProjectCsv, parseResourceAllocationCsv } from "../core/importers.js";
 import { state } from "../state/app-state.js";
 import { downloadProjectTemplate, downloadResourceTemplate, settingsView, uploadView } from "../views/admin.js";
 import { dashboardView, drawerTabContent, openProject, projectsView, timeline } from "../views/projects.js";
@@ -93,6 +93,32 @@ function toast(message) {
   window.setTimeout(() => {
     element.hidden = true;
   }, 2200);
+}
+
+const importKindLabels = { project: "项目", milestone: "里程碑", override: "健康覆盖", resource: "资源" };
+
+function showImportResult({ kind, filename, errors, warnings, count }) {
+  const panel = document.getElementById("import-result");
+  if (!panel) return;
+  const label = importKindLabels[kind] ?? kind;
+  const lines = [];
+  if (errors.length) {
+    lines.push(`<p class="import-status import-error">导入失败 — ${errors.length} 个错误</p>`);
+    const shown = errors.slice(0, 8);
+    lines.push(`<ul class="import-issues">${shown.map((e) => `<li>第 ${e.row} 行 <strong>${e.field}</strong>：${e.message}</li>`).join("")}</ul>`);
+    if (errors.length > 8) lines.push(`<p class="muted">…还有 ${errors.length - 8} 个错误</p>`);
+  } else {
+    lines.push(`<p class="import-status import-ok">已成功导入 ${count} 行${label}数据</p>`);
+  }
+  if (warnings.length) {
+    lines.push(`<p class="import-warn">⚠ ${warnings.length} 条警告</p>`);
+    const shown = warnings.slice(0, 5);
+    lines.push(`<ul class="import-issues">${shown.map((w) => `<li>第 ${w.row} 行 ${w.field}：${w.message}</li>`).join("")}</ul>`);
+    if (warnings.length > 5) lines.push(`<p class="muted">…还有 ${warnings.length - 5} 条警告</p>`);
+  }
+  lines.push(`<p class="muted" style="margin-top:6px">文件：${filename}</p>`);
+  panel.innerHTML = `<div class="import-result-head"><strong>${label}导入结果</strong><button class="ghost-button" onclick="this.closest('.import-result').hidden=true">关闭</button></div>${lines.join("")}`;
+  panel.hidden = false;
 }
 
 const routeViews = {
@@ -365,23 +391,35 @@ function bindEvents() {
       if (!file) return;
       try {
         const text = await file.text();
-        const parsed = importKind === "project"
-          ? parseProjectCsv(text)
-          : parseResourceAllocationCsv(text);
+        const parsers = {
+          project: () => parseProjectCsv(text),
+          milestone: () => parseMilestoneCsv(text),
+          override: () => parseOverrideCsv(text),
+          resource: () => parseResourceAllocationCsv(text),
+        };
+        const apis = {
+          project: (rows, name) => apiImportProjects(rows, name),
+          milestone: (rows, name) => apiImportMilestones(rows, name),
+          override: (rows, name) => apiImportOverrides(rows, name),
+          resource: (rows, name) => apiImportAllocations(rows, name),
+        };
+        const parser = parsers[importKind];
+        const api = apis[importKind];
+        if (!parser || !api) throw new Error(`Unknown import type: ${importKind}`);
+        const parsed = parser();
         if (parsed.errors.length) {
+          showImportResult({ kind: importKind, filename: file.name, errors: parsed.errors, warnings: parsed.warnings, count: 0 });
           const e = parsed.errors[0];
           throw new Error(`第 ${e.row} 行 ${e.field}：${e.message}`);
         }
-        const count = importKind === "project"
-          ? await apiImportProjects(parsed.validRows, file.name)
-          : await apiImportAllocations(parsed.validRows, file.name);
+        const count = await api(parsed.validRows, file.name);
         render();
-        const warn = parsed.warnings.length ? `（${parsed.warnings.length} 条警告）` : "";
-        toast(`已导入 ${count} 行${warn}`);
+        showImportResult({ kind: importKind, filename: file.name, errors: [], warnings: parsed.warnings, count });
+        toast(`已导入 ${count} 行`);
       } catch (err) {
         toast(`导入失败：${err.message}`);
       } finally {
-        event.target.value = ""; // allow re-selecting the same file
+        event.target.value = "";
       }
       return;
     }

@@ -144,6 +144,36 @@ export async function apiImportProjects(rows, filename) {
   return count;
 }
 
+export async function apiImportMilestones(rows, filename) {
+  const res = await fetch('/api/import/milestones', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rows, filename }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || res.statusText);
+  }
+  const { count } = await res.json();
+  await bootstrap();
+  return count;
+}
+
+export async function apiImportOverrides(rows, filename) {
+  const res = await fetch('/api/import/overrides', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rows, filename }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || res.statusText);
+  }
+  const { count } = await res.json();
+  await bootstrap();
+  return count;
+}
+
 export async function apiImportAllocations(rows, filename) {
   const res = await fetch('/api/import/allocations', {
     method: 'POST',
