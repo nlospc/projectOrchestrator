@@ -16,6 +16,8 @@
   --red-bg: #f4dfdc;
   --gray: #787774;
   --gray-bg: #ebe8e4;
+  --orange: #b36a1a;
+  --orange-bg: #fdefd8;
   --shadow: 0 8px 24px rgba(55, 53, 47, 0.08);
   font-family: Inter, "WenQuanYi Zen Hei", "Microsoft YaHei", Arial, sans-serif;
 }
@@ -592,6 +594,33 @@ textarea {
 .badge.gray {
   color: var(--gray);
   background: var(--gray-bg);
+}
+
+/* project grade badges: S(red) A(orange) B(yellow) C(green) D(gray) */
+.badge.grade-S { color: var(--red);    background: var(--red-bg);    }
+.badge.grade-A { color: var(--orange); background: var(--orange-bg); }
+.badge.grade-B { color: var(--yellow); background: var(--yellow-bg); }
+.badge.grade-C { color: var(--green);  background: var(--green-bg);  }
+.badge.grade-D { color: var(--gray);   background: var(--gray-bg);   }
+
+/* definition reference tables in settings panels */
+.def-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.def-table th,
+.def-table td {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.def-table thead th {
+  color: var(--muted);
+  font-weight: 600;
+}
+.def-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .stack {

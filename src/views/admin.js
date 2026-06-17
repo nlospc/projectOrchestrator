@@ -3,6 +3,7 @@ import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { downloadCsvTemplate } from "../core/files.js";
 import { milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, resourceTemplateSchema } from "../core/template-schemas.js";
 import { badge, loadFor } from "../core/utils.js";
+import { gateDefinitions, gradeDefinitions, healthDefinitions } from "../config/definitions.js";
 
 export function uploadView() {
   return `<div class="upload-layout">
@@ -110,6 +111,27 @@ export function settingsView() {
         <label>项目模板必填字段<textarea rows="3">项目编号、项目名称、健康度、复杂度、项目状态、当前PM</textarea></label>
         <label>资源模板必填字段<textarea rows="3">系统、项目、项目复杂度、项目状态、角色、人员、工时投入占比</textarea></label>
       </div>
+    </section>
+    <section class="panel settings-panel settings-wide">
+      <div class="settings-head"><h2>项目分级标准</h2><span class="muted">按复杂度和治理层级自动推荐分级</span></div>
+      <table class="def-table">
+        <thead><tr><th>分级</th><th>颜色</th><th>含义</th><th>门禁节奏</th></tr></thead>
+        <tbody>${gradeDefinitions.map((g) => `<tr><td><span class="badge grade-${g.value}">${g.value}</span></td><td>${g.color}</td><td>${g.meaning}</td><td>${g.checkCycle}</td></tr>`).join("")}</tbody>
+      </table>
+    </section>
+    <section class="panel settings-panel settings-wide">
+      <div class="settings-head"><h2>健康度标准</h2><span class="muted">系统自动计算，PMO 可手动覆盖</span></div>
+      <table class="def-table">
+        <thead><tr><th>健康度</th><th>颜色</th><th>触发条件</th></tr></thead>
+        <tbody>${healthDefinitions.map((h) => `<tr><td><span class="badge ${h.value}">${h.label}</span></td><td>${h.color}</td><td>${h.meaning}</td></tr>`).join("")}</tbody>
+      </table>
+    </section>
+    <section class="panel settings-panel settings-wide">
+      <div class="settings-head"><h2>门禁阶段定义</h2><span class="muted">G0–G6 阶段交付物清单</span></div>
+      <table class="def-table">
+        <thead><tr><th>门禁</th><th>名称</th><th>交付物</th></tr></thead>
+        <tbody>${gateDefinitions.map((g) => `<tr><td><strong>${g.value}</strong></td><td>${g.label}</td><td>${g.deliverables}</td></tr>`).join("")}</tbody>
+      </table>
     </section>
   </div>`;
 }

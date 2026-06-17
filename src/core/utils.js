@@ -1,5 +1,6 @@
 import { projects } from "./data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
+import { healthByValue } from "../config/definitions.js";
 
 
 
@@ -25,7 +26,7 @@ export function loadClass(value) {
 }
 
 export function healthLabel(value) {
-  return value === "R" ? "红灯" : value === "Y" ? "黄灯" : value === "G" ? "绿灯" : "未设置";
+  return healthByValue[value]?.label ?? "未设置";
 }
 
 export function badge(value) {
