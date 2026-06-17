@@ -39,7 +39,6 @@ export function uploadView() {
         ${uploadRow("计算字段", "负荷值 / 角色状态键", "系统根据模板字段自动计算", "G")}
       </div>
     </section>
-    <div id="import-result" class="panel import-result" hidden></div>
   </div>`;
 }
 

@@ -2693,11 +2693,18 @@ button.chart-bar:hover strong {
 /* ─── Import result panel ────────────────────────────────────────────────── */
 
 .import-result {
-  grid-column: 1 / -1;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 900;
+  width: 420px;
+  max-height: 60vh;
+  overflow-y: auto;
   padding: 16px 20px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
+  box-shadow: 0 4px 24px rgba(0,0,0,.12);
 }
 
 .import-result-head {

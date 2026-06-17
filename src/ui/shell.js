@@ -97,20 +97,25 @@ function toast(message) {
 
 const importKindLabels = { project: "项目", milestone: "里程碑", override: "健康覆盖", resource: "资源" };
 
-function showImportResult({ kind, filename, errors, warnings, count }) {
+function showImportResult({ kind, filename, loading, errors, warnings, count }) {
   const panel = document.getElementById("import-result");
   if (!panel) return;
   const label = importKindLabels[kind] ?? kind;
+  if (loading) {
+    panel.innerHTML = `<div class="import-result-head"><strong>${label}导入中…</strong></div><p class="muted">正在解析并写入 ${filename}，请稍候</p>`;
+    panel.hidden = false;
+    return;
+  }
   const lines = [];
-  if (errors.length) {
+  if (errors && errors.length) {
     lines.push(`<p class="import-status import-error">导入失败 — ${errors.length} 个错误</p>`);
     const shown = errors.slice(0, 8);
-    lines.push(`<ul class="import-issues">${shown.map((e) => `<li>第 ${e.row} 行 <strong>${e.field}</strong>：${e.message}</li>`).join("")}</ul>`);
+    lines.push(`<ul class="import-issues">${shown.map((e) => `<li>${e.row ? `第 ${e.row} 行 ` : ""}<strong>${e.field}</strong>：${e.message}</li>`).join("")}</ul>`);
     if (errors.length > 8) lines.push(`<p class="muted">…还有 ${errors.length - 8} 个错误</p>`);
   } else {
     lines.push(`<p class="import-status import-ok">已成功导入 ${count} 行${label}数据</p>`);
   }
-  if (warnings.length) {
+  if (warnings && warnings.length) {
     lines.push(`<p class="import-warn">⚠ ${warnings.length} 条警告</p>`);
     const shown = warnings.slice(0, 5);
     lines.push(`<ul class="import-issues">${shown.map((w) => `<li>第 ${w.row} 行 ${w.field}：${w.message}</li>`).join("")}</ul>`);
@@ -345,10 +350,11 @@ function bindEvents() {
   // the whole bootstrap when the tab regains focus (cheap for a cockpit), and
   // immediately after a `REV_CONFLICT` write (someone else saved first).
   let syncing = false;
+  let importing = false;
   let lastSyncAt = Date.now();
   async function syncFromServer({ force = false } = {}) {
-    if (syncing) return;
-    if (!force && Date.now() - lastSyncAt < 1500) return; // de-dupe focus+visibility
+    if (syncing || importing) return;
+    if (!force && Date.now() - lastSyncAt < 1500) return;
     syncing = true;
     try {
       await bootstrap();
@@ -389,6 +395,8 @@ function bindEvents() {
     if (importKind) {
       const file = event.target.files?.[0];
       if (!file) return;
+      importing = true;
+      showImportResult({ kind: importKind, filename: file.name, loading: true });
       try {
         const text = await file.text();
         const parsers = {
@@ -409,16 +417,15 @@ function bindEvents() {
         const parsed = parser();
         if (parsed.errors.length) {
           showImportResult({ kind: importKind, filename: file.name, errors: parsed.errors, warnings: parsed.warnings, count: 0 });
-          const e = parsed.errors[0];
-          throw new Error(`第 ${e.row} 行 ${e.field}：${e.message}`);
+          return;
         }
         const count = await api(parsed.validRows, file.name);
         render();
         showImportResult({ kind: importKind, filename: file.name, errors: [], warnings: parsed.warnings, count });
-        toast(`已导入 ${count} 行`);
       } catch (err) {
-        toast(`导入失败：${err.message}`);
+        showImportResult({ kind: importKind, filename: file.name, errors: [{ row: 0, field: "-", message: err.message }], warnings: [], count: 0 });
       } finally {
+        importing = false;
         event.target.value = "";
       }
       return;
