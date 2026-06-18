@@ -189,9 +189,19 @@ export function timeline(list) {
   ]);
 
   return `<div class="monitor-board" data-monitor-board>
-    <div class="monitor-board-content">
-      <div class="project-list-pane" data-project-list-pane>
+    <div class="monitor-board-headers">
+      <div class="project-list-header">
         <div class="project-list-head">项目列表</div>
+      </div>
+      <div class="gantt-header">
+        <div class="gantt-head">
+          ${months.map(m => `<span>${monthLabel(m)}</span>`).join("")}
+          ${showToday ? `<div class="month-today-line" style="left:${todayLeft}%"></div>` : ""}
+        </div>
+      </div>
+    </div>
+    <div class="monitor-board-content" data-gantt-scroll>
+      <div class="project-list-pane" data-project-list-pane>
         ${rows.map(row =>
           row.type === "group"
             ? groupRow(row.group)
@@ -199,12 +209,8 @@ export function timeline(list) {
         ).join("")}
       </div>
       <div class="gantt-pane">
-        <div class="gantt-scroll" data-gantt-scroll>
+        <div class="gantt-scroll">
           <div class="gantt-canvas" style="--month-count:${months.length}">
-            <div class="gantt-head">
-              ${months.map(m => `<span>${monthLabel(m)}</span>`).join("")}
-              ${showToday ? `<div class="month-today-line" style="left:${todayLeft}%"></div>` : ""}
-            </div>
             ${rows.map(row =>
               row.type === "group"
                 ? ganttGroupRow(row.group, months)

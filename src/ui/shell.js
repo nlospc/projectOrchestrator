@@ -151,24 +151,6 @@ const routeViews = {
 };
 
 function setupMonitorBoardScrollSync() {
-  const projectListPane = document.querySelector("[data-project-list-pane]");
-  const ganttScroll = document.querySelector("[data-gantt-scroll]");
-  const monitorBoard = document.querySelector("[data-monitor-board]");
-
-  if (!projectListPane || !ganttScroll || !monitorBoard) return;
-
-  let isSyncing = false;
-
-  const syncScroll = (source, target) => {
-    if (isSyncing) return;
-    isSyncing = true;
-    target.scrollTop = source.scrollTop;
-    isSyncing = false;
-  };
-
-  projectListPane.addEventListener("scroll", () => syncScroll(projectListPane, ganttScroll));
-  ganttScroll.addEventListener("scroll", () => syncScroll(ganttScroll, projectListPane));
-
   adjustMonitorBoardHeight();
   window.addEventListener("resize", () => adjustMonitorBoardHeight());
 }

@@ -758,18 +758,37 @@ tbody tr:hover {
   color: var(--muted);
 }
 
+.monitor-board-headers {
+  display: flex;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 11;
+  background: #fff;
+}
+
+.project-list-header {
+  flex: 0 0 360px;
+  border-right: 1px solid var(--line);
+}
+
+.gantt-header {
+  flex: 1;
+  overflow: hidden;
+}
+
 .monitor-board-content {
   display: flex;
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: auto;
 }
 
 .project-list-pane {
   flex: 0 0 360px;
   border-right: 1px solid var(--line);
   background: #fff;
-  overflow-y: auto;
-  overflow-x: hidden;
   position: relative;
 }
 
@@ -784,14 +803,10 @@ tbody tr:hover {
   align-items: center;
   height: 44px;
   padding: 0 14px;
-  border-bottom: 1px solid var(--line);
   background: var(--surface-2);
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
 .project-group-row {
@@ -893,7 +908,6 @@ tbody tr:hover {
 .gantt-scroll {
   flex: 1;
   overflow-x: auto;
-  overflow-y: hidden;
 }
 
 .gantt-canvas {
@@ -902,13 +916,9 @@ tbody tr:hover {
 }
 
 .gantt-head {
-  position: sticky;
-  top: 0;
-  z-index: 10;
   display: grid;
   grid-template-columns: repeat(var(--month-count), minmax(132px, 1fr));
   height: 44px;
-  border-bottom: 1px solid var(--line);
   background: var(--surface-2);
   color: var(--muted);
   font-size: 12px;
