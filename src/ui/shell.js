@@ -153,6 +153,16 @@ const routeViews = {
 function setupMonitorBoardScrollSync() {
   adjustMonitorBoardHeight();
   window.addEventListener("resize", () => adjustMonitorBoardHeight());
+
+  // Keep the month header aligned with the bars when the body scrolls
+  // horizontally. The header is overflow:hidden, so mirror its scrollLeft.
+  const ganttScroll = document.querySelector("[data-monitor-board] .gantt-scroll");
+  const ganttHeader = document.querySelector("[data-monitor-board] .gantt-header");
+  if (ganttScroll && ganttHeader) {
+    ganttScroll.addEventListener("scroll", () => {
+      ganttHeader.scrollLeft = ganttScroll.scrollLeft;
+    });
+  }
 }
 
 function adjustMonitorBoardHeight() {

@@ -193,7 +193,7 @@ export function timeline(list) {
     ...g.projects.map(p => ({ type: "project", project: p })),
   ]);
 
-  return `<div class="monitor-board" data-monitor-board>
+  return `<div class="monitor-board" data-monitor-board style="--month-count:${months.length}">
     <div class="monitor-board-headers">
       <div class="project-list-header">
         <div class="project-list-head">项目列表</div>
