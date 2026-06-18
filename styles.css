@@ -406,7 +406,7 @@ textarea {
 
 .gantt-group-control {
   position: relative;
-  z-index: 5;
+  z-index: 31;
 }
 
 .gantt-group-toggle {
