@@ -164,9 +164,6 @@ export function render() {
   if (globalFilter) globalFilter.hidden = !showProjectFilters;
   const view = $("#view");
   view.innerHTML = (routeViews[state.route] || dashboardView)();
-  if (state.route === "projects") {
-    setupMonitorBoardScrollSync();
-  }
 }
 
 function goToRoute(nextRoute) {
@@ -174,43 +171,6 @@ function goToRoute(nextRoute) {
   state.route = nextRoute;
   window.location.hash = nextRoute;
   render();
-}
-
-function setupMonitorBoardScrollSync() {
-  const projectListPane = document.querySelector("[data-project-list-pane]");
-  const ganttScroll = document.querySelector("[data-gantt-scroll]");
-  const monitorBoard = document.querySelector("[data-monitor-board]");
-
-  if (!projectListPane || !ganttScroll || !monitorBoard) return;
-
-  let isSyncing = false;
-
-  const syncScroll = (source, target) => {
-    if (isSyncing) return;
-    isSyncing = true;
-    target.scrollTop = source.scrollTop;
-    isSyncing = false;
-  };
-
-  projectListPane.addEventListener("scroll", () => syncScroll(projectListPane, ganttScroll));
-  ganttScroll.addEventListener("scroll", () => syncScroll(ganttScroll, projectListPane));
-
-  adjustMonitorBoardHeight();
-  window.addEventListener("resize", () => adjustMonitorBoardHeight());
-}
-
-function adjustMonitorBoardHeight() {
-  const monitorBoard = document.querySelector("[data-monitor-board]");
-  if (!monitorBoard) return;
-
-  const rect = monitorBoard.getBoundingClientRect();
-  const topOffset = rect.top;
-  const toolbarAndPadding = 280;
-
-  const availableHeight = window.innerHeight - topOffset - 22;
-  const constrainedHeight = Math.max(420, availableHeight);
-
-  monitorBoard.style.maxHeight = `${constrainedHeight}px`;
 }
 
 function bindEvents() {
@@ -232,7 +192,6 @@ function bindEvents() {
       !term || [project.id, project.name, project.pm, project.product, project.tech].join(" ").toLowerCase().includes(term)
     );
     wrap.innerHTML = timeline(rows);
-    setupMonitorBoardScrollSync();
   }
 
   function suppressAutoSync(durationMs = 15000) {

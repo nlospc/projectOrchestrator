@@ -188,29 +188,6 @@ export function timeline(list) {
     ...g.projects.map(p => ({ type: "project", project: p })),
   ]);
 
-<<<<<<< HEAD
-  return `<div class="monitor-board">
-    <div class="project-list-pane">
-      <div class="project-list-head">项目列表</div>
-      ${rows.map(row =>
-        row.type === "group"
-          ? groupRow(row.group)
-          : projectListRow(row.project, today)
-      ).join("")}
-    </div>
-    <div class="gantt-pane">
-      <div class="gantt-scroll">
-        <div class="gantt-canvas" style="--month-count:${months.length}">
-          <div class="gantt-head">
-            ${months.map(m => `<span>${monthLabel(m)}</span>`).join("")}
-            ${showToday ? `<div class="month-today-line" style="left:${todayLeft}%"></div>` : ""}
-          </div>
-          ${rows.map(row =>
-            row.type === "group"
-              ? ganttGroupRow(row.group, months)
-              : ganttProjectRow(row.project, months, today, pct, wPct, showToday, todayLeft)
-          ).join("")}
-=======
   return `<div class="monitor-board" data-monitor-board>
     <div class="monitor-board-content">
       <div class="project-list-pane" data-project-list-pane>
@@ -234,7 +211,6 @@ export function timeline(list) {
                 : ganttProjectRow(row.project, months, today, pct, wPct, showToday, todayLeft)
             ).join("")}
           </div>
->>>>>>> b0a63fb (scroll page fixed)
         </div>
       </div>
     </div>
