@@ -2,8 +2,9 @@ import { allocations, milestoneNames, milestones, projects } from "../core/data-
 import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { downloadCsvTemplate } from "../core/files.js";
 import { milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, resourceTemplateSchema } from "../core/template-schemas.js";
-import { badge, loadFor } from "../core/utils.js";
+import { badge, escapeHtml, loadFor } from "../core/utils.js";
 import { gateDefinitions, gradeDefinitions, healthDefinitions } from "../config/definitions.js";
+import { state } from "../state/app-state.js";
 
 export function uploadView() {
   return `<div class="upload-layout">
@@ -15,9 +16,11 @@ export function uploadView() {
         </div>
         <button class="ghost-button" data-action="download-project-template">下载项目模板</button>
       </div>
-      <div class="dropzone"><div><strong>上传项目主数据</strong><p class="muted">项目编号 / 名称 / 健康度 / PM 等字段。</p><label class="primary-button" style="cursor:pointer">解析并导入项目 CSV<input type="file" accept=".csv" data-import="project" hidden></label></div></div>
-      <div class="dropzone" style="margin-top:8px"><div><strong>上传里程碑</strong><p class="muted">按项目编号关联，需先导入项目主数据。</p><label class="primary-button" style="cursor:pointer">解析并导入里程碑 CSV<input type="file" accept=".csv" data-import="milestone" hidden></label></div></div>
-      <div class="dropzone" style="margin-top:8px"><div><strong>上传健康覆盖</strong><p class="muted">可选，PMO 手动标记红 / 黄 / 绿灯。</p><label class="primary-button" style="cursor:pointer">解析并导入覆盖 CSV<input type="file" accept=".csv" data-import="override" hidden></label></div></div>
+      <div class="upload-import-grid">
+        ${uploadImportSlot("Project CSV", "项目主数据。导入后全量替换当前项目表，并清理旧项目关联数据。", "project", "解析并导入 Project CSV")}
+        ${uploadImportSlot("Milestone CSV", "里程碑计划与实际日期。导入后全量替换当前里程碑表。", "milestone", "解析并导入 Milestone CSV")}
+        ${uploadImportSlot("Override CSV", "PMO 手动健康度覆盖。导入前清空现有覆盖，再应用 CSV。", "override", "解析并导入 Override CSV")}
+      </div>
       <div class="stack" style="margin-top:14px">
         ${uploadRow("Project Sheet", `${projects.length} 行`, "项目主数据字段完整", "G")}
         ${uploadRow("Milestone Sheet", `${milestones.length} 行`, "按项目编号关联里程碑", "G")}
@@ -32,7 +35,9 @@ export function uploadView() {
         </div>
         <button class="ghost-button" data-action="download-resource-template">下载资源模板</button>
       </div>
-      <div class="dropzone"><div><strong>上传资源 Excel</strong><p class="muted">用于人员 x 项目、人员负载和 Bus Factor 统计。</p><label class="primary-button" style="cursor:pointer">解析并导入资源 CSV<input type="file" accept=".csv" data-import="resource" hidden></label></div></div>
+      <div class="upload-import-grid single">
+        ${uploadImportSlot("ResourceAllocation CSV", "人员 x 项目、人员负载和 Bus Factor 统计。导入后替换当前资源分配表。", "resource", "解析并导入资源 CSV")}
+      </div>
       <div class="stack" style="margin-top:14px">
         ${uploadRow("ResourceAllocation Sheet", `${allocations.length} 行 R2 数据`, "可直接用于当前资源视图", "G")}
         ${uploadRow("必填字段", "项目 / 角色 / 人员 / 工时投入占比", "缺失会阻断导入", "Y")}
@@ -44,6 +49,21 @@ export function uploadView() {
 
 export function uploadRow(name, rows, status, health) {
   return `<div class="upload-row"><span><strong>${name}</strong><br><span class="muted">${rows} · ${status}</span></span>${badge(health)}</div>`;
+}
+
+function uploadImportSlot(title, description, kind, buttonText) {
+  const current = state.uploads[kind] || { tone: "idle", message: "等待选择 CSV 文件" };
+  return `<div class="dropzone upload-slot" data-upload-kind="${kind}">
+    <div>
+      <strong>${escapeHtml(title)}</strong>
+      <p class="muted">${escapeHtml(description)}</p>
+      <label class="primary-button" style="cursor:pointer">
+        ${escapeHtml(buttonText)}
+        <input type="file" accept=".csv" data-import="${kind}" hidden>
+      </label>
+      <div class="upload-status ${escapeHtml(current.tone)}" role="status">${escapeHtml(current.message)}</div>
+    </div>
+  </div>`;
 }
 
 export function downloadResourceTemplate() {

@@ -11,7 +11,10 @@ export const allocations = [];
 export const milestoneNames = [];
 
 export async function bootstrap() {
-  const res = await fetch('/api/bootstrap');
+  const res = await fetch('/api/bootstrap', {
+    cache: 'no-store',
+    headers: { 'Cache-Control': 'no-cache' },
+  });
   if (!res.ok) throw new Error(`Bootstrap failed: ${res.status}`);
   const data = await res.json();
 
@@ -129,8 +132,8 @@ export async function apiAppendComment(projectId, body, authorName) {
   return comment;
 }
 
-export async function apiImportProjects(rows, filename) {
-  const res = await fetch('/api/import/projects', {
+async function postImport(path, rows, filename) {
+  const res = await fetch(path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ rows, filename }),
@@ -139,54 +142,25 @@ export async function apiImportProjects(rows, filename) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || res.statusText);
   }
-  const { count } = await res.json();
+  const result = await res.json();
   await bootstrap(); // refresh whole cache from authoritative DB
-  return count;
+  return result;
+}
+
+export async function apiImportProjects(rows, filename) {
+  return postImport('/api/import/projects', rows, filename);
 }
 
 export async function apiImportMilestones(rows, filename) {
-  const res = await fetch('/api/import/milestones', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rows, filename }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
-  }
-  const { count } = await res.json();
-  await bootstrap();
-  return count;
+  return postImport('/api/import/milestones', rows, filename);
 }
 
 export async function apiImportOverrides(rows, filename) {
-  const res = await fetch('/api/import/overrides', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rows, filename }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
-  }
-  const { count } = await res.json();
-  await bootstrap();
-  return count;
+  return postImport('/api/import/overrides', rows, filename);
 }
 
 export async function apiImportAllocations(rows, filename) {
-  const res = await fetch('/api/import/allocations', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rows, filename }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
-  }
-  const { count } = await res.json();
-  await bootstrap();
-  return count;
+  return postImport('/api/import/allocations', rows, filename);
 }
 
 export async function apiPatchProject(id, patch, rev = null) {

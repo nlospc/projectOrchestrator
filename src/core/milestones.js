@@ -30,7 +30,7 @@
  *
  * seg_start formula (Locked Call A, revised 2026-06-14):
  *   i = 0:   M.actual_start_date ?? M.planned_start_date
- *   i > 0:   prev.actual_end_date ?? M.actual_start_date ?? M.planned_start_date
+ *   i > 0:   M.actual_start_date ?? prev.actual_end_date ?? M.planned_start_date
  *
  * Dispatch order (Locked Call B — ⑤ precedes ④):
  *   if A != null:
@@ -69,17 +69,22 @@ export function computeSegments(milestones, project, today) {
   return milestones.map((m, i) => {
     const P = pd(m.planned_end_date);
     const A = m.actual_end_date ? pd(m.actual_end_date) : null;
+    const prev = i > 0 ? milestones[i - 1] : null;
+    const upstreamFinishedLate = Boolean(
+      prev?.actual_end_date &&
+      prev?.planned_end_date &&
+      pd(prev.actual_end_date).getTime() > pd(prev.planned_end_date).getTime()
+    );
 
     // seg_start — Locked Call A
     let segStart;
     if (i === 0) {
       segStart = m.actual_start_date ? pd(m.actual_start_date) : pd(m.planned_start_date);
     } else {
-      const prev = milestones[i - 1];
-      if (prev.actual_end_date) {
-        segStart = pd(prev.actual_end_date);
-      } else if (m.actual_start_date) {
+      if (m.actual_start_date) {
         segStart = pd(m.actual_start_date);
+      } else if (prev.actual_end_date) {
+        segStart = pd(prev.actual_end_date);
       } else {
         segStart = pd(m.planned_start_date);
       }
@@ -142,7 +147,7 @@ export function computeSegments(milestones, project, today) {
       // ③ 未来在轨
       scenario = 3;
       segEnd = P;
-      hue = "green";
+      hue = upstreamFinishedLate ? "amber" : "green";
       tone = "ghost";
       deviationDays = 0;
       eroded = false;

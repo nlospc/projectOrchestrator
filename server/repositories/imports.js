@@ -61,91 +61,16 @@ export function replaceAllocations(rows, filename, importedBy) {
 }
 
 /**
- * Upsert projects by id. Preserves existing rows' milestones/comments
- * (we never delete projects here, so ON DELETE CASCADE never fires).
+ * Full-replace projects from the upload file. Deleting projects intentionally
+ * cascades to milestones/comments so the uploaded master data is authoritative.
  * `rows` are parsed project rows ({ id, name, health, complexity, status,
  * pm, category, dept, biz, family, gate, init, level, product, tech, batch,
  * override }).
  */
-export function upsertMilestones(rows, filename, importedBy) {
+export function replaceProjects(rows, filename, importedBy) {
   const db = getDb();
   const now = new Date().toISOString();
-  const upsert = db.prepare(`
-    INSERT INTO milestones (
-      id, project_id, name, sort_order,
-      planned_start_date, planned_end_date,
-      actual_start_date, actual_end_date,
-      rev, created_at, updated_at
-    ) VALUES (
-      @id, @project_id, @name, @sort_order,
-      @planned_start, @planned_end,
-      @actual_start, @actual_end,
-      1, @now, @now
-    )
-    ON CONFLICT(id) DO UPDATE SET
-      name = excluded.name,
-      planned_start_date = excluded.planned_start_date,
-      planned_end_date = excluded.planned_end_date,
-      actual_start_date = excluded.actual_start_date,
-      actual_end_date = excluded.actual_end_date,
-      updated_at = @now, rev = milestones.rev + 1
-  `);
-  const orderCounters = new Map();
-  db.transaction(() => {
-    for (const m of rows) {
-      const seq = (orderCounters.get(m.projectId) ?? 0) + 1;
-      orderCounters.set(m.projectId, seq);
-      upsert.run({
-        id: m.id,
-        project_id: m.projectId,
-        name: m.name,
-        sort_order: seq,
-        planned_start: m.plannedStart ?? null,
-        planned_end: m.plannedEnd,
-        actual_start: m.actualStart ?? null,
-        actual_end: m.actualEnd ?? null,
-        now,
-      });
-    }
-    recordBatch(db, 'milestone', filename, rows.length, importedBy);
-  })();
-  return rows.length;
-}
-
-export function applyOverrides(rows, filename, importedBy) {
-  const db = getDb();
-  const now = new Date().toISOString();
-  const update = db.prepare(`
-    UPDATE projects SET
-      override_health = @override_health,
-      override_note = @override_note,
-      override_by = @override_by,
-      override_at = @now,
-      rev = rev + 1,
-      updated_at = @now
-    WHERE id = @id
-  `);
-  let applied = 0;
-  db.transaction(() => {
-    for (const o of rows) {
-      const info = update.run({
-        id: o.projectId,
-        override_health: o.override ?? '',
-        override_note: o.overrideNote ?? '',
-        override_by: o.updatedBy ?? 'PMO Admin',
-        now,
-      });
-      if (info.changes > 0) applied++;
-    }
-    recordBatch(db, 'override', filename, rows.length, importedBy);
-  })();
-  return applied;
-}
-
-export function upsertProjects(rows, filename, importedBy) {
-  const db = getDb();
-  const now = new Date().toISOString();
-  const upsert = db.prepare(`
+  const insert = db.prepare(`
     INSERT INTO projects (
       id, code, category, dept, biz, family, name, summary,
       owner_name, owner_avatar, program_group,
@@ -161,17 +86,11 @@ export function upsertProjects(rows, filename, importedBy) {
       @gate, @complexity, @status, @init, @level, @pm, @product, @tech, @batch,
       0, 1, @now, @now
     )
-    ON CONFLICT(id) DO UPDATE SET
-      code = excluded.code, category = excluded.category, dept = excluded.dept,
-      biz = excluded.biz, family = excluded.family, name = excluded.name,
-      health = excluded.health, gate = excluded.gate, complexity = excluded.complexity,
-      status = excluded.status, init = excluded.init, level = excluded.level,
-      pm = excluded.pm, product = excluded.product, tech = excluded.tech,
-      batch = excluded.batch, updated_at = @now, rev = projects.rev + 1
   `);
   db.transaction(() => {
+    db.prepare('DELETE FROM projects').run();
     for (const p of rows) {
-      upsert.run({
+      insert.run({
         id: p.id,
         code: p.code ?? null,
         category: p.category ?? null,
@@ -180,7 +99,7 @@ export function upsertProjects(rows, filename, importedBy) {
         family: p.family ?? null,
         name: p.name,
         summary: p.summary ?? null,
-        owner_name: p.pm ?? null,
+        owner_name: p.product ?? p.pm ?? null,
         owner_avatar: '👤',
         program_group: p.programGroup ?? null,
         planned_start_date: p.planned_start_date ?? null,
@@ -201,6 +120,91 @@ export function upsertProjects(rows, filename, importedBy) {
       });
     }
     recordBatch(db, 'project', filename, rows.length, importedBy);
+  })();
+  return rows.length;
+}
+
+/**
+ * Full-replace milestones from the upload file. CSV order becomes the
+ * milestone order within each project.
+ */
+export function replaceMilestones(rows, filename, importedBy) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const insert = db.prepare(`
+    INSERT INTO milestones (id, project_id, name, sort_order,
+      planned_start_date, planned_end_date, actual_start_date, actual_end_date,
+      rev, created_at, updated_at)
+    VALUES (@id, @project_id, @name, @sort_order,
+      @planned_start_date, @planned_end_date, @actual_start_date, @actual_end_date,
+      1, @now, @now)
+  `);
+
+  db.transaction(() => {
+    db.prepare('DELETE FROM milestones').run();
+    const nextOrderByProject = new Map();
+    for (const m of rows) {
+      const project = db.prepare('SELECT id FROM projects WHERE id = ?').get(m.projectId);
+      if (!project) throw new Error(`Project ${m.projectId} does not exist`);
+      const sortOrder = nextOrderByProject.get(m.projectId) || 1;
+      nextOrderByProject.set(m.projectId, sortOrder + 1);
+      insert.run({
+        id: m.id,
+        project_id: m.projectId,
+        name: m.name,
+        sort_order: sortOrder,
+        planned_start_date: m.planned_start_date ?? null,
+        planned_end_date: m.planned_end_date,
+        actual_start_date: m.actual_start_date || null,
+        actual_end_date: m.actual_end_date || null,
+        now,
+      });
+    }
+    recordBatch(db, 'milestone', filename, rows.length, importedBy);
+  })();
+  return rows.length;
+}
+
+/**
+ * Full-replace PMO health overrides by clearing all existing overrides first,
+ * then applying the rows in the upload file.
+ */
+export function replaceProjectOverrides(rows, filename, importedBy) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const update = db.prepare(`
+    UPDATE projects SET
+      override_health = @override_health,
+      override_note = @override_note,
+      override_by = @override_by,
+      override_at = @override_at,
+      updated_at = @now,
+      rev = rev + 1
+    WHERE id = @id
+  `);
+
+  db.transaction(() => {
+    db.prepare(`
+      UPDATE projects SET
+        override_health = '',
+        override_note = '',
+        override_by = '',
+        override_at = '',
+        updated_at = @now,
+        rev = rev + 1
+    `).run({ now });
+    for (const row of rows) {
+      const result = update.run({
+        id: row.projectId,
+        override_health: row.override,
+        override_note: row.overrideNote ?? '',
+        override_by: row.updatedBy || importedBy || 'PMO Admin',
+        override_at: row.updatedAt ? `${row.updatedAt}T00:00:00.000Z` : now,
+        now,
+      });
+      if (result.changes === 0) throw new Error(`Project ${row.projectId} does not exist`);
+    }
+    recordBatch(db, 'override', filename, rows.length, importedBy);
   })();
   return rows.length;
 }

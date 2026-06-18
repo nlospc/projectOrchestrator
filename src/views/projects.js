@@ -220,7 +220,7 @@ export function groupProjects(list, today = state.today) {
 
   function getKey(p) {
     if (groupBy === "dept")  return p.dept  || "未知部门";
-    if (groupBy === "owner") return p.owner?.name || p.pm || "未知负责人";
+    if (groupBy === "owner") return projectProductManagerName(p) || "未知负责人";
     if (groupBy === "rag")   return projectRag(p, today);
     return "__all__";
   }
@@ -272,7 +272,7 @@ export function groupRow(group) {
 export function projectListRow(project, today = state.today) {
   const rag = projectRag(project, today);
   const tooltip = escapeHtml(`${project.code || project.id}: ${project.summary || project.name}`);
-  const ownerName = escapeHtml(project.owner?.name || project.pm || "");
+  const ownerName = escapeHtml(projectProductManagerName(project));
   return `<button class="project-list-row${project.archived ? " archived-row" : ""}"
       data-open-project="${project.id}"
       title="${tooltip}">
@@ -282,6 +282,16 @@ export function projectListRow(project, today = state.today) {
       <span class="owner-avatar">${project.owner?.avatar || "👤"}</span>${ownerName}
     </span>
   </button>`;
+}
+
+function projectProductManagerName(project) {
+  return normalizePersonList(project.product || project.owner?.name || project.pm || "");
+}
+
+function normalizePersonList(value) {
+  return String(value || "")
+    .replace(/[、,，]+/g, "、")
+    .replace(/^、|、$/g, "");
 }
 
 export function ganttGroupRow(group, months) {

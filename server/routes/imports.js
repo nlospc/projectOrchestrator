@@ -1,9 +1,14 @@
 import { Router } from 'express';
-import { applyOverrides, replaceAllocations, upsertMilestones, upsertProjects } from '../repositories/imports.js';
+import {
+  replaceAllocations,
+  replaceMilestones,
+  replaceProjectOverrides,
+  replaceProjects,
+} from '../repositories/imports.js';
 
 const router = Router();
 
-// POST /api/import/allocations  — full replace of the allocations table
+// POST /api/import/allocations - full replace of the allocations table.
 router.post('/import/allocations', (req, res) => {
   try {
     const { rows, filename = null } = req.body;
@@ -15,36 +20,36 @@ router.post('/import/allocations', (req, res) => {
   }
 });
 
-// POST /api/import/projects  — upsert projects by id (children preserved)
+// POST /api/import/projects - full replace of the projects table.
 router.post('/import/projects', (req, res) => {
   try {
     const { rows, filename = null } = req.body;
     if (!Array.isArray(rows)) return res.status(422).json({ error: 'rows array required' });
-    const count = upsertProjects(rows, filename);
+    const count = replaceProjects(rows, filename);
     res.json({ ok: true, count });
   } catch (err) {
     res.status(409).json({ error: err.message });
   }
 });
 
-// POST /api/import/milestones  — upsert milestones by id
+// POST /api/import/milestones - full replace of the milestones table.
 router.post('/import/milestones', (req, res) => {
   try {
     const { rows, filename = null } = req.body;
     if (!Array.isArray(rows)) return res.status(422).json({ error: 'rows array required' });
-    const count = upsertMilestones(rows, filename);
+    const count = replaceMilestones(rows, filename);
     res.json({ ok: true, count });
   } catch (err) {
     res.status(409).json({ error: err.message });
   }
 });
 
-// POST /api/import/overrides  — apply health overrides to existing projects
+// POST /api/import/overrides - full replace of PMO health overrides.
 router.post('/import/overrides', (req, res) => {
   try {
     const { rows, filename = null } = req.body;
     if (!Array.isArray(rows)) return res.status(422).json({ error: 'rows array required' });
-    const count = applyOverrides(rows, filename);
+    const count = replaceProjectOverrides(rows, filename);
     res.json({ ok: true, count });
   } catch (err) {
     res.status(409).json({ error: err.message });

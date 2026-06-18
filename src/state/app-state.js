@@ -6,6 +6,7 @@ export const state = {
   filters: { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "none", includeArchived: false },
   resourceFilters: { system: "all", role: "all", outsource: "all", projectFocus: null },
   drawer: { projectId: null, scrollToMilestoneId: null, activeTab: "milestones" },
+  uploads: {},
   settings: { delayRedThresholdDays: 7, redOverdueDays: 7 },
   today: (() => {
     const param = new URLSearchParams(window.location.search).get("today");

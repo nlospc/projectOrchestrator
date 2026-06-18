@@ -34,6 +34,7 @@ const booleanAliases = {
 
 export function parseCsv(text) {
   const source = String(text || "").replace(/^\uFEFF/, "");
+  const delimiter = detectDelimiter(source);
   const rows = [];
   let row = [];
   let cell = "";
@@ -55,7 +56,7 @@ export function parseCsv(text) {
     }
     if (char === '"') {
       inQuotes = true;
-    } else if (char === ",") {
+    } else if (char === delimiter) {
       row.push(cell);
       cell = "";
     } else if (char === "\n") {
@@ -71,6 +72,14 @@ export function parseCsv(text) {
   row.push(cell);
   rows.push(row);
   return rows.filter((items) => items.some((value) => String(value).trim() !== ""));
+}
+
+function detectDelimiter(source) {
+  const firstLine = String(source || "").split(/\r?\n/, 1)[0] || "";
+  const candidates = [",", "\t", ";"];
+  return candidates
+    .map((delimiter) => ({ delimiter, count: firstLine.split(delimiter).length - 1 }))
+    .sort((a, b) => b.count - a.count)[0]?.delimiter || ",";
 }
 
 export function mapHeaders(headers, schema) {
@@ -135,11 +144,28 @@ export function validateRows(rows, schema, options = {}) {
 }
 
 export function parseProjectCsv(text) {
-  return parseTypedCsv(text, projectTemplateSchema, (rows) => rows.map((row) => ({ ...row, override: row.override || "" })));
+  return parseTypedCsv(text, projectTemplateSchema, (rows, warnings) =>
+    rows.map((row, index) => {
+      const defaults = {
+        health: "G",
+        complexity: 5,
+        status: "未设置",
+        pm: "未指定",
+      };
+      const normalized = { ...row, override: row.override || "" };
+      Object.entries(defaults).forEach(([field, value]) => {
+        if (isBlank(normalized[field])) {
+          normalized[field] = value;
+          warnings.push({ row: index + 2, field, message: `${field} is blank; defaults to ${value}` });
+        }
+      });
+      return normalized;
+    })
+  );
 }
 
 export function parseMilestoneCsv(text, projectRows = projects) {
-  return parseTypedCsv(text, milestoneTemplateSchema, (rows) => rows.map((row) => ({ ...row, delay: delayDays(row.plannedEnd, row.actualEnd), note: row.note || "" })), {
+  return parseTypedCsv(text, milestoneTemplateSchema, (rows) => rows.map((row) => ({ ...row, delay: delayDays(row.planned_end_date, row.actual_end_date), note: row.note || "" })), {
     projects: projectRows,
     requireProjectMatch: true,
   });
@@ -172,7 +198,8 @@ function parseTypedCsv(text, schema, transform, validationOptions = {}) {
   const rows = parseCsv(text);
   const headers = rows[0] || [];
   const { fields, missingRequired, unknownHeaders } = mapHeaders(headers, schema);
-  const errors = missingRequired.map((field) => ({ row: 1, field: field.key, message: `${field.label} header is required` }));
+  const headerList = headers.map((header) => String(header).trim()).filter(Boolean).join(" / ") || "空表头";
+  const errors = missingRequired.map((field) => ({ row: 1, field: field.key, message: `${field.label} header is required；当前表头：${headerList}` }));
   const warnings = unknownHeaders.map((header) => ({ row: 1, field: header, message: "Unknown header will be ignored" }));
   const rawRows = rows.slice(1).map((values) => {
     const row = {};
