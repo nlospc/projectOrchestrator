@@ -747,10 +747,16 @@ tbody tr:hover {
 }
 
 .monitor-board {
-  display: flex;
-  flex-direction: column;
+  position: relative;
   min-height: 420px;
   max-height: calc(100vh - 280px);
+  overflow: auto;
+}
+
+.monitor-grid {
+  display: grid;
+  grid-template-columns: 360px max(980px, calc(var(--month-count) * 132px));
+  width: max-content;
 }
 
 .monitor-board-empty {
@@ -758,38 +764,10 @@ tbody tr:hover {
   color: var(--muted);
 }
 
-.monitor-board-headers {
-  display: flex;
-  flex: 0 0 auto;
-  border-bottom: 1px solid var(--line);
+.gantt-header {
   position: sticky;
   top: 0;
-  z-index: 11;
-  background: #fff;
-}
-
-.project-list-header {
-  flex: 0 0 360px;
-  border-right: 1px solid var(--line);
-}
-
-.gantt-header {
-  flex: 1;
-  overflow: hidden;
-}
-
-.monitor-board-content {
-  display: flex;
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: auto;
-}
-
-.project-list-pane {
-  flex: 0 0 360px;
-  border-right: 1px solid var(--line);
-  background: #fff;
-  position: relative;
+  z-index: 20;
 }
 
 .project-list-head,
@@ -807,6 +785,15 @@ tbody tr:hover {
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
+  border-right: 1px solid var(--line);
+}
+
+/* Frozen top-left corner: stays put on both scroll axes */
+.mb-corner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 30;
 }
 
 .project-group-row {
@@ -815,7 +802,11 @@ tbody tr:hover {
   height: 38px;
   padding: 0 14px;
   border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
   background: #f4f1eb;
+  position: sticky;
+  left: 0;
+  z-index: 10;
 }
 
 .project-group-row strong {
@@ -836,10 +827,14 @@ tbody tr:hover {
   width: 100%;
   border: 0;
   border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
   padding: 10px 14px;
   background: #fff;
   text-align: left;
   cursor: pointer;
+  position: sticky;
+  left: 0;
+  z-index: 10;
 }
 
 .project-list-row:hover {
@@ -894,25 +889,6 @@ tbody tr:hover {
 
 .health-dot.G::before {
   background: var(--green);
-}
-
-.gantt-pane {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  background: #fff;
-}
-
-.gantt-scroll {
-  flex: 1;
-  overflow-x: auto;
-}
-
-.gantt-canvas {
-  position: relative;
-  min-width: max(980px, calc(var(--month-count) * 132px));
 }
 
 .gantt-head {

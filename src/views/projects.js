@@ -193,37 +193,27 @@ export function timeline(list) {
     ...g.projects.map(p => ({ type: "project", project: p })),
   ]);
 
+  // One scroll container (.monitor-board) holds a 2-column grid: a frozen
+  // project-list column (sticky left) and the gantt timeline. Each logical row
+  // emits exactly two grid cells (list + gantt) so their heights stay locked,
+  // and the single container yields one vertical + one horizontal scrollbar.
+  const bodyCells = rows.map(row =>
+    row.type === "group"
+      ? groupRow(row.group) + ganttGroupRow(row.group, months)
+      : projectListRow(row.project, today) +
+        ganttProjectRow(row.project, months, today, pct, wPct, showToday, todayLeft)
+  ).join("");
+
   return `<div class="monitor-board" data-monitor-board style="--month-count:${months.length}">
-    <div class="monitor-board-headers">
-      <div class="project-list-header">
-        <div class="project-list-head">项目列表</div>
-      </div>
-      <div class="gantt-header">
+    <div class="monitor-grid">
+      <div class="project-list-head mb-corner">项目列表</div>
+      <div class="gantt-header mb-monthhead">
         <div class="gantt-head">
           ${months.map(m => `<span>${monthLabel(m)} ${m.getFullYear()}</span>`).join("")}
           ${showToday ? `<div class="month-today-line" style="left:${todayLeft}%"></div>` : ""}
         </div>
       </div>
-    </div>
-    <div class="monitor-board-content" data-gantt-scroll>
-      <div class="project-list-pane" data-project-list-pane>
-        ${rows.map(row =>
-          row.type === "group"
-            ? groupRow(row.group)
-            : projectListRow(row.project, today)
-        ).join("")}
-      </div>
-      <div class="gantt-pane">
-        <div class="gantt-scroll">
-          <div class="gantt-canvas" style="--month-count:${months.length}">
-            ${rows.map(row =>
-              row.type === "group"
-                ? ganttGroupRow(row.group, months)
-                : ganttProjectRow(row.project, months, today, pct, wPct, showToday, todayLeft)
-            ).join("")}
-          </div>
-        </div>
-      </div>
+      ${bodyCells}
     </div>
   </div>`;
 }
