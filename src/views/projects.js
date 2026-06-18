@@ -151,9 +151,14 @@ export function timeline(list) {
     return ms.length ? computeSegments(ms, p, today) : [];
   });
 
-  const startDates = list.map(p => new Date(p.planned_start_date)).filter(d => !isNaN(d));
+  // Project imports do not require project-level dates, so milestone bounds must
+  // also contribute to the axis or valid uploaded milestones never render.
+  const startDates = [
+    ...list.filter(p => p.planned_start_date).map(p => new Date(p.planned_start_date)),
+    ...allSegs.map(s => s.segStart),
+  ].filter(d => !isNaN(d));
   const endDates = [
-    ...list.map(p => new Date(p.planned_end_date)),
+    ...list.filter(p => p.planned_end_date).map(p => new Date(p.planned_end_date)),
     ...allSegs.map(s => s.segEnd),
     today,
   ].filter(d => !isNaN(d));
@@ -195,7 +200,7 @@ export function timeline(list) {
       </div>
       <div class="gantt-header">
         <div class="gantt-head">
-          ${months.map(m => `<span>${monthLabel(m)}</span>`).join("")}
+          ${months.map(m => `<span>${monthLabel(m)} ${m.getFullYear()}</span>`).join("")}
           ${showToday ? `<div class="month-today-line" style="left:${todayLeft}%"></div>` : ""}
         </div>
       </div>
