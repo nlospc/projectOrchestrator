@@ -747,9 +747,16 @@ tbody tr:hover {
 }
 
 .monitor-board {
-  display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   min-height: 420px;
+  max-height: calc(100vh - 280px);
+}
+
+.monitor-board-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 .monitor-board-empty {
@@ -758,9 +765,12 @@ tbody tr:hover {
 }
 
 .project-list-pane {
+  flex: 0 0 360px;
   border-right: 1px solid var(--line);
   background: #fff;
-  overflow-x: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
 }
 
 .project-list-head,
@@ -779,6 +789,9 @@ tbody tr:hover {
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .project-group-row {
@@ -869,12 +882,16 @@ tbody tr:hover {
 }
 
 .gantt-pane {
-  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
   background: #fff;
 }
 
 .gantt-scroll {
-  width: 100%;
+  flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
 }
@@ -885,7 +902,9 @@ tbody tr:hover {
 }
 
 .gantt-head {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: grid;
   grid-template-columns: repeat(var(--month-count), minmax(132px, 1fr));
   height: 44px;
