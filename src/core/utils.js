@@ -1,4 +1,3 @@
-import { projects } from "./data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { healthByValue } from "../config/definitions.js";
 
@@ -11,9 +10,8 @@ export function effectiveHealth(project) {
 }
 
 export function loadFor(allocation) {
-  const project = projects.find((item) => item.id === allocation.projectId);
-  const status = project?.status || allocation.status;
-  const complexity = project?.complexity || allocation.complexity || 3;
+  const status = allocation.status;
+  const complexity = allocation.complexity || 3;
   const statusWeight = statusWeights[status] ?? 0.5;
   const roleWeight = roleWeights[allocation.role]?.[status] ?? statusWeight;
   return allocation.timeRatio * Math.sqrt(complexity / 5) * roleWeight;
