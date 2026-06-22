@@ -507,21 +507,25 @@ export function workloadView() {
 
 export function busFactorRows() {
   return resourceProjects().map((project) => {
-    const contributors = projectAllocations([project]).map((a) => ({ ...a, load: loadFor(a) })).sort((a, b) => b.load - a.load);
-    const total = contributors.reduce((sum, item) => sum + item.load, 0);
+    const peopleLoads = new Map();
     const roleCoverage = new Map();
-    contributors.forEach((item) => {
-      const people = roleCoverage.get(item.role) || new Set();
-      people.add(item.person);
-      roleCoverage.set(item.role, people);
-    });
+    let total = 0;
+    for (const allocation of projectAllocations([project])) {
+      const load = loadFor(allocation);
+      if (load <= 0) continue;
+      total += load;
+      peopleLoads.set(allocation.person, (peopleLoads.get(allocation.person) || 0) + load);
+      const people = roleCoverage.get(allocation.role) || new Set();
+      people.add(allocation.person);
+      roleCoverage.set(allocation.role, people);
+    }
+    const contributors = [...peopleLoads.entries()].map(([person, load]) => ({ person, load })).sort((a, b) => b.load - a.load);
     let acc = 0;
     let bf = 0;
     for (const item of contributors) {
-      if (total > 0 && acc / total < 0.5) {
-        acc += item.load;
-        bf += 1;
-      }
+      acc += item.load;
+      bf += 1;
+      if (total > 0 && acc / total >= 0.5) break;
     }
     const top = contributors[0];
     const singleRoles = [...roleCoverage.entries()].filter(([, people]) => people.size === 1).map(([role]) => role);
@@ -530,7 +534,7 @@ export function busFactorRows() {
       contributors,
       total,
       bf,
-      peopleCount: unique(contributors.map((item) => item.person)).length,
+      peopleCount: contributors.length,
       topPerson: top?.person || "-",
       topLoad: top?.load || 0,
       topShare: total ? (top?.load || 0) / total : 0,

@@ -125,9 +125,10 @@ All of the above are identical in definition to the prototype views (`/`, `/matr
 
 | ID | Deviation | Status | Recommendation |
 |---|---|---|---|
-| **D1** | `loadFor` does `projects.find(id === allocation.projectId)` to source status/complexity, but allocation `projectId` (`PV / SRtracking`) never matches PMO `projects[].id` (`P-2401`), so the join is **dead** and values always come from the allocation record (matching the prototype). | Open | Remove the dead join from `src/core/utils.js` `loadFor` (read `status`/`complexity` straight off the allocation). Behaviour-preserving on current data. _Code change — deferred per "document + verify only" scope._ |
-| **D2** | Role-weight resolver fallback differs: prototype `Zm = V_[role]?.[status] ?? 0`; PMO `roleWeights[role]?.[status] ?? statusWeights[status] ?? 0.5`. | Open | Never fires on current seed (all allocation roles ∈ the 12-role set). For an unknown imported role the prototype contributes **0** load; PMO fabricates a weight. Align to `?? 0` for fidelity, or keep `0.5` as a deliberate robustness choice — **decide at import-design time**. |
+| **D1** | `loadFor` previously performed a dead allocation-to-project join to source status/complexity. | Resolved | The dead join was removed in commit `c299519`; `loadFor` now reads status/complexity directly from the allocation record. |
+| **D2** | Role-weight resolver fallback differed from the prototype's `Zm = V_[role]?.[status] ?? 0`. | Resolved — aligned to `?? 0` | Unknown roles contribute 0 load, matching prototype fidelity. Validation warnings surface unknown roles at import time. |
 | **D3** | Resource world is standalone: `resourceProjects()` is synthesized from `allocations[]`, disjoint from the milestone/`projects[]` world. `projectResourceSummary()` therefore returns zeros. | By design | Matches the self-contained prototype. Cross-linking Gantt ↔ resource would require an allocation→`P-24xx` ID map (out of scope here). |
+| **D4** | Bus Factor previously ranked raw allocation rows instead of per-person totals. | Resolved | `busFactorRows` now aggregates load per person before ranking, matching prototype `h3`; zero-load allocations are skipped. |
 
 ---
 

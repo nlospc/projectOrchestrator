@@ -178,15 +178,15 @@ export function parseOverrideCsv(text, projectRows = projects) {
 export function parseResourceAllocationCsv(text) {
   return parseTypedCsv(text, resourceTemplateSchema, (rows, warnings) =>
     rows.map((row, index) => {
-      const statusWeight = statusWeights[row.status] ?? 0.5;
-      const roleWeight = roleWeights[row.role]?.[row.status] ?? statusWeight;
-      if (!statusWeights[row.status]) warnings.push({ row: index + 2, field: "status", message: "Unknown status; statusWeight defaults to 0.5" });
-      if (!roleWeights[row.role]?.[row.status]) warnings.push({ row: index + 2, field: "role", message: "Missing role/status matrix weight; roleWeight falls back to statusWeight" });
+      const statusWeight = statusWeights[row.status] ?? 0;
+      const roleWeight = roleWeights[row.role]?.[row.status] ?? 0;
+      if (statusWeights[row.status] == null) warnings.push({ row: index + 2, field: "status", message: "Unknown status; statusWeight defaults to 0" });
+      if (roleWeights[row.role]?.[row.status] == null) warnings.push({ row: index + 2, field: "role", message: "Missing role/status matrix weight; roleWeight defaults to 0" });
       return {
         ...row,
         statusWeight,
         roleWeight,
-        load: row.timeRatio * Math.sqrt((row.complexity || 3) / 5) * roleWeight,
+        load: row.timeRatio * Math.sqrt((row.complexity ?? 3) / 5) * roleWeight,
         personKey: row.person,
         roleStatusKey: `${row.role}|${row.status}`,
       };
