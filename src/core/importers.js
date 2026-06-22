@@ -181,7 +181,18 @@ export function parseResourceAllocationCsv(text) {
       const statusWeight = statusWeights[row.status] ?? 0;
       const roleWeight = roleWeights[row.role]?.[row.status] ?? 0;
       if (statusWeights[row.status] == null) warnings.push({ row: index + 2, field: "status", message: "Unknown status; statusWeight defaults to 0" });
-      if (roleWeights[row.role]?.[row.status] == null) warnings.push({ row: index + 2, field: "role", message: "Missing role/status matrix weight; roleWeight defaults to 0" });
+      if (roleWeights[row.role] == null) {
+        warnings.push({
+          row: index + 2,
+          field: "role",
+          code: "unknown-role",
+          person: row.person,
+          role: row.role,
+          message: `未知角色「${row.role}」（人员：${row.person}）不在权重矩阵中，负荷按 0 计算，不计入工作量统计`,
+        });
+      } else if (roleWeights[row.role]?.[row.status] == null) {
+        warnings.push({ row: index + 2, field: "role", message: "Missing role/status matrix weight; roleWeight defaults to 0" });
+      }
       return {
         ...row,
         statusWeight,

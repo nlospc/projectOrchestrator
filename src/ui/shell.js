@@ -562,6 +562,17 @@ function bindEvents() {
           const e = parsed.errors[0];
           throw new Error(`第 ${e.row} 行 ${e.field}：${e.message}`);
         }
+        const unknownRoles = parsed.warnings.filter((warning) => warning.code === "unknown-role");
+        if (unknownRoles.length) {
+          const lines = unknownRoles
+            .map((warning) => `第 ${warning.row} 行 · 人员「${warning.person || "—"}」· 角色「${warning.role || "—"}」`)
+            .join("\n");
+          window.alert(
+            `⚠ 检测到 ${unknownRoles.length} 个未知角色（不在权重矩阵中）。\n` +
+              `这些记录的负荷将按 0 计算，不计入工作量统计：\n\n${lines}\n\n` +
+              `如需计入，请先在角色权重矩阵中补充该角色，或修正角色名称。`
+          );
+        }
         setUploadStatus(importKind, "busy", `校验通过，正在生成差异预览...`);
         const diff = await previewImport(importKind, parsed.validRows);
         const confirmation = `即将导入：新增 ${diff.added} 行，变更 ${diff.changed} 行，删除 ${diff.removed} 行，不变 ${diff.unchanged} 行。确认导入？`;
