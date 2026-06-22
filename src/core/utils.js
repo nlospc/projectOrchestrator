@@ -66,3 +66,9 @@ export function escapeHtml(value) {
 export function detail(label, value) {
   return `<div class="detail-item"><span>${label}</span><strong>${value}</strong></div>`;
 }
+
+export function kpi(label, value, hint, status = "", action = "", actionValue = "") {
+  return `<article class="kpi ${action ? "clickable" : ""}" ${action ? `data-action="${action}" data-value="${actionValue}"` : ""}>
+    <span>${label}</span><strong>${value}</strong><small>${hint}</small>${status ? `<div style="margin-top:8px">${badge(status)}</div>` : ""}
+  </article>`;
+}

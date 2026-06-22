@@ -1,6 +1,6 @@
 import { comments, milestoneChangeLogs, milestones, projects } from "../core/data-store.js";
 import {
-  $, addMonths, badge, detail, effectiveHealth, escapeHtml,
+  $, addMonths, badge, detail, effectiveHealth, escapeHtml, kpi,
   monthEnd, monthLabel, monthStart,
 } from "../core/utils.js";
 import { computeSegments } from "../core/milestones.js";
@@ -58,11 +58,6 @@ export function dashboardView() {
     </div>`;
 }
 
-export function kpi(label, value, hint, status = "", action = "", actionValue = "") {
-  return `<article class="kpi ${action ? "clickable" : ""}" ${action ? `data-action="${action}" data-value="${actionValue}"` : ""}>
-    <span>${label}</span><strong>${value}</strong><small>${hint}</small>${status ? `<div style="margin-top:8px">${badge(status)}</div>` : ""}
-  </article>`;
-}
 
 export function barLine(label, value, total, status) {
   const width = total ? Math.max(4, Math.round((value / total) * 100)) : 0;
