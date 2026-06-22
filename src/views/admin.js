@@ -15,6 +15,7 @@ export function uploadView() {
           <p class="muted">用于项目主数据和关键里程碑，不包含任务颗粒度。</p>
         </div>
         <div>
+          <button class="ghost-button" data-action="export-all-xlsx">全部导出 Excel</button>
           <button class="ghost-button" data-action="export-all-csv">全部导出</button>
           <button class="ghost-button" data-action="download-project-template">下载项目模板</button>
         </div>
@@ -47,6 +48,15 @@ export function uploadView() {
         ${uploadRow("计算字段", "负荷值 / 角色状态键", "系统根据模板字段自动计算", "G")}
       </div>
     </section>
+    <section class="panel upload-card" style="grid-column:1/-1">
+      <div class="upload-card-head">
+        <div>
+          <h2>导入批次历史</h2>
+          <p class="muted">最近 50 次已提交的导入。</p>
+        </div>
+      </div>
+      <div id="import-history-list"><p class="muted">正在加载...</p></div>
+    </section>
   </div>`;
 }
 
@@ -55,14 +65,14 @@ export function uploadRow(name, rows, status, health) {
 }
 
 function uploadImportSlot(title, description, kind, buttonText, exportAction) {
-  const current = state.uploads[kind] || { tone: "idle", message: "等待选择 CSV 文件" };
+  const current = state.uploads[kind] || { tone: "idle", message: "等待选择 CSV 或 Excel 文件" };
   return `<div class="dropzone upload-slot" data-upload-kind="${kind}">
     <div>
       <strong>${escapeHtml(title)}</strong>
       <p class="muted">${escapeHtml(description)}</p>
       <label class="primary-button" style="cursor:pointer">
         ${escapeHtml(buttonText)}
-        <input type="file" accept=".csv" data-import="${kind}" hidden>
+        <input type="file" accept=".csv,.xlsx,.xls" data-import="${kind}" hidden>
       </label>
       <button class="ghost-button" data-action="${exportAction}">导出当前数据</button>
       <div class="upload-status ${escapeHtml(current.tone)}" role="status">${escapeHtml(current.message)}</div>

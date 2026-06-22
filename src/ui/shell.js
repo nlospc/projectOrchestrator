@@ -147,6 +147,62 @@ async function readCsvFile(file) {
   }
 }
 
+async function readXlsxFile(file) {
+  const data = await file.arrayBuffer();
+  if (!window.XLSX) throw new Error("Excel 解析组件未加载");
+  return window.XLSX.read(data, { type: "array" });
+}
+
+async function previewImport(kind, rows) {
+  const response = await fetch(`/api/import/${kind}/preview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rows }),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(error.error || response.statusText);
+  }
+  return response.json();
+}
+
+async function loadImportHistory() {
+  const container = document.getElementById("import-history-list");
+  if (!container) return;
+  try {
+    const response = await fetch("/api/import/history");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const { batches } = await response.json();
+    if (!batches.length) {
+      container.innerHTML = '<p class="muted">暂无导入记录</p>';
+      return;
+    }
+    const table = document.createElement("table");
+    table.className = "def-table";
+    table.innerHTML = "<thead><tr><th>时间</th><th>类型</th><th>文件名</th><th>行数</th><th>操作人</th></tr></thead>";
+    const body = document.createElement("tbody");
+    batches.forEach((batch) => {
+      const row = document.createElement("tr");
+      [
+        new Date(batch.imported_at).toLocaleString("zh-CN"),
+        batch.kind,
+        batch.filename || "-",
+        batch.row_count,
+        batch.imported_by || "-",
+      ].forEach((value) => {
+        const cell = document.createElement("td");
+        cell.textContent = String(value);
+        row.appendChild(cell);
+      });
+      body.appendChild(row);
+    });
+    table.appendChild(body);
+    container.replaceChildren(table);
+  } catch (error) {
+    container.textContent = `加载失败：${error.message}`;
+  }
+}
+
 const routeViews = {
   dashboard: dashboardView,
   projects: projectsView,
@@ -191,6 +247,7 @@ export function render() {
   if (globalFilter) globalFilter.hidden = !showProjectFilters;
   const view = $("#view");
   view.innerHTML = (routeViews[state.route] || dashboardView)();
+  if (state.route === "upload") loadImportHistory();
   if (state.route === "projects") {
     setupMonitorBoardScrollSync();
   }
@@ -283,6 +340,7 @@ function bindEvents() {
     if (actionName === "export-milestones-csv") return triggerDownload("/api/export/milestones");
     if (actionName === "export-overrides-csv") return triggerDownload("/api/export/overrides");
     if (actionName === "export-allocations-csv") return triggerDownload("/api/export/allocations");
+    if (actionName === "export-all-xlsx") return triggerDownload("/api/export/all.xlsx");
     if (actionName === "export-all-csv") {
       triggerDownload("/api/export/projects");
       window.setTimeout(() => triggerDownload("/api/export/milestones"), 80);
@@ -472,7 +530,7 @@ function bindEvents() {
   });
 
   document.addEventListener("change", async (event) => {
-    // ── CSV import (admin upload dropzones) ────────────────────────────────
+    // ── CSV/Excel import (admin upload dropzones) ──────────────────────────
     const importKind = event.target.dataset.import;
     if (importKind) {
       const file = event.target.files?.[0];
@@ -488,14 +546,31 @@ function bindEvents() {
       }
       setUploadStatus(importKind, "busy", `正在读取 ${file.name}...`);
       try {
-        const text = await readCsvFile(file);
+        const extension = file.name.split(".").pop()?.toLowerCase();
+        let text;
+        if (extension === "xlsx" || extension === "xls") {
+          const workbook = await readXlsxFile(file);
+          const firstSheetName = workbook.SheetNames[0];
+          if (!firstSheetName) throw new Error("Excel 文件中没有工作表");
+          text = window.XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheetName]);
+        } else {
+          text = await readCsvFile(file);
+        }
         setUploadStatus(importKind, "busy", `正在解析 ${handler.label}...`);
         const parsed = handler.parse(text);
         if (parsed.errors.length) {
           const e = parsed.errors[0];
           throw new Error(`第 ${e.row} 行 ${e.field}：${e.message}`);
         }
-        setUploadStatus(importKind, "busy", `校验通过，正在导入 ${parsed.validRows.length} 行...`);
+        setUploadStatus(importKind, "busy", `校验通过，正在生成差异预览...`);
+        const diff = await previewImport(importKind, parsed.validRows);
+        const confirmation = `即将导入：新增 ${diff.added} 行，变更 ${diff.changed} 行，删除 ${diff.removed} 行，不变 ${diff.unchanged} 行。确认导入？`;
+        setUploadStatus(importKind, "busy", confirmation);
+        if (!window.confirm(confirmation)) {
+          setUploadStatus(importKind, "idle", `已取消导入 · ${file.name}`);
+          return;
+        }
+        setUploadStatus(importKind, "busy", `正在导入 ${parsed.validRows.length} 行...`);
         const result = await handler.send(parsed.validRows, file.name);
         render();
         const warn = parsed.warnings.length ? `（${parsed.warnings.length} 条警告）` : "";
