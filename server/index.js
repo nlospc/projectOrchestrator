@@ -8,6 +8,7 @@ import projectsRouter from './routes/projects.js';
 import milestonesRouter from './routes/milestones.js';
 import commentsRouter from './routes/comments.js';
 import importsRouter from './routes/imports.js';
+import exportRouter from './routes/exports.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
@@ -33,6 +34,7 @@ app.use('/api', projectsRouter);
 app.use('/api', milestonesRouter);
 app.use('/api', commentsRouter);
 app.use('/api', importsRouter);
+app.use('/api', exportRouter);
 
 // Static: serve repo root (index.html, app.js, src/, styles.css)
 app.use(express.static(STATIC_ROOT));

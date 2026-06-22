@@ -14,12 +14,15 @@ export function uploadView() {
           <h2>项目数据上传</h2>
           <p class="muted">用于项目主数据和关键里程碑，不包含任务颗粒度。</p>
         </div>
-        <button class="ghost-button" data-action="download-project-template">下载项目模板</button>
+        <div>
+          <button class="ghost-button" data-action="export-all-csv">全部导出</button>
+          <button class="ghost-button" data-action="download-project-template">下载项目模板</button>
+        </div>
       </div>
       <div class="upload-import-grid">
-        ${uploadImportSlot("Project CSV", "项目主数据。导入后全量替换当前项目表，并清理旧项目关联数据。", "project", "解析并导入 Project CSV")}
-        ${uploadImportSlot("Milestone CSV", "里程碑计划与实际日期。导入后全量替换当前里程碑表。", "milestone", "解析并导入 Milestone CSV")}
-        ${uploadImportSlot("Override CSV", "PMO 手动健康度覆盖。导入前清空现有覆盖，再应用 CSV。", "override", "解析并导入 Override CSV")}
+        ${uploadImportSlot("Project CSV", "项目主数据。导入后全量替换当前项目表，并清理旧项目关联数据。", "project", "解析并导入 Project CSV", "export-projects-csv")}
+        ${uploadImportSlot("Milestone CSV", "里程碑计划与实际日期。导入后全量替换当前里程碑表。", "milestone", "解析并导入 Milestone CSV", "export-milestones-csv")}
+        ${uploadImportSlot("Override CSV", "PMO 手动健康度覆盖。导入前清空现有覆盖，再应用 CSV。", "override", "解析并导入 Override CSV", "export-overrides-csv")}
       </div>
       <div class="stack" style="margin-top:14px">
         ${uploadRow("Project Sheet", `${projects.length} 行`, "项目主数据字段完整", "G")}
@@ -36,7 +39,7 @@ export function uploadView() {
         <button class="ghost-button" data-action="download-resource-template">下载资源模板</button>
       </div>
       <div class="upload-import-grid single">
-        ${uploadImportSlot("ResourceAllocation CSV", "人员 x 项目、人员负载和 Bus Factor 统计。导入后替换当前资源分配表。", "resource", "解析并导入资源 CSV")}
+        ${uploadImportSlot("ResourceAllocation CSV", "人员 x 项目、人员负载和 Bus Factor 统计。导入后替换当前资源分配表。", "resource", "解析并导入资源 CSV", "export-allocations-csv")}
       </div>
       <div class="stack" style="margin-top:14px">
         ${uploadRow("ResourceAllocation Sheet", `${allocations.length} 行 R2 数据`, "可直接用于当前资源视图", "G")}
@@ -51,7 +54,7 @@ export function uploadRow(name, rows, status, health) {
   return `<div class="upload-row"><span><strong>${name}</strong><br><span class="muted">${rows} · ${status}</span></span>${badge(health)}</div>`;
 }
 
-function uploadImportSlot(title, description, kind, buttonText) {
+function uploadImportSlot(title, description, kind, buttonText, exportAction) {
   const current = state.uploads[kind] || { tone: "idle", message: "等待选择 CSV 文件" };
   return `<div class="dropzone upload-slot" data-upload-kind="${kind}">
     <div>
@@ -61,6 +64,7 @@ function uploadImportSlot(title, description, kind, buttonText) {
         ${escapeHtml(buttonText)}
         <input type="file" accept=".csv" data-import="${kind}" hidden>
       </label>
+      <button class="ghost-button" data-action="${exportAction}">导出当前数据</button>
       <div class="upload-status ${escapeHtml(current.tone)}" role="status">${escapeHtml(current.message)}</div>
     </div>
   </div>`;

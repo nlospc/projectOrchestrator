@@ -34,6 +34,15 @@ let eventsBound = false;
 let filtersBound = false;
 let suppressSyncUntil = 0;
 
+function triggerDownload(path) {
+  const link = document.createElement("a");
+  link.href = path;
+  link.download = "";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
 function initNav() {
   $("#nav").innerHTML = routeGroups
     .map((group) =>       `<div class="nav-group">
@@ -270,6 +279,17 @@ function bindEvents() {
     if (actionName === "mock-resource-upload") return toast(`??????? Excel?${personStats().length} ?????????`);
     if (actionName === "download-resource-template") return downloadResourceTemplate();
     if (actionName === "download-project-template") return downloadProjectTemplate();
+    if (actionName === "export-projects-csv") return triggerDownload("/api/export/projects");
+    if (actionName === "export-milestones-csv") return triggerDownload("/api/export/milestones");
+    if (actionName === "export-overrides-csv") return triggerDownload("/api/export/overrides");
+    if (actionName === "export-allocations-csv") return triggerDownload("/api/export/allocations");
+    if (actionName === "export-all-csv") {
+      triggerDownload("/api/export/projects");
+      window.setTimeout(() => triggerDownload("/api/export/milestones"), 80);
+      window.setTimeout(() => triggerDownload("/api/export/overrides"), 160);
+      window.setTimeout(() => triggerDownload("/api/export/allocations"), 240);
+      return;
+    }
     if (actionName === "export-workload-csv") return exportWorkloadCsv();
     if (actionName === "export-bf-projects") return exportBusFactorProjects();
     if (actionName === "export-bf-people") return exportBusFactorPeople();
