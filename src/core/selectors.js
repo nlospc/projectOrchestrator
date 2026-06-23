@@ -242,16 +242,17 @@ export function cockpitMetrics(projectList = filteredProjects()) {
     const segs = computeSegments(ms, p, today);
     let maxSlip = 0;
     let worstMilestone = ms[0]?.name || "";
-    for (const seg of segs) {
+    for (let si = 0; si < segs.length; si++) {
+      const seg = segs[si];
       let slip = 0;
       if (seg.scenario === 4) {
-        slip = Math.round((today - new Date(seg.milestone.planned_end_date)) / 86400000);
+        slip = seg.deviationDays || 0;
       } else if (seg.scenario === 2) {
         slip = seg.deviationDays || 0;
       }
       if (slip > maxSlip) {
         maxSlip = slip;
-        worstMilestone = seg.milestone?.name || worstMilestone;
+        worstMilestone = ms[si]?.name || worstMilestone;
       }
     }
     actNow.push({
