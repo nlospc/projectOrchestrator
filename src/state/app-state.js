@@ -1,7 +1,7 @@
 import { routes } from "../config/routes.js";
 
 export const state = {
-  route: window.location.hash.replace("#", "") || "dashboard",
+  route: window.location.hash.replace("#", "") || "cockpit",
   selectedProjectId: null,
   filters: { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "none", includeArchived: false },
   resourceFilters: { system: "all", role: "all", outsource: "all", projectFocus: null },
@@ -15,9 +15,9 @@ export const state = {
 };
 
 if (!routes.some(([id]) => id === state.route)) {
-  state.route = "dashboard";
+  state.route = "cockpit";
 }
 
 if (!routes.some(([id]) => id === state.route)) {
-  state.route = "dashboard";
+  state.route = "cockpit";
 }

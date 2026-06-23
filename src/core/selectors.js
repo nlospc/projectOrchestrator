@@ -2,6 +2,7 @@ import { allocations, milestones, projects } from "./data-store.js";
 import { state } from "../state/app-state.js";
 import { computeSegments } from "./milestones.js";
 import { effectiveHealth, loadFor, parseDate } from "./utils.js";
+import { busFactorRows, keyPeopleRiskRows } from "../views/resource.js";
 
 // ─── Role-category mapping for projectResourceSummary ────────────────────────
 // Roles not listed here fall into "开发" (catch-all for technical staff).
@@ -210,5 +211,126 @@ export function dashboardMetrics(list) {
     due,
     overload: stats.filter((person) => person.load >= 1.2).length,
     risks,
+  };
+}
+
+export function cockpitMetrics(projectList = filteredProjects()) {
+  const today = state.today ?? new Date();
+  const projectIds = new Set(projectList.map(p => p.id));
+
+  // 1.1 Delivery Confidence
+  let red = 0, yellow = 0, green = 0;
+  for (const p of projectList) {
+    const rag = projectRag(p, today);
+    if (rag === "R") red++;
+    else if (rag === "Y") yellow++;
+    else if (rag === "G") green++;
+  }
+  const total = red + yellow + green;
+  const index = total ? green / total : 0;
+
+  // 1.2 Act-Now Risk List
+  const riskProjects = projectList.filter(p => {
+    const rag = projectRag(p, today);
+    return rag === "R" || rag === "Y";
+  });
+  const actNow = [];
+  for (const p of riskProjects) {
+    const ms = milestones
+      .filter(m => m.projectId === p.id)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    const segs = computeSegments(ms, p, today);
+    let maxSlip = 0;
+    let worstMilestone = ms[0]?.name || "";
+    for (const seg of segs) {
+      let slip = 0;
+      if (seg.scenario === 4) {
+        slip = Math.round((today - new Date(seg.milestone.planned_end_date)) / 86400000);
+      } else if (seg.scenario === 2) {
+        slip = seg.deviationDays || 0;
+      }
+      if (slip > maxSlip) {
+        maxSlip = slip;
+        worstMilestone = seg.milestone?.name || worstMilestone;
+      }
+    }
+    actNow.push({
+      projectId: p.id,
+      projectName: p.name,
+      owner: p.pm || "",
+      dept: p.dept || "",
+      milestoneName: worstMilestone,
+      slipDays: maxSlip,
+      rag: projectRag(p, today),
+      impactScore: maxSlip * (p.complexity || 3),
+    });
+  }
+  actNow.sort((a, b) => b.impactScore - a.impactScore);
+
+  // 1.3 Delivery Wave
+  const upcoming = milestones.filter(m =>
+    !m.actual_end_date && projectIds.has(m.projectId)
+  );
+  const daysUntil = d => Math.round((new Date(d) - today) / 86400000);
+  const d30 = upcoming.filter(m => daysUntil(m.planned_end_date) <= 30).length;
+  const d60 = upcoming.filter(m => daysUntil(m.planned_end_date) <= 60).length;
+  const d90 = upcoming.filter(m => daysUntil(m.planned_end_date) <= 90).length;
+
+  // 1.4 Concentration Risk
+  const stats = personStats(projectList);
+  const bfRows = busFactorRows();
+  const bf1Count = bfRows.filter(r => r.bf <= 1).length;
+  const overAllocated = stats.filter(p => p.ratio > 1).length;
+  const overloaded = stats.filter(p => p.load >= 1.2).length;
+  const keyPersons = keyPeopleRiskRows(bfRows).slice(0, 5).map(kp => {
+    const personInfo = stats.find(s => s.person === kp.person);
+    return {
+      person: kp.person,
+      role: personInfo?.role || "",
+      ratio: personInfo?.ratio || 0,
+      load: kp.load,
+      singlePoint: kp.singlePoint,
+    };
+  });
+
+  // 1.5 Org Heatmap
+  const orgMap = new Map();
+  for (const p of projectList) {
+    const rag = projectRag(p, today);
+    if (rag === "gray") continue;
+    const biz = p.biz || "未分类";
+    const entry = orgMap.get(biz) || { biz, red: 0, yellow: 0, green: 0 };
+    if (rag === "R") entry.red++;
+    else if (rag === "Y") entry.yellow++;
+    else if (rag === "G") entry.green++;
+    orgMap.set(biz, entry);
+  }
+  const orgHeatmap = [...orgMap.values()].sort((a, b) => b.red - a.red || b.yellow - a.yellow);
+
+  // 1.6 Phase Distribution
+  const PHASE_BUCKETS = [
+    { label: "设计", statuses: ["需求调研", "产品设计"] },
+    { label: "开发", statuses: ["产品开发"] },
+    { label: "测试", statuses: ["产品自测", "UAT"] },
+    { label: "运维/上线", statuses: ["部署上线", "系统运维"] },
+  ];
+  const phases = PHASE_BUCKETS.map(b => ({
+    label: b.label,
+    count: projectList.filter(p => b.statuses.includes(p.status)).length,
+  }));
+
+  // 1.7 Workforce Utilization
+  const low = stats.filter(p => p.load < 0.6).length;
+  const mid = stats.filter(p => p.load >= 0.6 && p.load < 1.2).length;
+  const high = stats.filter(p => p.load >= 1.2).length;
+
+  return {
+    confidence: { index, red, yellow, green, delta: null },
+    actNow: actNow.slice(0, 6),
+    wave: { d30, d60, d90 },
+    concentration: { bf1Count, overAllocated, overloaded, keyPersons },
+    orgHeatmap,
+    phases,
+    workforce: { low, mid, high },
   };
 }

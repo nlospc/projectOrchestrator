@@ -2,6 +2,7 @@ export const routeGroups = [
   {
     label: "项目",
     routes: [
+      ["cockpit", "执行驾驶舱"],
       ["dashboard", "项目总览"],
       ["projects", "项目里程碑"],
     ],

@@ -2741,3 +2741,315 @@ button.chart-bar:hover strong {
 .drawer-resource-card {
   margin-top: 16px;
 }
+
+/* ═══ Execution Cockpit ═══ */
+
+.hero-strip {
+  display: grid;
+  grid-template-columns: 1.6fr repeat(4, 1fr);
+  gap: 16px;
+}
+
+.hero-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hero-card.confidence {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+}
+
+.hero-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+}
+.hero-card.confidence .hero-label { color: rgba(255,255,255,0.7); }
+
+.hero-value {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1.1;
+}
+.hero-card:not(.confidence) .hero-value { font-size: 32px; }
+
+.hero-delta {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.hero-card.confidence .hero-delta { color: rgba(255,255,255,0.5); }
+
+.hero-delta .placeholder {
+  display: inline-block;
+  width: 32px;
+  height: 14px;
+  background: var(--gray-bg);
+  border-radius: 3px;
+}
+.hero-card.confidence .hero-delta .placeholder {
+  background: rgba(255,255,255,0.15);
+}
+
+.hero-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ─── RAG Donut ─── */
+.rag-donut-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+.rag-donut {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+.rag-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.rag-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.rag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.rag-dot.R { background: var(--red); }
+.rag-dot.Y { background: var(--yellow); }
+.rag-dot.G { background: var(--green); }
+
+/* ─── Panel rows ─── */
+.panel-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+.panel-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.panel-badge.warn { background: var(--red-bg); color: var(--red); }
+.panel-badge.info { background: var(--gray-bg); color: var(--gray); }
+
+/* ─── Risk Table ─── */
+.risk-table { width: 100%; border-collapse: collapse; }
+.risk-table th {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: left;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--line);
+  letter-spacing: 0.3px;
+}
+.risk-table td {
+  padding: 10px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.risk-table tr:last-child td { border-bottom: none; }
+.risk-table .project-name { font-weight: 500; }
+.risk-table .owner { color: var(--muted); font-size: 12px; }
+.risk-table .slip-days {
+  font-weight: 600;
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
+}
+.risk-table .milestone-name { font-size: 12px; color: var(--muted); }
+
+.rag-tag {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  position: relative;
+  top: -1px;
+}
+.rag-tag.R { background: var(--red); }
+.rag-tag.Y { background: var(--yellow); }
+
+/* ─── Delivery Wave ─── */
+.wave-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 4px;
+}
+.wave-row {
+  display: grid;
+  grid-template-columns: 64px 1fr 32px;
+  align-items: center;
+  gap: 12px;
+}
+.wave-label { font-size: 13px; font-weight: 500; }
+.wave-track {
+  height: 28px;
+  background: var(--bg);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.wave-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+.wave-fill.urgent { background: var(--red); opacity: 0.75; }
+.wave-fill.soon { background: var(--yellow); opacity: 0.65; }
+.wave-fill.planned { background: var(--primary); opacity: 0.45; }
+.wave-count {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ─── Concentration Risk ─── */
+.conc-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.conc-stat {
+  text-align: center;
+  padding: 16px 8px;
+  background: var(--bg);
+  border-radius: 8px;
+}
+.conc-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.conc-stat-value.danger { color: var(--red); }
+.conc-stat-value.warning { color: var(--yellow); }
+.conc-stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+.key-person-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.key-person-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.key-person-row:last-child { border-bottom: none; }
+.key-person-name { font-weight: 500; }
+.key-person-role { font-size: 12px; color: var(--muted); }
+.key-person-load {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+.load-high { color: var(--red); }
+.load-med { color: var(--yellow); }
+
+/* ─── Org Heatmap ─── */
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: 120px repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.heatmap-cell {
+  padding: 10px 12px;
+  background: var(--surface);
+  font-size: 12px;
+  text-align: center;
+}
+.heatmap-cell.header {
+  background: var(--surface-2);
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+}
+.heatmap-cell.label {
+  text-align: left;
+  font-weight: 500;
+  background: var(--surface-2);
+}
+.heatmap-cell .count {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.heatmap-cell .count.R { color: var(--red); }
+.heatmap-cell .count.Y { color: var(--yellow); }
+.heatmap-cell .count.G { color: var(--green); }
+.heatmap-cell.hot { background: var(--red-bg); }
+.heatmap-cell.warm { background: var(--yellow-bg); }
+.heatmap-cell.cool { background: var(--green-bg); }
+
+/* ─── Trend stub ─── */
+.trend-stub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 8px 12px;
+  background: var(--bg);
+  border-radius: 6px;
+  border: 1px dashed var(--line-strong);
+}
+.trend-stub::before {
+  content: '';
+  width: 40px;
+  height: 16px;
+  background: repeating-linear-gradient(90deg, var(--line-strong) 0 2px, transparent 2px 6px);
+  border-radius: 2px;
+  flex-shrink: 0;
+}

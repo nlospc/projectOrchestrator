@@ -6,6 +6,7 @@ import { parseMilestoneCsv, parseOverrideCsv, parseProjectCsv, parseResourceAllo
 import { state } from "../state/app-state.js";
 import { downloadProjectTemplate, downloadResourceTemplate, settingsView, uploadView } from "../views/admin.js";
 import { dashboardView, drawerTabContent, openProject, projectsView, timeline } from "../views/projects.js";
+import { cockpitView } from "../views/cockpit.js";
 import { appendComment, setProjectOverride, updateMilestone } from "../core/mutations.js";
 import { openReasonModal } from "../ui/reason-modal.js";
 import {
@@ -204,6 +205,7 @@ async function loadImportHistory() {
 }
 
 const routeViews = {
+  cockpit: cockpitView,
   dashboard: dashboardView,
   projects: projectsView,
   resource: resourceOverviewView,
