@@ -2,7 +2,7 @@ import { allocations, projects } from "../core/data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { downloadTextFile } from "../core/files.js";
 import { $, badge, detail, escapeHtml, kpi, loadClass, loadFor, unique } from "../core/utils.js";
-import { dashboardMetrics, personStats, projectAllocations, resourceProjects } from "../core/selectors.js";
+import { personStats, projectAllocations, resourceProjects } from "../core/selectors.js";
 import { state } from "../state/app-state.js";
 
 export function resourceOverviewView() {

@@ -152,3 +152,122 @@ Added 2026-06-23. Composes from the selectors above — no new raw data.
   These are the **only** definitions; `server/seed.js` imports rows from here on first boot.
 - Algorithm: `src/core/utils.js` (`loadFor`, `loadClass`), `src/core/selectors.js`, `src/views/resource.js`.
 - Prototype reference: `design/R2-Workforce-Dashboard-offline-V14/overview.md` + `assets/app.js`.
+
+---
+
+## 8. Batch snapshots & trend deltas
+
+Added 2026-06-23. Enables the "↑/↓ vs 上批次" trend indicators on `#dashboard` and `#cockpit`.
+
+### 8a. Motivation
+
+Every headline number on the executive dashboard needs a direction arrow and magnitude
+(`信心 78% ↓3`). The cockpit already stubs `delta: null` (§5b). Without persisted
+snapshots of prior state there is no baseline to diff against.
+
+### 8b. Snapshot record (`batch_snapshots`)
+
+One row is written per Excel import (any `kind`). It freezes the **output** of
+`cockpitMetrics()` at the moment the import lands — same shape, flat columns.
+
+| Field | Type | Source |
+|---|---|---|
+| `id` | TEXT PK | `"BS-" + uid()` |
+| `batch_id` | TEXT FK → `import_batches.id` | The import that triggered this snapshot |
+| `snapped_at` | TEXT (ISO) | `new Date().toISOString()` at write time |
+| `confidence_index` | REAL | `confidence.index` (0–1) |
+| `red` | INTEGER | `confidence.red` |
+| `yellow` | INTEGER | `confidence.yellow` |
+| `green` | INTEGER | `confidence.green` |
+| `wave_d30` | INTEGER | `wave.d30` |
+| `wave_d60` | INTEGER | `wave.d60` |
+| `wave_d90` | INTEGER | `wave.d90` |
+| `bf1_count` | INTEGER | `concentration.bf1Count` |
+| `over_allocated` | INTEGER | `concentration.overAllocated` |
+| `overloaded` | INTEGER | `concentration.overloaded` |
+| `workforce_low` | INTEGER | `workforce.low` |
+| `workforce_mid` | INTEGER | `workforce.mid` |
+| `workforce_high` | INTEGER | `workforce.high` |
+| `project_total` | INTEGER | `red + yellow + green` |
+| `phase_json` | TEXT | JSON array of `{label, count}` (§5b phases) |
+| `org_heatmap_json` | TEXT | JSON array of `{biz, red, yellow, green}` (§5b orgHeatmap) |
+
+**Why flat columns + two JSON columns?**
+- The 15 scalar metrics are the ones that appear as KPI tiles with deltas — they must be
+  queryable and diffable without JSON parsing.
+- `phase_json` and `org_heatmap_json` are variable-length arrays used only for
+  historical drill-down (not KPI deltas), so a structured column would add complexity
+  with no query benefit.
+
+### 8c. Write trigger
+
+Snapshots are written **inside the same transaction as the import** in the
+`POST /api/import/:kind` handler (see `db-persistence-design.md` §7):
+
+```
+BEGIN;
+  -- upsert rows (existing import logic)
+  INSERT INTO import_batches ...;
+  -- NEW: freeze current cockpit state
+  INSERT INTO batch_snapshots (...) VALUES (...);
+COMMIT;
+```
+
+The server calls `cockpitMetrics()` **after** the upsert rows land but **before** commit,
+so the snapshot reflects the state *including* the new import.
+
+### 8d. Delta selector (`snapshotDelta`)
+
+New export in `src/core/selectors.js`:
+
+```js
+// snapshotDelta(currentMetrics, previousSnapshot) → deltas object
+//
+// previousSnapshot = the most-recent batch_snapshots row, fetched at
+// bootstrap via GET /api/bootstrap (added to the payload).
+//
+// Returns null when no previous snapshot exists (first-ever import).
+// Otherwise returns an object with the same scalar keys, each value =
+// (current − previous). Positive = improvement for confidence_index,
+// workforce_low; positive = deterioration for red, overloaded, bf1_count.
+// The view layer decides arrow color based on the field's polarity.
+```
+
+**Field polarity** (determines whether ↑ is good or bad):
+
+| Field | ↑ = good | ↑ = bad |
+|---|---|---|
+| `confidence_index` | ✓ | |
+| `green`, `workforce_low` | ✓ | |
+| `red`, `yellow` | | ✓ |
+| `bf1_count`, `over_allocated`, `overloaded` | | ✓ |
+| `wave_d30`, `wave_d60`, `wave_d90` | | ✓ |
+| `workforce_mid` | | (neutral) |
+| `workforce_high` | | ✓ |
+| `project_total` | (neutral) | |
+
+### 8e. API surface
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/bootstrap` | Add `previousSnapshot` (latest `batch_snapshots` row) to existing payload |
+| `GET /api/snapshots?limit=N` | Historical list for future sparkline/trend chart (not v1.0) |
+
+### 8f. View integration
+
+**`#dashboard` (项目总览):**
+- Headline verdict renders `confPct` + arrow from `snapshotDelta.confidence_index`.
+- Each KPI tile adds `↑N / ↓N` sub-label from the corresponding delta field.
+- Arrow color: green for "good direction" per polarity table, red for "bad direction".
+
+**`#cockpit` (执行驾驶舱):**
+- `confidence.delta` (currently `null`) is replaced by `snapshotDelta.confidence_index`.
+- `vs 上批次` placeholder becomes a real formatted delta.
+
+### 8g. Graceful degradation
+
+- **No snapshots yet** (fresh install, no imports): `delta = null` → views render
+  `--` or hide the arrow. No errors.
+- **Only one snapshot**: delta is computed against that one (shows change since first import).
+- **Multiple snapshots**: always diff against `ORDER BY snapped_at DESC LIMIT 1 OFFSET 1`
+  (the second-most-recent), so each import shows change vs the *previous* import.

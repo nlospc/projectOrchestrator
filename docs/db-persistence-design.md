@@ -162,6 +162,30 @@ CREATE TABLE import_batches (
   imported_by TEXT,
   imported_at TEXT NOT NULL
 );
+
+-- ── batch_snapshots (frozen cockpit metrics per import; see data-sequences.md §8) ─
+CREATE TABLE batch_snapshots (
+  id                TEXT PRIMARY KEY,           -- "BS-xxx"
+  batch_id          TEXT NOT NULL REFERENCES import_batches(id) ON DELETE CASCADE,
+  snapped_at        TEXT NOT NULL,              -- ISO timestamp
+  confidence_index  REAL,                       -- 0–1
+  red               INTEGER,
+  yellow            INTEGER,
+  green             INTEGER,
+  wave_d30          INTEGER,
+  wave_d60          INTEGER,
+  wave_d90          INTEGER,
+  bf1_count         INTEGER,
+  over_allocated    INTEGER,
+  overloaded        INTEGER,
+  workforce_low     INTEGER,
+  workforce_mid     INTEGER,
+  workforce_high    INTEGER,
+  project_total     INTEGER,
+  phase_json        TEXT,                       -- JSON [{label, count}, ...]
+  org_heatmap_json  TEXT                        -- JSON [{biz, red, yellow, green}, ...]
+);
+CREATE INDEX idx_snapshots_time ON batch_snapshots(snapped_at DESC);
 ```
 
 **Notes**
@@ -178,7 +202,7 @@ One resource group per table. Every endpoint maps onto an existing `mutations.js
 
 | Method & path | Maps to | Body / notes |
 |---|---|---|
-| `GET /api/bootstrap` | initial load | Returns `{projects, milestones, changeLogs, comments, allocations}` in one round-trip (replaces the static import). |
+| `GET /api/bootstrap` | initial load | Returns `{projects, milestones, changeLogs, comments, allocations, previousSnapshot}` in one round-trip (replaces the static import). `previousSnapshot` is the latest `batch_snapshots` row or `null`. |
 | `GET /api/projects` | list | filters via query string |
 | `PATCH /api/projects/:id` | set health override / archive | `{override_health, override_note}` etc. |
 | `GET /api/projects/:id/milestones` | list | ordered by `sort_order` |
@@ -189,7 +213,8 @@ One resource group per table. Every endpoint maps onto an existing `mutations.js
 | `GET /api/milestones/:id/changelog` | history tab | append-only |
 | `GET /api/projects/:id/comments` | comments tab | |
 | `POST /api/projects/:id/comments` | `appendComment` | `{body, authorName?}` |
-| `POST /api/import/:kind` | bulk Excel import | validated rows → single transaction upsert (see §7) |
+| `POST /api/import/:kind` | bulk Excel import | validated rows → single transaction upsert (see §7). Also writes a `batch_snapshots` row in the same tx (see `data-sequences.md` §8c). |
+| `GET /api/snapshots?limit=N` | snapshot history | Latest N `batch_snapshots` rows (for future sparkline; not v1.0 UI). |
 
 **Error convention:** validation failures return `409 Conflict` (business rule, e.g. reason missing, ordering violation) or `422` (malformed) with `{error: "<message>"}`. The UI already surfaces `err.message` via `toast()` — so server messages flow straight to the existing toast.
 
@@ -267,6 +292,7 @@ Upsert-by-id means re-uploading a corrected sheet updates in place instead of du
 | **D4** | Milestone CRUD endpoints + server-side validation parity | `server/routes`, `server/repositories` |
 | **D5** | Comments + project override (health) endpoints | `server/*` |
 | **D6** | Excel import endpoint (`POST /api/import/:kind`) + `import_batches` | `server/*`, reuse `importers.js` |
+| **D6b** | Batch snapshots: `batch_snapshots` table + write in import tx + `previousSnapshot` in bootstrap + `snapshotDelta` selector | `server/repositories`, `core/selectors.js`, `core/data-store.js` |
 | **D7** | Optimistic-concurrency (`rev`) + focus-refresh | both tiers |
 
 After D3, the original question is answered: **editing `start_date` / `end_date` in the milestone view persists across reloads and is shared across users.**
@@ -279,3 +305,4 @@ After D3, the original question is answered: **editing `start_date` / `end_date`
 2. **Single internal server**, low write concurrency → SQLite. Postgres path is mechanical (SQL isolated in repositories) if scale changes — that's why the question offered it.
 3. **`allocations` are read-mostly** (refreshed by Excel import, not edited row-by-row in the UI), so no per-row allocation CRUD endpoints in v1.0.
 4. Derived resource weights remain computed in `selectors.js`, not persisted.
+5. **Snapshot granularity** is per-import, not per-edit. A user correcting a milestone date does not trigger a snapshot — only Excel uploads do. This keeps the baseline stable (one snapshot per data batch) and avoids noise from incremental edits.

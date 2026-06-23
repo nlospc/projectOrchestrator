@@ -176,44 +176,6 @@ export function projectResourceSummary(project) {
   return { 产品: cats.产品.size, 项目: cats.项目.size, 开发: cats.开发.size };
 }
 
-// ─── Fixed dashboardMetrics ───────────────────────────────────────────────────
-
-export function dashboardMetrics(list) {
-  const today = state.today ?? new Date();
-  const projectIds = new Set(list.map((p) => p.id));
-
-  const monthStart = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
-  const monthEnd   = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0));
-
-  const projectMilestones = milestones
-    .filter((m) => projectIds.has(m.projectId))
-    .sort((a, b) => new Date(a.planned_end_date) - new Date(b.planned_end_date));
-
-  // due = milestones whose planned_end_date falls in the current calendar month
-  const due = projectMilestones.filter((m) => {
-    const d = new Date(m.planned_end_date);
-    return d >= monthStart && d <= monthEnd;
-  }).length;
-
-  const stats = personStats(list);
-
-  // risks = projects in R or Y RAG (replaces old milestone.state === "R/Y" scan)
-  const risks = list.filter((p) => {
-    const rag = projectRag(p, today);
-    return rag === "R" || rag === "Y";
-  });
-
-  return {
-    stats,
-    red:      list.filter((p) => projectRag(p, today) === "R").length,
-    yellow:   list.filter((p) => projectRag(p, today) === "Y").length,
-    green:    list.filter((p) => projectRag(p, today) === "G").length,
-    due,
-    overload: stats.filter((person) => person.load >= 1.2).length,
-    risks,
-  };
-}
-
 export function cockpitMetrics(projectList = filteredProjects()) {
   const today = state.today ?? new Date();
   const projectIds = new Set(projectList.map(p => p.id));
@@ -333,5 +295,55 @@ export function cockpitMetrics(projectList = filteredProjects()) {
     orgHeatmap,
     phases,
     workforce: { low, mid, high },
+  };
+}
+
+export function overviewMetrics() {
+  const cm = cockpitMetrics();
+  const total = cm.confidence.red + cm.confidence.yellow + cm.confidence.green;
+  const confPct = total ? Math.round(cm.confidence.index * 100) : 0;
+
+  // decisions: actNow items enriched with nextDate (planned_end_date of the slipping milestone)
+  const decisions = cm.actNow.map(r => {
+    const ms = milestones
+      .filter(m => m.projectId === r.projectId)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    const upcoming = ms.find(m => !m.actual_end_date);
+    const nextDate = upcoming ? upcoming.planned_end_date : null;
+    return { ...r, nextDate };
+  });
+
+  return {
+    ...cm,
+    headline: {
+      total,
+      confPct,
+      decisionCount: cm.actNow.length,
+      d30: cm.wave.d30,
+    },
+    decisions,
+    signals: {
+      overAllocated: cm.concentration.overAllocated,
+      keyPersonCount: cm.concentration.keyPersons.length,
+      d60: cm.wave.d60,
+      healthyCount: cm.workforce.low,
+    },
+    snapshot: { importedAt: null, previousBatch: null },
+    deltas: {
+      confidence_index: null,
+      red: null,
+      yellow: null,
+      green: null,
+      wave_d30: null,
+      wave_d60: null,
+      wave_d90: null,
+      bf1_count: null,
+      over_allocated: null,
+      overloaded: null,
+      workforce_low: null,
+      workforce_mid: null,
+      workforce_high: null,
+      project_total: null,
+    },
   };
 }

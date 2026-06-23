@@ -5,79 +5,176 @@ import {
 } from "../core/utils.js";
 import { computeSegments } from "../core/milestones.js";
 import {
-  dashboardMetrics, filteredProjects,
+  filteredProjects, overviewMetrics,
   projectOverflowSegment, projectRag, projectResourceSummary,
 } from "../core/selectors.js";
-import { barChart, distributionList } from "./resource.js";
 import { state } from "../state/app-state.js";
 
-// ─── Dashboard ────────────────────────────────────────────────────────────────
+// ─── 管理概览 (Dashboard v2) ──────────────────────────────────────────────────
 
 export function dashboardView() {
-  const list = filteredProjects();
-  const metrics = dashboardMetrics(list);
-  const categoryRows = groupedProjectRows(list, "category");
-  const statusRows = groupedProjectRows(list, "status");
+  const m = overviewMetrics();
+  const { confidence, headline, decisions, signals, wave, concentration, workforce, deltas } = m;
+  const ragTotal = confidence.red + confidence.yellow + confidence.green;
+  const totalPeople = workforce.low + workforce.mid + workforce.high;
+
   return `
-    <div class="grid kpi-grid dashboard-kpis">
-      ${kpi("项目总数", list.length, "当前筛选范围内项目")}
-      ${kpi("红灯项目", metrics.red, "点击查看红灯项目", "R", "health-filter", "R")}
-      ${kpi("黄灯项目", metrics.yellow, "需要跟踪排期和资源", "Y", "health-filter", "Y")}
-      ${kpi("本月里程碑", metrics.due, "计划完成日期落本月")}
-      ${kpi("超负荷人员", metrics.overload, "投入度 ≥ 120%", "Y")}
+    <div class="headline-strip">
+      <span class="headline-main">${headline.total} 个项目</span>
+      <span class="headline-sep">·</span>
+      <span class="headline-stat">
+        信心 <span class="val">${headline.confPct}</span><span class="overview-kpi-unit">%</span>
+        ${deltaChip(deltas.confidence_index, true)}
+      </span>
+      <span class="headline-sep">·</span>
+      <span class="headline-stat">
+        <span class="val${headline.decisionCount > 0 ? " danger" : ""}">${headline.decisionCount}</span> 个需本周决策
+      </span>
+      <span class="headline-sep">·</span>
+      <span class="headline-stat">
+        <span class="val${headline.d30 > 0 ? " warning" : ""}">${headline.d30}</span> 个里程碑 ≤30天
+      </span>
     </div>
-    <div class="dashboard-priority">
-      <section class="panel health-panel">
-        <h2>项目健康分布</h2>
-        <div class="bar-stack">
-          ${barLine("红灯", metrics.red, list.length, "R")}
-          ${barLine("黄灯", metrics.yellow, list.length, "Y")}
-          ${barLine("绿灯", metrics.green, list.length, "G")}
+
+    <div class="overview-kpi-strip">
+      <div class="overview-kpi-card accent">
+        <span class="overview-kpi-label">交付信心指数</span>
+        <div class="overview-kpi-main">
+          <span class="overview-kpi-value">${headline.confPct}<span class="overview-kpi-unit">%</span></span>
+          ${deltaChip(deltas.confidence_index, true)}
         </div>
-      </section>
-      <section class="panel risk-panel">
-        <h2>风险项目</h2>
-        <div class="stack compact-list">
-          ${metrics.risks.length
-            ? metrics.risks.slice(0, 6).map(p => riskRow(p)).join("")
-            : '<p class="muted">当前筛选范围内暂无红/黄灯项目。</p>'}
+        <span class="overview-kpi-sub">绿灯 ${confidence.green} · 黄灯 ${confidence.yellow} · 红灯 ${confidence.red}</span>
+      </div>
+      <div class="overview-kpi-card">
+        <span class="overview-kpi-label">红灯项目</span>
+        <div class="overview-kpi-main">
+          <span class="overview-kpi-value" style="color:var(--red)">${confidence.red}</span>
+          ${deltaChip(deltas.red, false)}
         </div>
-      </section>
+        <span class="overview-kpi-sub">vs 上批次</span>
+      </div>
+      <div class="overview-kpi-card">
+        <span class="overview-kpi-label">30天内到期里程碑</span>
+        <div class="overview-kpi-main">
+          <span class="overview-kpi-value" style="color:var(--orange)">${wave.d30}</span>
+          ${deltaChip(deltas.wave_d30, false)}
+        </div>
+        <span class="overview-kpi-sub">未完成里程碑</span>
+      </div>
+      <div class="overview-kpi-card">
+        <span class="overview-kpi-label">超负荷人员</span>
+        <div class="overview-kpi-main">
+          <span class="overview-kpi-value" style="color:var(--red)">${workforce.high}</span>
+          ${deltaChip(deltas.overloaded, false)}
+        </div>
+        <span class="overview-kpi-sub">负荷 ≥ 1.2 / ${totalPeople} 人</span>
+      </div>
+      <div class="overview-kpi-card">
+        <span class="overview-kpi-label">单点故障项目</span>
+        <div class="overview-kpi-main">
+          <span class="overview-kpi-value" style="color:var(--red)">${concentration.bf1Count}</span>
+          ${deltaChip(deltas.bf1_count, false)}
+        </div>
+        <span class="overview-kpi-sub">Bus Factor = 1</span>
+      </div>
     </div>
-    <div class="dashboard-secondary">
-      <section class="panel stage-panel">
-        <h2>分类项目分布</h2>
-        ${barChart(categoryRows, "dashboard-category")}
-        ${distributionList(categoryRows)}
-      </section>
-      <section class="panel stage-panel">
-        <h2>项目状态分布</h2>
-        ${barChart(statusRows, "dashboard-status")}
-        ${distributionList(statusRows)}
-      </section>
+
+    <div class="overview-panels">
+      <div class="panel cockpit-panel">
+        <div class="panel-header">
+          <span class="panel-title">需要你决策 · 风险项目</span>
+          ${decisions.length ? `<span class="panel-badge warn">${decisions.length} 个需关注</span>` : '<span class="panel-badge ok">无风险</span>'}
+        </div>
+        ${decisions.length ? `<table class="decision-table">
+          <thead><tr><th>项目</th><th>滑点里程碑</th><th>下一节点</th><th class="text-right">滑点</th></tr></thead>
+          <tbody>${decisions.map((r, i) => `<tr class="clickable" data-open-project="${escapeHtml(r.projectId)}">
+              <td><span class="risk-rank">${i + 1}</span><span class="rag-tag ${r.rag}"></span><span class="project-name">${escapeHtml(r.projectName)}</span><div class="owner-line">${escapeHtml(r.owner)} · ${escapeHtml(r.dept)}</div></td>
+              <td><span class="milestone-name">${escapeHtml(r.milestoneName)}</span></td>
+              <td><span class="next-date">${r.nextDate ? r.nextDate.slice(5) : "--"}</span></td>
+              <td style="text-align:right"><span class="slip-chip${r.slipDays < 10 ? " moderate" : ""}">${r.slipDays}d</span></td>
+            </tr>`).join("")}</tbody>
+        </table>` : '<div class="empty-state"><span class="empty-icon">✓</span><p>当前筛选范围内暂无风险项目</p></div>'}
+      </div>
+
+      <div class="panel cockpit-panel">
+        <div class="panel-header">
+          <span class="panel-title">快速信号</span>
+          <span class="panel-badge info">概览</span>
+        </div>
+        <div class="signal-grid">
+          <div class="signal-row clickable" data-action="health-filter" data-value="">
+            <div class="signal-label">
+              <span class="signal-title">健康分布</span>
+              <span class="signal-sub">RAG 红/黄/绿</span>
+            </div>
+            <div class="confidence-donut-wrap">
+              ${overviewDonut(confidence, ragTotal)}
+              <div class="rag-legend">
+                <span class="rag-legend-item clickable" data-action="health-filter" data-value="R"><span class="rag-dot R"></span>${confidence.red} 红灯</span>
+                <span class="rag-legend-item clickable" data-action="health-filter" data-value="Y"><span class="rag-dot Y"></span>${confidence.yellow} 黄灯</span>
+                <span class="rag-legend-item clickable" data-action="health-filter" data-value="G"><span class="rag-dot G"></span>${confidence.green} 绿灯</span>
+              </div>
+            </div>
+          </div>
+          <div class="signal-row clickable" data-route="workload">
+            <div class="signal-label">
+              <span class="signal-title">超分配人员</span>
+              <span class="signal-sub">投入度 &gt; 100%</span>
+            </div>
+            <span class="signal-value${signals.overAllocated > 0 ? " warning" : ""}">${signals.overAllocated}</span>
+          </div>
+          <div class="signal-row clickable" data-route="busfactor">
+            <div class="signal-label">
+              <span class="signal-title">关键人员风险</span>
+              <span class="signal-sub">BF≤2 项目 SPOF 贡献者</span>
+            </div>
+            <span class="signal-value${signals.keyPersonCount > 0 ? " danger" : ""}">${signals.keyPersonCount}</span>
+          </div>
+          <div class="signal-row clickable" data-route="projects">
+            <div class="signal-label">
+              <span class="signal-title">60天内里程碑</span>
+              <span class="signal-sub">含 ≤30天的 ${wave.d30} 个</span>
+            </div>
+            <span class="signal-value" style="color:var(--primary)">${signals.d60}</span>
+          </div>
+          <div class="signal-row clickable" data-route="workload">
+            <div class="signal-label">
+              <span class="signal-title">正常负荷人员</span>
+              <span class="signal-sub">负荷 &lt; 0.6</span>
+            </div>
+            <span class="signal-value ok">${signals.healthyCount}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="snapshot-footer">
+      <span>数据快照 · ${m.snapshot.importedAt ? m.snapshot.importedAt : "--"} · vs 上批次 ${m.snapshot.previousBatch || "--"}</span>
     </div>`;
 }
 
-
-export function barLine(label, value, total, status) {
-  const width = total ? Math.max(4, Math.round((value / total) * 100)) : 0;
-  return `<div class="bar-line"><strong>${label}</strong><div class="bar-track"><div class="bar-fill ${status}" style="width:${width}%"></div></div><span>${value}</span></div>`;
+function deltaChip(value, goodWhenPositive) {
+  if (value == null) return "";
+  if (value === 0) return '<span class="delta neutral">—</span>';
+  const arrow = value > 0 ? "↑" : "↓";
+  const abs = Math.abs(value);
+  const isGood = goodWhenPositive ? value > 0 : value < 0;
+  return `<span class="delta ${isGood ? "good" : "bad"}">${arrow}${abs}</span>`;
 }
 
-export function riskRow(project) {
-  const rag = effectiveHealth(project);
-  return `<button class="risk-row clickable" data-open-project="${project.id}">
-    <span><strong>${escapeHtml(project.name)}</strong><br>
-    <span class="muted">${escapeHtml(project.code || project.id)} · ${escapeHtml(project.dept)}</span></span>
-    ${badge(rag)}
-  </button>`;
-}
-
-export function personRow(person) {
-  return `<div class="person-row">
-    <span><strong>${person.person}</strong><br><span class="muted">${person.role} · ${person.projects.length} 个项目 · 投入 ${(person.ratio * 100).toFixed(0)}%</span></span>
-    <span class="badge ${person.load >= 1.2 ? "R" : person.load >= 0.6 ? "Y" : "G"}">${person.load.toFixed(2)}</span>
-  </div>`;
+function overviewDonut(confidence, total) {
+  if (!total) return "";
+  const r = 15.915;
+  const redPct = (confidence.red / total) * 100;
+  const yellowPct = (confidence.yellow / total) * 100;
+  const greenPct = (confidence.green / total) * 100;
+  const offset = 25;
+  return `<svg class="rag-donut" viewBox="0 0 36 36">
+    <circle cx="18" cy="18" r="${r}" fill="none" stroke="var(--gray-bg)" stroke-width="3.5"></circle>
+    ${redPct > 0 ? `<circle cx="18" cy="18" r="${r}" fill="none" stroke="var(--red)" stroke-width="3.5" stroke-dasharray="${redPct} ${100 - redPct}" stroke-dashoffset="${offset}" transform="rotate(-90 18 18)"></circle>` : ""}
+    ${yellowPct > 0 ? `<circle cx="18" cy="18" r="${r}" fill="none" stroke="var(--yellow)" stroke-width="3.5" stroke-dasharray="${yellowPct} ${100 - yellowPct}" stroke-dashoffset="${offset - redPct}" transform="rotate(-90 18 18)"></circle>` : ""}
+    ${greenPct > 0 ? `<circle cx="18" cy="18" r="${r}" fill="none" stroke="var(--green)" stroke-width="3.5" stroke-dasharray="${greenPct} ${100 - greenPct}" stroke-dashoffset="${offset - redPct - yellowPct}" transform="rotate(-90 18 18)"></circle>` : ""}
+  </svg>`;
 }
 
 // ─── Projects Gantt view ──────────────────────────────────────────────────────
