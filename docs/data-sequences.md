@@ -119,6 +119,20 @@ deviation D2). The prototype has no such fallback.
 All of the above are identical in definition to the prototype views (`/`, `/matrix`, `/workload`,
 `/roles`, `/busfactor`, `/people`).
 
+### 5b. Executive cockpit metrics (`cockpitMetrics`, `src/core/selectors.js`)
+
+Added 2026-06-23. Composes from the selectors above — no new raw data.
+
+| Metric | Formula | Notes |
+|---|---|---|
+| Delivery Confidence | `green / (R + Y + G)` | 0–1; displayed as %. `delta` stubbed `null` (awaits batch-snapshot persistence). |
+| Act-Now risk rank | `deviationDays × complexity` desc | Top 6 slipping projects. `deviationDays` = max milestone slip via `computeSegments`. |
+| Delivery wave | milestones where `!actual_end_date`, bucketed ≤30 / ≤60 / ≤90 days | Negative `daysUntil` (overdue) still counts in bucket. |
+| Concentration risk | `bf1Count` + `overAllocated` + `overloaded` + top-5 key persons | Reuses `busFactorRows`, `keyPeopleRiskRows`, `personStats`. |
+| Org heatmap | R/Y/G counts grouped by `biz` | Uses `projectRag`; excludes archived/gray. |
+| Phase distribution | project count per status bucket (设计/开发/测试/运维上线) | 8 statuses collapsed to 4 display buckets. |
+| Workforce utilization | load < 0.6 / 0.6–1.2 / ≥ 1.2 person counts | Same thresholds as §2. |
+
 ---
 
 ## 6. Known deviations & recommendations
