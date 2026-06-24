@@ -3387,10 +3387,15 @@ button.chart-bar:hover strong {
   gap: 16px;
   margin-bottom: 16px;
 }
+.overview-panels > .panel {
+  min-width: 0;
+  overflow: hidden;
+}
 
 .decision-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .decision-table th {
@@ -3409,6 +3414,18 @@ button.chart-bar:hover strong {
   font-size: 13px;
   vertical-align: top;
   border-bottom: 1px solid var(--line);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.decision-table td:first-child {
+  white-space: normal;
+}
+.decision-table td:first-child .project-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 .decision-table tr:last-child td { border-bottom: none; }
