@@ -3679,3 +3679,209 @@ button.chart-bar:hover strong {
 .group-rag-dots .mini-rag .dot.R { background: var(--red); }
 .group-rag-dots .mini-rag .dot.Y { background: var(--yellow); }
 .group-rag-dots .mini-rag .dot.G { background: var(--green); }
+
+/* ── Resource Overview v2 ─────────────────────────────── */
+
+.resource-overview-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.resource-overview-v2 .hero-strip {
+  margin-bottom: 16px;
+}
+
+.resource-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 20px 0 10px;
+}
+
+.resource-overview-v2 .panel-row {
+  margin-bottom: 0;
+}
+
+.resource-overview-v2 .panel-row.full {
+  grid-template-columns: 1fr;
+}
+
+/* System distribution ranked list */
+.sys-dist-head {
+  display: grid;
+  grid-template-columns: 180px 1fr 52px 52px 56px;
+  gap: 10px;
+  padding: 0 4px 6px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.sys-dist-head span:nth-child(n+3) {
+  text-align: right;
+}
+
+.sys-dist-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sys-dist-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 52px 52px 56px;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.sys-dist-row:last-child {
+  border-bottom: none;
+}
+
+.sys-dist-row:hover {
+  background: var(--surface-2);
+}
+
+.sys-dist-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sys-dist-bar {
+  height: 20px;
+  background: var(--gray-bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sys-dist-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--primary);
+  transition: width 0.3s;
+}
+
+.sys-dist-meta {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sys-dist-meta strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Internal / External split bar */
+.source-split-bar {
+  display: flex;
+  height: 28px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.source-split-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.source-split-seg.internal {
+  background: var(--primary);
+}
+
+.source-split-seg.external {
+  background: var(--primary-2);
+}
+
+.source-split-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.source-split-legend span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.source-split-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+/* Over-allocation chips (compact version for v2) */
+.overalloc-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.overalloc-chip {
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+.overalloc-chip.severe {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.overalloc-chip.moderate {
+  background: var(--yellow-bg);
+  color: var(--yellow);
+}
+
+/* Panel sub-label */
+.panel-sub-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* Panel divider */
+.panel-divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 16px 0;
+}
+
+/* Responsive for sys-dist */
+@media (max-width: 900px) {
+  .sys-dist-row {
+    grid-template-columns: 120px 1fr 44px 44px;
+  }
+  .sys-dist-row .sys-dist-meta:last-child {
+    display: none;
+  }
+  .sys-dist-head {
+    grid-template-columns: 120px 1fr 44px 44px;
+  }
+  .sys-dist-head span:last-child {
+    display: none;
+  }
+}

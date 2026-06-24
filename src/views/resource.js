@@ -10,60 +10,158 @@ export function resourceOverviewView() {
   const stats = personStats(list);
   const all = projectAllocations(list);
   const people = resourcePeopleStats(list);
-  const overallocated = people.filter((person) => person.ratio > 1).sort((a, b) => b.ratio - a.ratio);
+  const overallocated = people.filter((p) => p.ratio > 1).sort((a, b) => b.ratio - a.ratio);
   const projectCount = list.length;
-  const activeProjects = list.filter((project) => project.status !== "项目暂停").length;
-  const high = stats.filter((person) => person.load >= 1.2).length;
-  const low = stats.filter((person) => person.load < 0.6).length;
-  const totalLoad = stats.reduce((sum, person) => sum + person.load, 0);
-  const avgLoad = stats.length ? totalLoad / stats.length : 0;
-  const outsourcedPeople = people.filter((person) => person.outsourced).length;
-  const busyPeople = [...people].sort((a, b) => b.load - a.load);
+  const activeProjects = list.filter((p) => p.status !== '项目暂停').length;
+  const high = stats.filter((p) => p.load >= 1.2).length;
+  const mid = stats.filter((p) => p.load >= 0.6 && p.load < 1.2).length;
+  const low = stats.filter((p) => p.load < 0.6).length;
+  const totalPeople = people.length;
+  const outsourcedCount = people.filter((p) => p.outsourced).length;
+  const internalCount = totalPeople - outsourcedCount;
+  const internalPct = totalPeople ? Math.round((internalCount / totalPeople) * 100) : 0;
+  const externalPct = totalPeople ? 100 - internalPct : 0;
+  const busyPeople = [...people].sort((a, b) => b.load - a.load).slice(0, 10);
   const roleCompositionRows = roleComposition(all);
-  return `<div class="resource-workspace resource-overview">
+  const systems = systemRows(list);
+  const maxSysPeople = Math.max(...systems.map((s) => s.people.length), 1);
+  const bfRows = busFactorRows();
+  const bf1Count = bfRows.filter((r) => r.risk === 'R').length;
+
+  return `<div class="resource-workspace resource-overview-v2">
+    <div class="hero-strip">
+      <div class="hero-card confidence">
+        <span class="hero-label">总人数</span>
+        <span class="hero-value">${totalPeople}</span>
+        <span class="hero-sub">内部 ${internalCount} · 外包 ${outsourcedCount} (${externalPct}%)</span>
+      </div>
+      <div class="hero-card clickable" data-route="matrix">
+        <span class="hero-label">覆盖系统</span>
+        <span class="hero-value">${systems.length}</span>
+        <span class="hero-sub">系统/平台</span>
+      </div>
+      <div class="hero-card clickable" data-route="matrix">
+        <span class="hero-label">参与项目</span>
+        <span class="hero-value">${projectCount}</span>
+        <span class="hero-sub">活跃 ${activeProjects} 个</span>
+      </div>
+      <div class="hero-card clickable" data-route="workload">
+        <span class="hero-label">高负荷人员</span>
+        <span class="hero-value${high > 0 ? ' text-danger' : ''}">${high}</span>
+        <span class="hero-sub">load ≥ 1.2</span>
+      </div>
+      <div class="hero-card clickable" data-route="workload">
+        <span class="hero-label">超分配人员</span>
+        <span class="hero-value${overallocated.length > 0 ? ' text-danger' : ''}">${overallocated.length}</span>
+        <span class="hero-sub">Σ 工时 > 100%</span>
+      </div>
+    </div>
+
     ${resourceFilterBar()}
-    <div class="resource-kpi-strip">
-      ${resourceKpi("总人数", people.length, `含外包 ${outsourcedPeople} 人`)}
-      ${resourceKpi("项目总数", projectCount, `活跃 ${activeProjects} 个`)}
-      ${resourceKpi("人均负荷", avgLoad.toFixed(2), "按 R2 workload 公式汇总")}
-      ${resourceKpi("高负荷", high, ">= 1.2", "R")}
-      ${resourceKpi("低负荷", low, "< 0.6", "G")}
-    </div>
-    <div class="resource-formula">
-      <strong>分级口径：</strong>
-      <span>负荷 = 工时投入占比 * sqrt(项目复杂度 / 5) * 角色 x 阶段参与度矩阵。分级：低 &lt; 0.6 · 中 0.6-1.2 · 高 &gt;= 1.2。Σ 工时占比 &gt; 100% 标注为超分配。</span>
-    </div>
-    <details class="panel resource-config">
-      <summary><span>负荷计算配置 <span class="muted">点击展开配置阈值</span></span><button type="button" class="small-button" data-route="settings">去设置阈值</button></summary>
-      <div class="threshold-row">
-        <span class="status g"><span class="dot g"></span>低负荷：load &lt; 0.6</span>
-        <span class="status y"><span class="dot y"></span>中负荷：0.6 - 1.2</span>
-        <span class="status r"><span class="dot r"></span>高负荷：load &gt;= 1.2</span>
-        <span class="status y"><span class="dot y"></span>超分配：Σ 工时占比 &gt; 100%</span>
+
+    <div class="resource-section-label">系统/平台 资源分布</div>
+    <div class="panel-row full">
+      <div class="panel cockpit-panel">
+        <div class="panel-header">
+          <span class="panel-title">按系统/平台 — 人员投入排名</span>
+          <span class="panel-badge info">Top ${Math.min(systems.length, 12)} / ${systems.length} 系统</span>
+        </div>
+        <div class="sys-dist-head">
+          <span>系统</span><span>人员规模</span><span>人数</span><span>项目</span><span>投入率</span>
+        </div>
+        <div class="sys-dist-list">
+          ${systems.slice(0, 12).map((row) => `<div class="sys-dist-row" data-resource-filter-system="${escapeHtml(row.system)}">
+            <span class="sys-dist-name" title="${escapeHtml(row.system)}">${escapeHtml(row.system)}</span>
+            <span class="sys-dist-bar"><span class="sys-dist-bar-fill" style="width:${Math.max(4, Math.round((row.people.length / maxSysPeople) * 100))}%"></span></span>
+            <span class="sys-dist-meta"><strong>${row.people.length}</strong></span>
+            <span class="sys-dist-meta">${row.projects.length}</span>
+            <span class="sys-dist-meta">${Math.round(row.ratio * 100)}%</span>
+          </div>`).join('')}
+        </div>
       </div>
-    </details>
-    <section class="panel resource-overalloc">
-      <div class="matrix-toolbar">
-        <h2>超分配告警（${overallocated.length} 人工时占比 &gt; 100%）</h2>
-        <span class="muted">按工时占比降序</span>
-      </div>
-      ${overallocated.length ? `<div class="overalloc-grid">${overallocated.map((person) => overallocatedCard(person)).join("")}</div>` : '<p class="muted">当前筛选范围内没有超分配人员。</p>'}
-    </section>
-    <div class="resource-insight-grid">
-      <section class="panel role-composition-panel">
-        <h2>角色构成</h2>
+    </div>
+
+    <div class="resource-section-label">技能构成 & 人力来源</div>
+    <div class="panel-row">
+      <div class="panel cockpit-panel">
+        <div class="panel-header">
+          <span class="panel-title">角色构成</span>
+          <span class="panel-badge info">${roleCompositionRows.length} 个角色</span>
+        </div>
         ${rolePieChart(roleCompositionRows)}
-      </section>
-      <section class="panel busy-ranking">
-        <div class="matrix-toolbar">
-          <h2>忙闲排行榜</h2>
-          <div class="inline-actions"><button class="small-button" data-route="workload">查看热力</button><span class="muted">${people.length} 人</span></div>
+      </div>
+      <div class="panel cockpit-panel">
+        <div class="panel-header">
+          <span class="panel-title">内部 / 外包 & 人力利用率</span>
+        </div>
+        <div class="panel-sub-label">人力来源构成</div>
+        <div class="source-split-bar">
+          <div class="source-split-seg internal" style="width:${internalPct}%">${internalCount} 内部</div>
+          <div class="source-split-seg external" style="width:${externalPct}%">${outsourcedCount} 外包</div>
+        </div>
+        <div class="source-split-legend">
+          <span><span class="source-split-dot" style="background:var(--primary)"></span> 内部 ${internalPct}%</span>
+          <span><span class="source-split-dot" style="background:var(--primary-2)"></span> 外包 ${externalPct}%</span>
+        </div>
+        <hr class="panel-divider">
+        <div class="panel-sub-label">人力利用率分布</div>
+        <div class="workforce-grid">
+          <div class="workforce-stat">
+            <div class="workforce-value" style="color: var(--green);">${low}</div>
+            <div class="workforce-bar"><div class="workforce-fill G" style="width: ${totalPeople ? Math.round((low / totalPeople) * 100) : 0}%;"></div></div>
+            <div class="workforce-label">正常负荷<br><span>&lt; 0.6</span></div>
+          </div>
+          <div class="workforce-stat">
+            <div class="workforce-value" style="color: var(--yellow);">${mid}</div>
+            <div class="workforce-bar"><div class="workforce-fill Y" style="width: ${totalPeople ? Math.round((mid / totalPeople) * 100) : 0}%;"></div></div>
+            <div class="workforce-label">中等负荷<br><span>0.6 – 1.2</span></div>
+          </div>
+          <div class="workforce-stat">
+            <div class="workforce-value" style="color: var(--red);">${high}</div>
+            <div class="workforce-bar"><div class="workforce-fill R" style="width: ${totalPeople ? Math.round((high / totalPeople) * 100) : 0}%;"></div></div>
+            <div class="workforce-label">超负荷<br><span>≥ 1.2</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="resource-section-label">集中度 & 负荷热点</div>
+    <div class="panel-row">
+      <div class="panel cockpit-panel">
+        <div class="panel-header">
+          <span class="panel-title">集中度风险</span>
+          ${bf1Count > 0 || overallocated.length > 0 ? '<span class="panel-badge warn">需关注</span>' : '<span class="panel-badge info">正常</span>'}
+        </div>
+        <div class="conc-stats">
+          <div class="conc-stat clickable" data-route="busfactor">
+            <div class="conc-stat-value${bf1Count > 0 ? ' danger' : ''}">${bf1Count}</div>
+            <div class="conc-stat-label">BF=1 项目<br>(单点故障)</div>
+          </div>
+          <div class="conc-stat clickable" data-route="workload">
+            <div class="conc-stat-value${overallocated.length > 0 ? ' warning' : ''}">${overallocated.length}</div>
+            <div class="conc-stat-label">超分配人员<br>(投入 &gt; 100%)</div>
+          </div>
+          <div class="conc-stat clickable" data-route="workload">
+            <div class="conc-stat-value${high > 0 ? ' danger' : ''}">${high}</div>
+            <div class="conc-stat-label">超负荷人员<br>(负荷 ≥ 1.2)</div>
+          </div>
+        </div>
+        <hr class="panel-divider">
+        <div class="panel-sub-label">超分配告警 — 工时占比 > 100%</div>
+        ${overallocated.length ? `<div class="overalloc-chip-list">
+          ${overallocated.slice(0, 5).map((p) => `<button class="overalloc-chip ${p.ratio >= 1.5 ? 'severe' : 'moderate'}" data-open-person="${escapeHtml(p.person)}">${escapeHtml(p.person)} ${Math.round(p.ratio * 100)}%</button>`).join('')}
+          ${overallocated.length > 5 ? `<span class="muted" style="align-self:center">+${overallocated.length - 5} 人</span>` : ''}
+        </div>` : '<p class="muted">当前筛选范围内没有超分配人员。</p>'}
+      </div>
+      <div class="panel cockpit-panel">
+        <div class="panel-header">
+          <span class="panel-title">忙闲排行 Top 10</span>
+          <button class="panel-badge info" style="cursor:pointer;border:none;background:var(--gray-bg);color:var(--muted)" data-route="workload">→ 查看热力</button>
         </div>
         <div class="busy-list">
-          <div class="busy-row busy-head"><span>排名</span><span>人员</span><span>负荷条</span><span>负荷</span><span>等级</span><span>项目数</span></div>
-          ${busyPeople.map((person, index) => busyRankingRow(person, index, busyPeople[0]?.load || 1)).join("")}
+          ${busyPeople.map((person, index) => busyRankingRow(person, index, busyPeople[0]?.load || 1)).join('')}
         </div>
-      </section>
+      </div>
     </div>
   </div>`;
 }
