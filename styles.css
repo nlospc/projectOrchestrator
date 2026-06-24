@@ -493,9 +493,9 @@ textarea {
 }
 
 .granularity-chip.active {
-  background: var(--brand, #2563eb);
+  background: var(--primary);
   color: #fff;
-  border-color: var(--brand, #2563eb);
+  border-color: var(--primary);
 }
 
 .granularity-chip.disabled {
@@ -820,10 +820,10 @@ tbody tr:hover {
 
 .project-list-row {
   display: grid;
-  grid-template-columns: 14px minmax(0, 1fr) auto;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
   gap: 0 8px;
   align-items: center;
-  height: 76px;
+  height: 60px;
   width: 100%;
   border: 0;
   border-bottom: 1px solid var(--line);
@@ -922,7 +922,7 @@ tbody tr:hover {
 
 .gantt-project-row {
   position: relative;
-  height: 76px;
+  height: 60px;
   border-bottom: 1px solid var(--line);
   background: #fff;
 }
@@ -956,8 +956,8 @@ tbody tr:hover {
 
 .gantt-segment {
   position: absolute;
-  top: 25px;
-  height: 26px;
+  top: 17px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -971,6 +971,12 @@ tbody tr:hover {
   cursor: pointer;
   z-index: 2;
   box-sizing: border-box;
+}
+
+.gantt-segment:hover {
+  filter: brightness(1.08);
+  transform: scaleY(1.12);
+  z-index: 5;
 }
 
 .gantt-segment-label {
@@ -3476,3 +3482,183 @@ button.chart-bar:hover strong {
   border-radius: 4px;
   background: var(--gray-bg);
 }
+
+/* ── Projects Hero Strip ───────────────────────────────────────── */
+.projects-hero-strip {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.projects-hero-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.projects-hero-stat .hero-num {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.projects-hero-stat .hero-unit {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.hero-sep {
+  width: 1px;
+  height: 28px;
+  background: var(--line);
+}
+.rag-mini-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rag-mini {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.rag-mini:hover {
+  background: var(--gray-bg);
+}
+.rag-mini .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.rag-mini .dot.R { background: var(--red); }
+.rag-mini .dot.Y { background: var(--yellow); }
+.rag-mini .dot.G { background: var(--green); }
+.hero-alert-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.hero-alert-chip.slip {
+  background: var(--red-bg);
+  color: var(--red);
+}
+.hero-alert-chip.due {
+  background: var(--orange-bg);
+  color: var(--orange);
+}
+.rag-donut-mini {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+/* ── Segment Legend ────────────────────────────────────────────── */
+.seg-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 5px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 11px;
+  color: var(--muted);
+}
+.seg-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.seg-legend-swatch {
+  width: 14px;
+  height: 8px;
+  border-radius: 2px;
+}
+.seg-legend-swatch.solid-green { background: #1c8f5a; }
+.seg-legend-swatch.ghost-green { background: #d3f0e2; border: 1px solid #1c8f5a; }
+.seg-legend-swatch.solid-red   { background: #eb5757; }
+.seg-legend-swatch.ghost-amber { background: #fdecc8; border: 1px solid #c28b48; }
+.seg-legend-swatch.solid-gray  { background: #9b9a97; }
+
+/* ── Project list row refinements ──────────────────────────────── */
+.project-info {
+  min-width: 0;
+}
+.project-sub {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.project-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.project-owner-name {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.deviation-chip {
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.deviation-chip.slip {
+  background: var(--red-bg);
+  color: var(--red);
+}
+.deviation-chip.warn {
+  background: var(--yellow-bg);
+  color: var(--yellow);
+}
+
+/* ── Group row RAG dots ────────────────────────────────────────── */
+.group-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.group-rag-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.group-rag-dots .mini-rag {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.group-rag-dots .mini-rag .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.group-rag-dots .mini-rag .dot.R { background: var(--red); }
+.group-rag-dots .mini-rag .dot.Y { background: var(--yellow); }
+.group-rag-dots .mini-rag .dot.G { background: var(--green); }

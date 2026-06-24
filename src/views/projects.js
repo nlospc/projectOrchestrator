@@ -7,6 +7,7 @@ import { computeSegments } from "../core/milestones.js";
 import {
   filteredProjects, overviewMetrics,
   projectOverflowSegment, projectRag, projectResourceSummary,
+  projectsViewMetrics,
 } from "../core/selectors.js";
 import { state } from "../state/app-state.js";
 
@@ -177,19 +178,57 @@ function overviewDonut(confidence, total) {
   </svg>`;
 }
 
+function projectsMiniDonut(metrics) {
+  const total = metrics.red + metrics.yellow + metrics.green;
+  if (!total) return "";
+  const r = 15.915;
+  const redPct = (metrics.red / total) * 100;
+  const yellowPct = (metrics.yellow / total) * 100;
+  const greenPct = (metrics.green / total) * 100;
+  const offset = 25;
+  return `<svg class="rag-donut-mini" viewBox="0 0 36 36">
+    <circle cx="18" cy="18" r="${r}" fill="none" stroke="var(--gray-bg)" stroke-width="3"></circle>
+    ${redPct > 0 ? `<circle cx="18" cy="18" r="${r}" fill="none" stroke="var(--red)" stroke-width="3" stroke-dasharray="${redPct} ${100 - redPct}" stroke-dashoffset="${offset}" transform="rotate(-90 18 18)"></circle>` : ""}
+    ${yellowPct > 0 ? `<circle cx="18" cy="18" r="${r}" fill="none" stroke="var(--yellow)" stroke-width="3" stroke-dasharray="${yellowPct} ${100 - yellowPct}" stroke-dashoffset="${offset - redPct}" transform="rotate(-90 18 18)"></circle>` : ""}
+    ${greenPct > 0 ? `<circle cx="18" cy="18" r="${r}" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="${greenPct} ${100 - greenPct}" stroke-dashoffset="${offset - redPct - yellowPct}" transform="rotate(-90 18 18)"></circle>` : ""}
+  </svg>`;
+}
+
 // ─── Projects Gantt view ──────────────────────────────────────────────────────
 
 export function projectsView() {
   const list = filteredProjects();
+  const metrics = projectsViewMetrics(list);
   const { groupBy, includeArchived } = state.filters;
   const groupOptions = [
+    ["family", "按产品族"],
     ["none", "不分组"],
     ["dept", "按部门"],
     ["owner", "按负责人"],
     ["rag", "按状态"],
   ];
   const groupLabel = groupOptions.find(([value]) => value === groupBy)?.[1] ?? "不分组";
-  return `<section class="panel project-monitor">
+  return `<div class="projects-hero-strip">
+    <div class="projects-hero-stat">
+      <span class="hero-num">${metrics.total}</span>
+      <span class="hero-unit">个项目</span>
+    </div>
+    <div class="hero-sep"></div>
+    <div class="rag-mini-group">
+      ${projectsMiniDonut(metrics)}
+      <span class="rag-mini clickable" data-action="health-filter" data-value="R"><span class="dot R"></span>${metrics.red}</span>
+      <span class="rag-mini clickable" data-action="health-filter" data-value="Y"><span class="dot Y"></span>${metrics.yellow}</span>
+      <span class="rag-mini clickable" data-action="health-filter" data-value="G"><span class="dot G"></span>${metrics.green}</span>
+    </div>
+    <div class="hero-sep"></div>
+    ${metrics.slippingCount > 0
+      ? `<div class="hero-alert-chip slip">${metrics.slippingCount} 个滑点里程碑 · 最大 +${metrics.maxDeviation}d</div>`
+      : ""}
+    ${metrics.milestonesDue30 > 0
+      ? `<div class="hero-alert-chip due">${metrics.milestonesDue30} 个 ≤30天到期</div>`
+      : ""}
+  </div>
+  <section class="panel project-monitor">
       <div class="project-monitor-head">
         <div>
           <h2>关键里程碑监控</h2>
@@ -223,6 +262,14 @@ export function projectsView() {
           <span class="granularity-chip disabled" title="v1.1 功能">周</span>
           <span class="granularity-chip disabled" title="v1.1 功能">季度</span>
         </div>
+      </div>
+      <div class="seg-legend">
+        <span style="font-weight:600;margin-right:4px">图例</span>
+        <span class="seg-legend-item"><span class="seg-legend-swatch solid-green"></span>按期完成</span>
+        <span class="seg-legend-item"><span class="seg-legend-swatch ghost-green"></span>未来在轨</span>
+        <span class="seg-legend-item"><span class="seg-legend-swatch ghost-amber"></span>延期完成</span>
+        <span class="seg-legend-item"><span class="seg-legend-swatch solid-red"></span>逾期未填</span>
+        <span class="seg-legend-item"><span class="seg-legend-swatch solid-gray"></span>已归档</span>
       </div>
       <div class="table-wrap" id="project-timeline-wrap">${timeline(list)}</div>
     </section>`;
@@ -314,6 +361,7 @@ export function groupProjects(list, today = state.today) {
   const groupBy = state.filters?.groupBy ?? "none";
 
   function getKey(p) {
+    if (groupBy === "family") return p.family || "未分类";
     if (groupBy === "dept")  return p.dept  || "未知部门";
     if (groupBy === "owner") return projectProductManagerName(p) || "未知负责人";
     if (groupBy === "rag")   return projectRag(p, today);
@@ -350,17 +398,27 @@ export function groupProjects(list, today = state.today) {
     key,
     label: groupBy === "rag" ? (RAG_LABELS[key] ?? key) : key,
     redCount: ps.filter(p => projectRag(p, today) === "R").length,
+    yellowCount: ps.filter(p => projectRag(p, today) === "Y").length,
+    greenCount: ps.filter(p => projectRag(p, today) === "G").length,
     projects: ps,
   }));
 }
 
 export function groupRow(group) {
-  const redBadge = group.redCount
-    ? ` · <span class="red-count">${group.redCount} 红灯</span>`
-    : "";
+  const rc = group.redCount || 0;
+  const yc = group.yellowCount || 0;
+  const gc = group.greenCount || 0;
+  const dots = [
+    rc > 0 ? `<span class="mini-rag"><span class="dot R"></span>${rc}</span>` : "",
+    yc > 0 ? `<span class="mini-rag"><span class="dot Y"></span>${yc}</span>` : "",
+    gc > 0 ? `<span class="mini-rag"><span class="dot G"></span>${gc}</span>` : "",
+  ].filter(Boolean).join("");
   return `<div class="project-group-row">
     <strong>${escapeHtml(group.label)}</strong>
-    <span>${group.projects.length} 个项目${redBadge}</span>
+    <div class="group-meta">
+      <span>${group.projects.length} 个项目</span>
+      <div class="group-rag-dots">${dots}</div>
+    </div>
   </div>`;
 }
 
@@ -368,14 +426,26 @@ export function projectListRow(project, today = state.today) {
   const rag = projectRag(project, today);
   const tooltip = escapeHtml(`${project.code || project.id}: ${project.summary || project.name}`);
   const ownerName = escapeHtml(projectProductManagerName(project));
+  const ms = milestones
+    .filter(m => m.projectId === project.id)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const segs = ms.length ? computeSegments(ms, project, today) : [];
+  const maxDev = Math.max(0, ...segs.filter(s => s.scenario === 2 || s.scenario === 4).map(s => s.deviationDays));
+  const devChip = maxDev > 0
+    ? `<span class="deviation-chip ${rag === "R" ? "slip" : "warn"}">+${maxDev}d</span>`
+    : "";
   return `<button class="project-list-row${project.archived ? " archived-row" : ""}"
       data-open-project="${project.id}"
       title="${tooltip}">
     <span class="rag-lamp ${rag}"></span>
-    <span class="project-name">${escapeHtml(project.name)}</span>
-    <span class="project-owner">
-      <span class="owner-avatar">${project.owner?.avatar || "👤"}</span>${ownerName}
-    </span>
+    <div class="project-info">
+      <div class="project-name">${escapeHtml(project.name)}</div>
+      <div class="project-sub">${escapeHtml(project.dept || "")} · ${escapeHtml(project.biz || "")}</div>
+    </div>
+    <div class="project-right">
+      <span class="project-owner-name">${ownerName}</span>
+      ${devChip}
+    </div>
   </button>`;
 }
 

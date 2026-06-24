@@ -347,3 +347,42 @@ export function overviewMetrics() {
     },
   };
 }
+
+export function projectsViewMetrics(projectList = filteredProjects()) {
+  const today = state.today ?? new Date();
+  let red = 0, yellow = 0, green = 0;
+  for (const p of projectList) {
+    const rag = projectRag(p, today);
+    if (rag === 'R') red++;
+    else if (rag === 'Y') yellow++;
+    else if (rag === 'G') green++;
+  }
+  const total = red + yellow + green;
+
+  let slippingCount = 0;
+  let maxDeviation = 0;
+  const projectIds = new Set(projectList.map(p => p.id));
+  for (const p of projectList) {
+    const ms = milestones
+      .filter(m => m.projectId === p.id)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    if (!ms.length) continue;
+    const segs = computeSegments(ms, p, today);
+    for (const seg of segs) {
+      if ((seg.scenario === 2 || seg.scenario === 4) && seg.deviationDays > 0) {
+        slippingCount++;
+        if (seg.deviationDays > maxDeviation) maxDeviation = seg.deviationDays;
+      }
+    }
+  }
+
+  const upcoming = milestones.filter(m =>
+    !m.actual_end_date && projectIds.has(m.projectId)
+  );
+  const milestonesDue30 = upcoming.filter(m => {
+    const days = Math.round((new Date(m.planned_end_date) - today) / 86400000);
+    return days <= 30;
+  }).length;
+
+  return { total, red, yellow, green, slippingCount, maxDeviation, milestonesDue30 };
+}
