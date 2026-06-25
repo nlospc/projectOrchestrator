@@ -439,8 +439,6 @@ export function matrixView() {
   const focus = state.resourceFilters.projectFocus;
   const focusProject = focus ? projects.find(p => p.id === focus) : null;
 
-  // When focused, filter allocation list to only show the target project's people.
-  // Allocations use legacy projectId strings — fall back to name matching if needed.
   let list = resourceProjects();
   let focusBanner = "";
   if (focus) {
@@ -463,26 +461,64 @@ export function matrixView() {
   }
 
   const groups = businessProjectGroups(list);
+  const allAllocs = projectAllocations(list);
+  const systemCount = new Set(allAllocs.map(a => a.system).filter(Boolean)).size;
+  const activeProjects = list.filter(p => p.status !== '项目暂停').length;
+  const peopleCount = new Set(allAllocs.map(a => a.person)).size;
+  const bizCount = groups.length;
+  const avgComplexity = allAllocs.length
+    ? (allAllocs.reduce((s, a) => s + (a.complexity || 0), 0) / allAllocs.length).toFixed(1)
+    : '–';
+
   return `<div class="resource-workspace people-project-workspace">
+    <div class="hero-strip">
+      <div class="hero-card confidence">
+        <span class="hero-label">覆盖系统</span>
+        <span class="hero-value">${systemCount}</span>
+        <span class="hero-sub">系统 / 平台</span>
+      </div>
+      <div class="hero-card clickable" data-route="resource">
+        <span class="hero-label">参与项目</span>
+        <span class="hero-value">${list.length}</span>
+        <span class="hero-sub">活跃 ${activeProjects} 个</span>
+      </div>
+      <div class="hero-card clickable" data-route="people">
+        <span class="hero-label">矩阵人数</span>
+        <span class="hero-value">${peopleCount}</span>
+        <span class="hero-sub">人员 × 项目</span>
+      </div>
+      <div class="hero-card clickable">
+        <span class="hero-label">业务部门</span>
+        <span class="hero-value">${bizCount}</span>
+        <span class="hero-sub">分组</span>
+      </div>
+      <div class="hero-card">
+        <span class="hero-label">平均复杂度</span>
+        <span class="hero-value">${avgComplexity}</span>
+        <span class="hero-sub">1–5 标度</span>
+      </div>
+    </div>
+
     ${focusBanner}
     ${resourceFilterBar()}
-    <section class="panel benchmark-panel">
-      <div class="matrix-toolbar">
-        <div>
-          <h2>📊 角色 × 项目阶段 参与度（矩阵单元格百分比来源）</h2>
-          <p class="muted">矩阵用于 R2 V7 负荷公式中的角色阶段权重：复杂度 × 状态权重 × 角色参与度。</p>
+
+    <section class="panel cockpit-panel benchmark-panel">
+      <div class="panel-header">
+        <span class="panel-title">角色 × 项目阶段 参与度</span>
+        <div class="rv-seg-legend">
+          <span><i class="rv-seg-swatch G"></i>高参与</span>
+          <span><i class="rv-seg-swatch Y"></i>中参与</span>
+          <span><i class="rv-seg-swatch" style="background:var(--gray-bg)"></i>低参与</span>
         </div>
-        <div class="inline-actions"><span class="badge G">低参与</span><span class="badge Y">中参与</span><span class="badge R">高参与</span></div>
       </div>
+      <p class="panel-hint">矩阵为 R2 V7 负荷公式中的角色阶段权重来源：复杂度 × 状态权重 × 角色参与度。</p>
       ${benchmarkParticipationMatrix()}
     </section>
-    <section class="panel business-groups-panel">
-      <div class="matrix-toolbar">
-        <div>
-          <h2>业务部门分组项目人员</h2>
-          <p class="muted">按 R2 workspace 的业务部门分组，把每个项目的产品、项目、Agent、技术、测试、运维等参与人员展开。</p>
-        </div>
-        <span class="muted">${groups.reduce((sum, group) => sum + group.projects.length, 0)} 个项目</span>
+
+    <section class="panel cockpit-panel business-groups-panel">
+      <div class="panel-header">
+        <span class="panel-title">业务部门分组项目人员</span>
+        <span class="panel-badge info">${groups.reduce((sum, group) => sum + group.projects.length, 0)} 个项目</span>
       </div>
       ${groups.length
         ? businessProjectGroupsView(groups)
@@ -568,38 +604,63 @@ export function workloadView() {
   const projectIds = list.map((project) => project.id);
   const all = projectAllocations(list);
   const high = stats.filter((person) => person.load >= 1.2).length;
+  const totalRatio = all.reduce((sum, allocation) => sum + allocation.timeRatio, 0);
   const outsourcedRatio = all.length ? Math.round((all.filter((allocation) => allocation.outsourced).length / all.length) * 100) : 0;
+
   return `<div class="resource-workspace workload-heatmap-workspace">
+    <div class="hero-strip">
+      <div class="hero-card confidence">
+        <span class="hero-label">当前人数</span>
+        <span class="hero-value">${stats.length}</span>
+        <span class="hero-sub">筛选范围内</span>
+      </div>
+      <div class="hero-card clickable" data-route="matrix">
+        <span class="hero-label">项目数</span>
+        <span class="hero-value">${list.length}</span>
+        <span class="hero-sub">热力列</span>
+      </div>
+      <div class="hero-card clickable">
+        <span class="hero-label">总投入比例</span>
+        <span class="hero-value">${Math.round(totalRatio * 100)}<small>%</small></span>
+        <span class="hero-sub">Excel 工时投入占比</span>
+      </div>
+      <div class="hero-card clickable" data-route="people">
+        <span class="hero-label">高负载人员</span>
+        <span class="hero-value${high > 0 ? ' text-danger' : ''}">${high}</span>
+        <span class="hero-sub">load >= 1.2</span>
+      </div>
+      <div class="hero-card clickable">
+        <span class="hero-label">外包占比</span>
+        <span class="hero-value">${outsourcedRatio}<small>%</small></span>
+        <span class="hero-sub">资源分配记录</span>
+      </div>
+    </div>
+
     ${resourceFilterBar()}
-    <section class="panel matrix-panel">
-      <div class="matrix-toolbar">
-        <div>
-          <h2>人员 × 项目 热力</h2>
-          <p class="muted">单元格显示投入比例 / 计算负荷；点击热力单元格或人员行，以抽屉形式查看人员项目贡献。</p>
+
+    <div class="panel cockpit-panel">
+      <div class="panel-header">
+        <span class="panel-title">人员 x 项目 负荷热力</span>
+        <div class="rv-seg-legend">
+          <span><i class="rv-seg-swatch G"></i>低 &lt; 0.6</span>
+          <span><i class="rv-seg-swatch Y"></i>中 0.6-1.2</span>
+          <span><i class="rv-seg-swatch R"></i>高 >= 1.2</span>
         </div>
-        <div class="inline-actions"><span class="badge G">低 &lt; 0.6</span><span class="badge Y">中 0.6-1.2</span><span class="badge R">高 &gt;= 1.2</span></div>
       </div>
-      <div class="matrix-summary">
-        ${kpi("当前人数", stats.length, "筛选范围")}
-        ${kpi("项目数", list.length, "热力列")}
-        ${kpi("总投入比例", `${Math.round(all.reduce((sum, allocation) => sum + allocation.timeRatio, 0) * 100)}%`, "Excel 工时投入占比")}
-        ${kpi("高负载人员", high, "load >= 1.2", high ? "R" : "G")}
-        ${kpi("外包占比", `${outsourcedRatio}%`, "资源分配记录")}
-        ${kpi("钻取", "抽屉", "人员项目贡献明细")}
+      <p class="panel-hint">单元格显示投入比例 / 计算负荷；点击单元格或人员行查看贡献明细。</p>
+      <div class="rv-heatmap-wrap">
+        <table class="rv-heatmap">
+          <thead><tr>
+            <th class="rv-corner">人员 / 项目</th>
+            ${list.map((project) => `<th><span>${escapeHtml(project.name)}</span>${project.system ? `<small>${escapeHtml(project.system)}</small>` : ''}</th>`).join('')}
+          </tr></thead>
+          <tbody>${stats.map((person) => `<tr class="clickable" data-open-person="${escapeHtml(person.person)}">
+            <td class="rv-rowhead"><strong>${escapeHtml(person.person)}</strong><span>${escapeHtml(person.role)}${person.outsourced ? ' · 外包' : ' · 内部'}</span></td>
+            ${projectIds.map((id) => matrixCell(person.person, id)).join('')}
+          </tr>`).join('')}</tbody>
+        </table>
       </div>
-      <div class="matrix compact-matrix heatmap-matrix"><table>
-        <thead><tr><th>人员 / 项目</th>${list.map((project) => `<th><span>${project.name}</span><small>${project.system || ""}</small></th>`).join("")}</tr></thead>
-        <tbody>${stats.map((person) => `<tr class="clickable" data-open-person="${person.person}"><td><strong>${person.person}</strong><span class="muted">${person.role}${person.outsourced ? " · 外包" : " · 内部"}</span></td>${projectIds.map((id) => matrixCell(person.person, id)).join("")}</tr>`).join("")}</tbody>
-      </table></div>
-    </section>
-    <section class="panel stack-sm">
-      <h2>负荷阈值</h2>
-      <div class="threshold-row">
-        <span class="status g"><span class="dot g"></span>低：load &lt; 0.6</span>
-        <span class="status y"><span class="dot y"></span>中：0.6 - 1.2</span>
-        <span class="status r"><span class="dot r"></span>高：load &gt;= 1.2</span>
-      </div>
-    </section>
+    </div>
   </div>`;
 }
 
@@ -691,59 +752,93 @@ export function busFactorCoverageHeatmap(rows) {
 
 export function busFactorView() {
   const rows = busFactorRows();
-  const singlePoint = rows.filter((row) => row.risk === "R").length;
-  const medium = rows.filter((row) => row.risk === "Y").length;
-  const healthy = rows.filter((row) => row.risk === "G").length;
+  const singlePoint = rows.filter((row) => row.risk === 'R').length;
+  const medium = rows.filter((row) => row.risk === 'Y').length;
+  const healthy = rows.filter((row) => row.risk === 'G').length;
   const keyPeople = keyPeopleRiskRows(rows);
   const pieRows = [
-    { label: "BF=1", value: singlePoint, key: "R" },
-    { label: "BF=2", value: medium, key: "Y" },
-    { label: "BF≥3", value: healthy, key: "G" },
+    { label: 'BF=1', value: singlePoint, key: 'R' },
+    { label: 'BF=2', value: medium, key: 'Y' },
+    { label: 'BF≥3', value: healthy, key: 'G' },
   ];
   const redline = rows.filter((row) => row.bf <= 1);
   return `<div class="resource-workspace busfactor-dashboard">
-    <div class="resource-page-head">
-      <div>
-        <h2>Bus Factor 仪表盘</h2>
-        <p class="muted">Bus Factor（公交因子）= 一个项目中，按负荷贡献从高到低累计达到 50% 所需的最少人数。BF=1 表示单点失败风险，BF=2 双备份但仍脆弱，BF≥3 健康。本仪表盘按 V7 负荷公式（复杂度 × 状态权重 × 角色参与度）计算每人对每个项目的贡献。</p>
+    <div class="hero-strip">
+      <div class="hero-card confidence">
+        <span class="hero-label">Bus Factor 红线</span>
+        <span class="hero-value${singlePoint > 0 ? ' text-danger' : ''}">${singlePoint}</span>
+        <span class="hero-sub">BF=1 单点故障项目</span>
       </div>
-      <div class="inline-actions"><button class="ghost-button" data-action="export-bf-projects">项目 BF 清单</button><button class="ghost-button" data-action="export-bf-people">关键人风险榜</button></div>
+      <div class="hero-card clickable hero-alert-y">
+        <span class="hero-label">BF=2</span>
+        <span class="hero-value${medium > 0 ? ' text-urgent' : ''}">${medium}</span>
+        <span class="hero-sub">双备份但脆弱</span>
+      </div>
+      <div class="hero-card clickable">
+        <span class="hero-label">BF≥3</span>
+        <span class="hero-value">${healthy}</span>
+        <span class="hero-sub">覆盖健康</span>
+      </div>
+      <div class="hero-card clickable" data-route="workload">
+        <span class="hero-label">关键人节点</span>
+        <span class="hero-value${keyPeople.length > 0 ? ' text-danger' : ''}">${keyPeople.length}</span>
+        <span class="hero-sub">出现在风险项目 Top 贡献</span>
+      </div>
+      <div class="hero-card">
+        <span class="hero-label">风险口径</span>
+        <span class="hero-value">50<small>%</small></span>
+        <span class="hero-sub">累计贡献阈值</span>
+      </div>
     </div>
+
     ${resourceFilterBar()}
-    <div class="matrix-summary bf-kpis">
-      ${kpi("BF=1 红线", singlePoint, "单点失败风险", singlePoint ? "R" : "G")}
-      ${kpi("BF=2", medium, "双备份但仍脆弱", medium ? "Y" : "G")}
-      ${kpi("BF≥3", healthy, "覆盖健康", "G")}
-      ${kpi("关键人节点", keyPeople.length, "出现在风险项目 Top 贡献中")}
-      ${kpi("风险口径", "50%", "累计贡献阈值")}
-      ${kpi("V7 公式", "启用", "复杂度 × 状态权重 × 角色参与度")}
+
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button class="ghost-button" data-action="export-bf-projects">项目 BF 清单 ↓</button>
+      <button class="ghost-button" data-action="export-bf-people">关键人风险榜 ↓</button>
     </div>
-    <div class="bf-chart-grid">
-      <section class="panel">
-        <h2>Bus Factor 全景分布</h2>
+
+    <div class="panel-row">
+      <div class="panel cockpit-panel">
+        <div class="panel-header"><span class="panel-title">Bus Factor 全景分布</span></div>
         ${donutChart(pieRows)}
         ${distributionList(pieRows)}
-      </section>
-      <section class="panel">
-        <h2>关键人风险榜（Top 10）</h2>
+      </div>
+      <div class="panel cockpit-panel">
+        <div class="panel-header">
+          <span class="panel-title">关键人风险榜 Top 10</span>
+          ${keyPeople.length > 0 ? '<span class="panel-badge warn">需关注</span>' : '<span class="panel-badge info">正常</span>'}
+        </div>
         ${horizontalRiskBars(keyPeople.slice(0, 10))}
-      </section>
+      </div>
     </div>
-    <section class="panel bf-redline-panel">
-      <div class="matrix-toolbar"><h2>BF=1 红线项目</h2><span class="muted">优先做知识备份、角色补位和交付拆分</span></div>
-      ${redline.length ? `<div class="bf-card-grid">${redline.map((row) => busFactorRedlineCard(row)).join("")}</div>` : '<p class="muted">当前筛选范围内没有 BF=1 红线项目。</p>'}
-    </section>
-    <section class="panel bf-coverage-panel">
-      <div class="matrix-toolbar"><h2>角色 × 项目覆盖热力</h2><span class="muted">单角色单人覆盖会形成隐性 Bus Factor 风险</span></div>
+
+    <div class="panel cockpit-panel">
+      <div class="panel-header">
+        <span class="panel-title">BF=1 红线项目</span>
+        <span class="muted" style="font-size:12px">优先做知识备份、角色补位和交付拆分</span>
+      </div>
+      ${redline.length ? `<div class="bf-card-grid">${redline.map((row) => busFactorRedlineCard(row)).join('')}</div>` : '<p class="muted">当前筛选范围内没有 BF=1 红线项目。</p>'}
+    </div>
+
+    <div class="panel cockpit-panel">
+      <div class="panel-header">
+        <span class="panel-title">角色 × 项目覆盖热力</span>
+        <span class="muted" style="font-size:12px">单角色单人覆盖会形成隐性 Bus Factor 风险</span>
+      </div>
       ${busFactorCoverageHeatmap(rows.slice(0, 8))}
-    </section>
-    <section class="panel">
-      <h2>项目 Bus Factor 明细</h2>
+    </div>
+
+    <div class="panel cockpit-panel">
+      <div class="panel-header">
+        <span class="panel-title">项目 Bus Factor 明细</span>
+        <span class="panel-badge info">${rows.length} 个项目</span>
+      </div>
       <div class="table-wrap"><table>
         <thead><tr><th>项目</th><th>总负荷</th><th>Bus Factor</th><th>关键贡献人</th><th>Top 贡献占比</th><th>参与人数</th><th>单人覆盖角色</th><th>项目健康</th><th>风险解释</th></tr></thead>
-        <tbody>${rows.map((row) => `<tr><td><strong>${row.project.name}</strong><br><span class="muted">${row.project.system}</span></td><td>${row.total.toFixed(2)}</td><td><strong>${row.bf}</strong></td><td>${row.contributors.slice(0, 3).map((c) => `${c.person} ${c.load.toFixed(2)}`).join(" / ")}</td><td>${Math.round(row.topShare * 100)}%</td><td>${row.peopleCount}</td><td>${row.singleRoles.length ? row.singleRoles.join(" / ") : '<span class="muted">-</span>'}</td><td>${badge(row.project.health)}</td><td>${busFactorExplain(row)}</td></tr>`).join("")}</tbody>
+        <tbody>${rows.map((row) => `<tr><td><strong>${row.project.name}</strong><br><span class="muted">${row.project.system}</span></td><td>${row.total.toFixed(2)}</td><td><strong>${row.bf}</strong></td><td>${row.contributors.slice(0, 3).map((c) => `${c.person} ${c.load.toFixed(2)}`).join(' / ')}</td><td>${Math.round(row.topShare * 100)}%</td><td>${row.peopleCount}</td><td>${row.singleRoles.length ? row.singleRoles.join(' / ') : '<span class="muted">-</span>'}</td><td>${badge(row.project.health)}</td><td>${busFactorExplain(row)}</td></tr>`).join('')}</tbody>
       </table></div>
-    </section>
+    </div>
   </div>`;
 }
 
@@ -768,24 +863,85 @@ export function rolesView() {
 }
 
 export function peopleView() {
-  const stats = personStats();
-  return `<section class="panel people-index-panel">
-    <div class="matrix-toolbar">
-      <h2>人员索引</h2>
-      <input id="people-search" placeholder="搜索人员、角色、部门" />
+  const list = resourceProjects();
+  const people = resourcePeopleStats(list);
+  const totalPeople = people.length;
+  const outsourcedCount = people.filter(p => p.outsourced).length;
+  const internalCount = totalPeople - outsourcedCount;
+  const externalPct = totalPeople ? Math.round((outsourcedCount / totalPeople) * 100) : 0;
+  const high = people.filter(p => p.load >= 1.2).length;
+  const overallocated = people.filter(p => p.ratio > 1).length;
+  const avgProjects = totalPeople ? (people.reduce((s, p) => s + p.projects.length, 0) / totalPeople).toFixed(1) : '0';
+
+  return `<div class="resource-workspace people-index-workspace">
+    <div class="hero-strip">
+      <div class="hero-card confidence">
+        <span class="hero-label">总人数</span>
+        <span class="hero-value">${totalPeople}</span>
+        <span class="hero-sub">内部 ${internalCount} · 外包 ${outsourcedCount} (${externalPct}%)</span>
+      </div>
+      <div class="hero-card clickable" data-route="workload">
+        <span class="hero-label">内部 / 外包</span>
+        <span class="hero-value">${internalCount}<small> / ${outsourcedCount}</small></span>
+        <span class="hero-sub">内部占比 ${totalPeople ? Math.round((internalCount / totalPeople) * 100) : 0}%</span>
+      </div>
+      <div class="hero-card clickable" data-route="workload">
+        <span class="hero-label">超负荷人员</span>
+        <span class="hero-value${high > 0 ? ' text-danger' : ''}">${high}</span>
+        <span class="hero-sub">负荷 ≥ 1.2</span>
+      </div>
+      <div class="hero-card clickable" data-route="workload">
+        <span class="hero-label">超分配人员</span>
+        <span class="hero-value${overallocated > 0 ? ' text-danger' : ''}">${overallocated}</span>
+        <span class="hero-sub">Σ 工时 &gt; 100%</span>
+      </div>
+      <div class="hero-card">
+        <span class="hero-label">平均参与项目</span>
+        <span class="hero-value">${avgProjects}</span>
+        <span class="hero-sub">每人</span>
+      </div>
     </div>
-    <div class="people-grid" id="people-grid">
-      ${stats.map((person) => peopleCard(person)).join("")}
+
+    ${resourceFilterBar()}
+
+    <div class="panel cockpit-panel">
+      <div class="rv-people-toolbar">
+        <div class="panel-header" style="gap:10px"><span class="panel-title">人员索引</span><span class="panel-badge info">${totalPeople} 人</span></div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <div class="rv-sort">
+            <button class="rv-sort-chip active" data-people-sort="load">负荷 ↓</button>
+            <button class="rv-sort-chip" data-people-sort="ratio">工时占比</button>
+            <button class="rv-sort-chip" data-people-sort="projects">项目数</button>
+            <button class="rv-sort-chip" data-people-sort="name">姓名</button>
+          </div>
+          <input class="rv-people-search" id="people-search" placeholder="搜索人员、角色、部门…">
+        </div>
+      </div>
+      <div class="rv-people-grid" id="people-grid">
+        ${people.sort((a, b) => b.load - a.load).map(person => peopleCard(person)).join('')}
+      </div>
     </div>
-  </section>`;
+  </div>`;
 }
 
 export function peopleCard(person) {
-  const level = person.load >= 1.2 ? "R" : person.load >= 0.6 ? "Y" : "G";
-  return `<button class="people-card" data-open-person="${person.person}">
-    <strong>${person.person}</strong>
-    <span class="muted">${person.role} · ${person.dept}</span>
-    <span class="people-card-meta"><span>${person.projects.length} 个项目</span><span>${Math.round(person.ratio * 100)}%</span>${badge(level)}</span>
+  const level = loadLevel(person.load);
+  const maxLoad = 2.5;
+  const barWidth = Math.max(4, Math.round((person.load / maxLoad) * 100));
+  return `<button class="rv-person-card" data-open-person="${escapeHtml(person.person)}">
+    <div class="rv-person-top">
+      <div>
+        <div class="rv-person-name">${escapeHtml(person.person)}${person.outsourced ? ' <span class="rv-ext-tag">外包</span>' : ''}</div>
+        <div class="rv-person-sub">${escapeHtml(person.role)} · ${escapeHtml(person.dept)}</div>
+      </div>
+      <span class="rv-lamp ${level.key}"></span>
+    </div>
+    <div class="rv-person-loadbar"><span class="${level.key}" style="width:${barWidth}%"></span></div>
+    <div class="rv-person-meta">
+      <span>${person.projects.length} 个项目</span>
+      <strong>${Math.round(person.ratio * 100)}%</strong>
+      <span class="badge ${level.key}">${level.label}</span>
+    </div>
   </button>`;
 }
 
