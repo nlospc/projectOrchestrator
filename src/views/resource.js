@@ -2,14 +2,14 @@ import { allocations, projects } from "../core/data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { csvValue, downloadTextFile } from "../core/files.js";
 import { $, badge, detail, escapeHtml, kpi, loadClass, loadFor, unique } from "../core/utils.js";
-import { personStats, projectAllocations, resourceProjects } from "../core/selectors.js";
+import { busFactorRows, keyPeopleRiskRows, personStats, projectAllocations, resourceProjects } from "../core/selectors.js";
 import { state } from "../state/app-state.js";
 
 export function resourceOverviewView() {
   const list = resourceProjects();
   const stats = personStats(list);
   const all = projectAllocations(list);
-  const people = resourcePeopleStats(list);
+  const people = personStats(list);
   const overallocated = people.filter((p) => p.ratio > 1).sort((a, b) => b.ratio - a.ratio);
   const projectCount = list.length;
   const activeProjects = list.filter((p) => p.status !== '项目暂停').length;
@@ -193,28 +193,6 @@ export function roleRows(list = resourceProjects()) {
     rows.set(allocation.role, current);
   });
   return [...rows.values()].map((row) => ({ ...row, people: [...row.people], projects: [...row.projects] })).sort((a, b) => b.load - a.load);
-}
-
-export function resourcePeopleStats(projectList = resourceProjects()) {
-  const rows = new Map();
-  projectAllocations(projectList).forEach((allocation) => {
-    const load = loadFor(allocation);
-    const current = rows.get(allocation.person) || {
-      person: allocation.person,
-      role: allocation.role,
-      dept: allocation.dept,
-      outsourced: allocation.outsourced,
-      projects: new Set(),
-      ratio: 0,
-      load: 0,
-    };
-    current.projects.add(allocation.projectId);
-    current.ratio += allocation.timeRatio;
-    current.load += load;
-    current.outsourced = current.outsourced || allocation.outsourced;
-    rows.set(allocation.person, current);
-  });
-  return [...rows.values()].map((row) => ({ ...row, projects: [...row.projects] }));
 }
 
 export function resourceKpi(label, value, hint, status = "") {
@@ -665,60 +643,6 @@ export function workloadView() {
   </div>`;
 }
 
-export function busFactorRows() {
-  return resourceProjects().map((project) => {
-    const peopleLoads = new Map();
-    const roleCoverage = new Map();
-    let total = 0;
-    for (const allocation of projectAllocations([project])) {
-      const load = loadFor(allocation);
-      if (load <= 0) continue;
-      total += load;
-      peopleLoads.set(allocation.person, (peopleLoads.get(allocation.person) || 0) + load);
-      const people = roleCoverage.get(allocation.role) || new Set();
-      people.add(allocation.person);
-      roleCoverage.set(allocation.role, people);
-    }
-    const contributors = [...peopleLoads.entries()].map(([person, load]) => ({ person, load })).sort((a, b) => b.load - a.load);
-    let acc = 0;
-    let bf = 0;
-    for (const item of contributors) {
-      acc += item.load;
-      bf += 1;
-      if (total > 0 && acc / total >= 0.5) break;
-    }
-    const top = contributors[0];
-    const singleRoles = [...roleCoverage.entries()].filter(([, people]) => people.size === 1).map(([role]) => role);
-    return {
-      project,
-      contributors,
-      total,
-      bf,
-      peopleCount: contributors.length,
-      topPerson: top?.person || "-",
-      topLoad: top?.load || 0,
-      topShare: total ? (top?.load || 0) / total : 0,
-      singleRoles,
-      roleCoverage,
-      risk: bf <= 1 ? "R" : bf === 2 ? "Y" : "G",
-    };
-  }).sort((a, b) => a.bf - b.bf || b.topShare - a.topShare);
-}
-
-export function keyPeopleRiskRows(rows) {
-  const people = new Map();
-  rows.filter((row) => row.bf <= 2).forEach((row) => {
-    row.contributors.slice(0, Math.max(1, row.bf)).forEach((item) => {
-      const current = people.get(item.person) || { person: item.person, projects: new Set(), load: 0, singlePoint: 0 };
-      current.projects.add(row.project.name);
-      current.load += item.load;
-      if (row.bf === 1) current.singlePoint += 1;
-      people.set(item.person, current);
-    });
-  });
-  return [...people.values()].map((item) => ({ ...item, projectCount: item.projects.size })).sort((a, b) => b.singlePoint - a.singlePoint || b.load - a.load);
-}
-
 export function donutChart(rows) {
   const total = rows.reduce((sum, row) => sum + row.value, 0) || 1;
   let offset = 25;
@@ -869,7 +793,7 @@ export function rolesView() {
 
 export function peopleView() {
   const list = resourceProjects();
-  const people = resourcePeopleStats(list);
+  const people = personStats(list);
   const totalPeople = people.length;
   const outsourcedCount = people.filter(p => p.outsourced).length;
   const internalCount = totalPeople - outsourcedCount;
@@ -923,7 +847,7 @@ export function peopleView() {
         </div>
       </div>
       <div class="rv-people-grid" id="people-grid">
-        ${people.sort((a, b) => b.load - a.load).map(person => peopleCard(person)).join('')}
+        ${[...people].sort((a, b) => b.load - a.load).map(person => peopleCard(person)).join('')}
       </div>
     </div>
   </div>`;
@@ -992,7 +916,7 @@ export function openPerson(personName) {
 }
 
 export function exportWorkloadCsv() {
-  const rows = resourcePeopleStats().sort((a, b) => b.load - a.load);
+  const rows = personStats();
   const header = ["人员", "角色", "部门", "人员类型", "项目数", "工时占比", "计算负荷", "负荷等级", "是否超分配"];
   const lines = [
     header.map(csvValue).join(","),

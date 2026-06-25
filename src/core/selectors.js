@@ -2,7 +2,6 @@ import { allocations, milestones, projects } from "./data-store.js";
 import { state } from "../state/app-state.js";
 import { computeSegments } from "./milestones.js";
 import { effectiveHealth, loadFor, parseDate } from "./utils.js";
-import { busFactorRows, keyPeopleRiskRows } from "../views/resource.js";
 
 // ─── Role-category mapping for projectResourceSummary ────────────────────────
 // Roles not listed here fall into "开发" (catch-all for technical staff).
@@ -174,6 +173,60 @@ export function projectResourceSummary(project) {
     cats[cat].add(a.person);
   }
   return { 产品: cats.产品.size, 项目: cats.项目.size, 开发: cats.开发.size };
+}
+
+export function busFactorRows() {
+  return resourceProjects().map((project) => {
+    const peopleLoads = new Map();
+    const roleCoverage = new Map();
+    let total = 0;
+    for (const allocation of projectAllocations([project])) {
+      const load = loadFor(allocation);
+      if (load <= 0) continue;
+      total += load;
+      peopleLoads.set(allocation.person, (peopleLoads.get(allocation.person) || 0) + load);
+      const people = roleCoverage.get(allocation.role) || new Set();
+      people.add(allocation.person);
+      roleCoverage.set(allocation.role, people);
+    }
+    const contributors = [...peopleLoads.entries()].map(([person, load]) => ({ person, load })).sort((a, b) => b.load - a.load);
+    let acc = 0;
+    let bf = 0;
+    for (const item of contributors) {
+      acc += item.load;
+      bf += 1;
+      if (total > 0 && acc / total >= 0.5) break;
+    }
+    const top = contributors[0];
+    const singleRoles = [...roleCoverage.entries()].filter(([, people]) => people.size === 1).map(([role]) => role);
+    return {
+      project,
+      contributors,
+      total,
+      bf,
+      peopleCount: contributors.length,
+      topPerson: top?.person || "-",
+      topLoad: top?.load || 0,
+      topShare: total ? (top?.load || 0) / total : 0,
+      singleRoles,
+      roleCoverage,
+      risk: bf <= 1 ? "R" : bf === 2 ? "Y" : "G",
+    };
+  }).sort((a, b) => a.bf - b.bf || b.topShare - a.topShare);
+}
+
+export function keyPeopleRiskRows(rows) {
+  const people = new Map();
+  rows.filter((row) => row.bf <= 2).forEach((row) => {
+    row.contributors.slice(0, Math.max(1, row.bf)).forEach((item) => {
+      const current = people.get(item.person) || { person: item.person, projects: new Set(), load: 0, singlePoint: 0 };
+      current.projects.add(row.project.name);
+      current.load += item.load;
+      if (row.bf === 1) current.singlePoint += 1;
+      people.set(item.person, current);
+    });
+  });
+  return [...people.values()].map((item) => ({ ...item, projectCount: item.projects.size })).sort((a, b) => b.singlePoint - a.singlePoint || b.load - a.load);
 }
 
 export function cockpitMetrics(projectList = filteredProjects()) {
