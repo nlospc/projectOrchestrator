@@ -1,6 +1,6 @@
 import { allocations, projects } from "../core/data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
-import { downloadTextFile } from "../core/files.js";
+import { csvValue, downloadTextFile } from "../core/files.js";
 import { $, badge, detail, escapeHtml, kpi, loadClass, loadFor, unique } from "../core/utils.js";
 import { personStats, projectAllocations, resourceProjects } from "../core/selectors.js";
 import { state } from "../state/app-state.js";
@@ -231,9 +231,10 @@ export function loadLevel(value) {
 
 export function personChip(person, interactive = true) {
   const tag = interactive ? "button" : "span";
-  const action = interactive ? ` data-open-person="${person.person}"` : "";
+  const name = escapeHtml(person.person);
+  const action = interactive ? ` data-open-person="${name}"` : "";
   return `<${tag} class="person-chip ${person.outsourced ? "external" : ""}"${action}>
-    ${person.person}${person.outsourced ? '<span>外包</span>' : ""}
+    ${name}${person.outsourced ? '<span>外包</span>' : ""}
   </${tag}>`;
 }
 
@@ -403,8 +404,8 @@ export function businessProjectGroupsView(groups) {
     <div class="table-wrap business-project-table"><table>
       <thead><tr><th>系统 / 项目</th><th>阶段</th><th>复杂度</th><th>产品</th><th>项目</th><th>Agent</th><th>技术</th><th>测试</th><th>运维 / 其他</th><th>投入</th></tr></thead>
       <tbody>${group.projects.map((project) => `<tr>
-        <td><strong>${project.projectName}</strong><br><span class="muted">${project.system} · ${project.cat}</span></td>
-        <td>${project.status}</td>
+        <td><strong>${escapeHtml(project.projectName)}</strong><br><span class="muted">${escapeHtml(project.system)} · ${escapeHtml(project.cat)}</span></td>
+        <td>${escapeHtml(project.status)}</td>
         <td>${project.complexity}</td>
         <td>${rolePeopleCell(project, ["产品经理", "Product Manager", "产品"])}</td>
         <td>${rolePeopleCell(project, ["项目经理", "PM", "Project Manager"])}</td>
@@ -737,13 +738,17 @@ export function horizontalRiskBars(rows) {
 }
 
 export function busFactorRedlineCard(row) {
-  return `<article class="bf-risk-card"><div><span class="badge R">BF=1</span><h3>${row.project.name}</h3><p class="muted">${row.project.system} · ${row.project.status}</p></div><div class="bf-risk-meta"><span>关键人 <strong>${row.topPerson}</strong></span><span>Top 贡献 <strong>${Math.round(row.topShare * 100)}%</strong></span><span>总负荷 <strong>${row.total.toFixed(2)}</strong></span></div><p>${busFactorExplain(row)}</p></article>`;
+  const name = escapeHtml(row.project.name);
+  const system = escapeHtml(row.project.system);
+  const status = escapeHtml(row.project.status);
+  const person = escapeHtml(row.topPerson);
+  return `<article class="bf-risk-card"><div><span class="badge R">BF=1</span><h3>${name}</h3><p class="muted">${system} · ${status}</p></div><div class="bf-risk-meta"><span>关键人 <strong>${person}</strong></span><span>Top 贡献 <strong>${Math.round(row.topShare * 100)}%</strong></span><span>总负荷 <strong>${row.total.toFixed(2)}</strong></span></div><p>${busFactorExplain(row)}</p></article>`;
 }
 
 export function busFactorCoverageHeatmap(rows) {
   const roles = unique(allocations.map((allocation) => allocation.role)).slice(0, 8);
   if (!rows.length || !roles.length) return '<p class="muted">暂无覆盖数据。</p>';
-  return `<div class="table-wrap coverage-heatmap"><table><thead><tr><th>项目 / 角色</th>${roles.map((role) => `<th>${role}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr><td><strong>${row.project.name}</strong><span class="muted">BF ${row.bf}</span></td>${roles.map((role) => {
+  return `<div class="table-wrap coverage-heatmap"><table><thead><tr><th>项目 / 角色</th>${roles.map((role) => `<th>${escapeHtml(role)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr><td><strong>${escapeHtml(row.project.name)}</strong><span class="muted">BF ${row.bf}</span></td>${roles.map((role) => {
     const count = row.roleCoverage.get(role)?.size || 0;
     const cls = count <= 0 ? "empty" : count === 1 ? "risk" : count === 2 ? "warn" : "ok";
     return `<td><span class="coverage-cell ${cls}">${count || "-"}</span></td>`;
