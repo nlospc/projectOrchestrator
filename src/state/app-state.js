@@ -4,7 +4,7 @@ export const state = {
   route: window.location.hash.replace("#", "") || "cockpit",
   selectedProjectId: null,
   filters: { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "family", includeArchived: false },
-  resourceFilters: { system: "all", role: "all", outsource: "all", projectFocus: null },
+  resourceFilters: { system: "all", role: "all", outsource: "all", projectFocus: null, biz: "all", dept: "all", status: "all", health: "all" },
   drawer: { projectId: null, scrollToMilestoneId: null, activeTab: "milestones" },
   uploads: {},
   settings: { delayRedThresholdDays: 7, redOverdueDays: 7 },

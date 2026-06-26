@@ -563,6 +563,8 @@ export function resourceFilterBar() {
   const hasUnattributed = rawSystems.some((s) => !s);
   const systems = ["all", ...(hasUnattributed ? ["未归属系统"] : []), ...rawSystems.filter(Boolean)];
   const roles = ["all", ...unique(allocations.map((allocation) => allocation.role))];
+  const bizList = ["all", ...unique(allocations.map((a) => a.biz).filter(Boolean))];
+  const deptList = ["all", ...unique(allocations.map((a) => a.dept).filter(Boolean))];
   return `<section class="resource-filter-panel">
     <span class="tag">资源筛选</span>
     <label>系统<select data-resource-filter="system">${systems.map((value) => `<option value="${value}" ${state.resourceFilters.system === value ? "selected" : ""}>${value === "all" ? "全部系统" : value}</option>`).join("")}</select></label>
@@ -572,6 +574,8 @@ export function resourceFilterBar() {
       <option value="internal" ${state.resourceFilters.outsource === "internal" ? "selected" : ""}>内部</option>
       <option value="external" ${state.resourceFilters.outsource === "external" ? "selected" : ""}>外包</option>
     </select></label>
+    <label>业务<select data-resource-filter="biz">${bizList.map((v) => `<option value="${v}" ${state.resourceFilters.biz === v ? "selected" : ""}>${v === "all" ? "全部业务" : v}</option>`).join("")}</select></label>
+    <label>部门<select data-resource-filter="dept">${deptList.map((v) => `<option value="${v}" ${state.resourceFilters.dept === v ? "selected" : ""}>${v === "all" ? "全部部门" : v}</option>`).join("")}</select></label>
   </section>`;
 }
 

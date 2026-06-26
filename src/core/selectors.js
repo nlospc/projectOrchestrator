@@ -48,17 +48,16 @@ export function resourceProjects() {
     }
   });
   return [...rows.values()].filter((project) => {
-    const filters = state.filters;
-    const resourceFilters = state.resourceFilters;
+    const rf = state.resourceFilters;
     return (
-      (filters.dept === "all" || project.dept === filters.dept) &&
-      (filters.biz === "all" || project.biz === filters.biz) &&
-      (filters.status === "all" || project.status === filters.status) &&
-      (filters.health === "all" || project.health === filters.health) &&
-      (resourceFilters.system === "all" ||
-        (resourceFilters.system === "未归属系统"
+      (rf.biz    === "all" || project.biz    === rf.biz)    &&
+      (rf.dept   === "all" || project.dept   === rf.dept)   &&
+      (rf.status === "all" || project.status === rf.status) &&
+      (rf.health === "all" || project.health === rf.health) &&
+      (rf.system === "all" ||
+        (rf.system === "未归属系统"
           ? !project.system
-          : project.system === resourceFilters.system))
+          : project.system === rf.system))
     );
   });
 }
