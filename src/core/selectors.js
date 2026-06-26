@@ -55,7 +55,10 @@ export function resourceProjects() {
       (filters.biz === "all" || project.biz === filters.biz) &&
       (filters.status === "all" || project.status === filters.status) &&
       (filters.health === "all" || project.health === filters.health) &&
-      (resourceFilters.system === "all" || project.system === resourceFilters.system)
+      (resourceFilters.system === "all" ||
+        (resourceFilters.system === "未归属系统"
+          ? !project.system
+          : project.system === resourceFilters.system))
     );
   });
 }

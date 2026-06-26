@@ -375,22 +375,47 @@ export function businessProjectGroups(projectList = resourceProjects()) {
   })).sort((a, b) => b.projects.length - a.projects.length || a.biz.localeCompare(b.biz));
 }
 
+const ROLE_CATS = [
+  { cat: 'pm',    label: '产品',  matches: ['产品经理', 'Product Manager', '产品'] },
+  { cat: 'proj',  label: '项目',  matches: ['项目经理', 'PM', 'Project Manager'] },
+  { cat: 'agent', label: 'Agent', matches: ['Agent开发', 'Agent', 'AI Agent', '智能体'] },
+  { cat: 'tech',  label: '技术',  matches: ['技术负责人', 'Tech Lead', '开发', '架构师', '全栈'] },
+  { cat: 'qa',    label: '测试',  matches: ['测试', 'QA', '测试负责人'] },
+];
+
+function roleCategory(role) {
+  for (const { cat, label, matches } of ROLE_CATS) {
+    if (matches.some((m) => role.includes(m))) return { cat, label };
+  }
+  return { cat: 'other', label: role.slice(0, 4) };
+}
+
+function allRoleChips(project) {
+  const chips = [];
+  project.roles.forEach((peopleMap, role) => {
+    const { cat, label } = roleCategory(role);
+    peopleMap.forEach((_, person) => chips.push({ cat, label, person }));
+  });
+  if (!chips.length) return '<span class="muted">-</span>';
+  const shown = chips.slice(0, 8);
+  const more = chips.length - shown.length;
+  return `<div class="role-chip-list">${shown.map(
+    ({ cat, label, person }) =>
+      `<span class="role-chip role-chip-${cat}"><em>[${escapeHtml(label)}]</em> ${escapeHtml(person)}</span>`
+  ).join('')}${more > 0 ? `<span class="muted">+${more}</span>` : ''}</div>`;
+}
+
 export function businessProjectGroupsView(groups) {
   if (!groups.length) return '<p class="muted">当前筛选范围内暂无人员项目分组。</p>';
   return `<div class="business-group-list">${groups.map((group) => `<details class="business-group" open>
     <summary><strong>${group.biz}</strong><span class="muted">${group.projects.length} 个项目</span></summary>
     <div class="table-wrap business-project-table"><table>
-      <thead><tr><th>系统 / 项目</th><th>阶段</th><th>复杂度</th><th>产品</th><th>项目</th><th>Agent</th><th>技术</th><th>测试</th><th>运维 / 其他</th><th>投入</th></tr></thead>
+      <thead><tr><th>系统 / 项目</th><th>阶段</th><th>∑人员</th><th>人员构成</th><th>投入</th></tr></thead>
       <tbody>${group.projects.map((project) => `<tr>
         <td><strong>${escapeHtml(project.projectName)}</strong><br><span class="muted">${escapeHtml(project.system)} · ${escapeHtml(project.cat)}</span></td>
         <td>${escapeHtml(project.status)}</td>
-        <td>${project.complexity}</td>
-        <td>${rolePeopleCell(project, ["产品经理", "Product Manager", "产品"])}</td>
-        <td>${rolePeopleCell(project, ["项目经理", "PM", "Project Manager"])}</td>
-        <td>${rolePeopleCell(project, ["Agent开发", "Agent", "AI Agent", "智能体"])}</td>
-        <td>${rolePeopleCell(project, ["技术负责人", "Tech Lead", "开发", "架构师"])}</td>
-        <td>${rolePeopleCell(project, ["测试", "QA", "测试负责人"])}</td>
-        <td>${otherRolePeopleCell(project, ["产品经理", "Product Manager", "产品", "项目经理", "PM", "Project Manager", "Agent开发", "Agent", "AI Agent", "智能体", "技术负责人", "Tech Lead", "开发", "架构师", "测试", "QA", "测试负责人"])}</td>
+        <td>${(() => { const s = new Set(); project.roles.forEach(m => m.forEach((_, p) => s.add(p))); return s.size; })()}</td>
+        <td>${allRoleChips(project)}</td>
         <td><strong>${Math.round(project.totalRatio * 100)}%</strong><br><span class="muted">${project.totalLoad.toFixed(2)}</span></td>
       </tr>`).join("")}</tbody>
     </table></div>

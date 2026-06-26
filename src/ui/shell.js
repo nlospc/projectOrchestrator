@@ -322,6 +322,13 @@ function bindEvents() {
   }
 
   document.addEventListener("click", async (event) => {
+    const sysFilterRow = event.target.closest("[data-resource-filter-system]");
+    if (sysFilterRow) {
+      state.resourceFilters.system = sysFilterRow.dataset.resourceFilterSystem;
+      goToRoute("resource");
+      return;
+    }
+
     const groupByToggle = event.target.closest("[data-groupby-toggle]");
     if (groupByToggle) {
       const menu = groupByToggle.parentElement?.querySelector("[data-groupby-menu]");
