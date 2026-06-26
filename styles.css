@@ -672,6 +672,7 @@ button.person-row {
 }
 
 .bar-track {
+  display: block;
   height: 9px;
   border-radius: 999px;
   background: var(--surface-2);
@@ -696,6 +697,7 @@ button.person-row {
 }
 
 .bar-fill {
+  display: block;
   height: 100%;
   border-radius: inherit;
 }
@@ -3950,6 +3952,7 @@ button.chart-bar:hover strong {
 }
 
 .sys-dist-bar-fill {
+  display: block;
   height: 100%;
   border-radius: 4px;
   background: var(--primary);
