@@ -397,7 +397,7 @@ function allRoleChips(project) {
     peopleMap.forEach((_, person) => chips.push({ cat, label, person }));
   });
   if (!chips.length) return '<span class="muted">-</span>';
-  const shown = chips.slice(0, 8);
+  const shown = chips.slice(0, 10);
   const more = chips.length - shown.length;
   return `<div class="role-chip-list">${shown.map(
     ({ cat, label, person }) =>
@@ -405,20 +405,44 @@ function allRoleChips(project) {
   ).join('')}${more > 0 ? `<span class="muted">+${more}</span>` : ''}</div>`;
 }
 
+function projectStatusClass(status) {
+  if (['需求调研', '产品设计'].includes(status)) return 'early';
+  if (['产品开发', '产品自测', 'UAT'].includes(status)) return 'active';
+  if (['部署上线', '系统运维'].includes(status)) return 'live';
+  if (status === '项目暂停') return 'paused';
+  return '';
+}
+
+function matrixProjectCard(project) {
+  const personCount = (() => { const s = new Set(); project.roles.forEach(m => m.forEach((_, p) => s.add(p))); return s.size; })();
+  const sc = projectStatusClass(project.status);
+  return `<div class="matrix-project-card">
+    <div class="mpc-left">
+      <div class="mpc-identity">
+        <div class="project-name">${escapeHtml(project.projectName)}</div>
+        <div class="project-sub">${escapeHtml(project.system || '—')} · ${escapeHtml(project.cat || '—')}</div>
+      </div>
+      <span class="mpc-phase mpc-phase-${sc}">${escapeHtml(project.status)}</span>
+    </div>
+    <div class="mpc-chips">${allRoleChips(project)}</div>
+    <div class="mpc-invest">
+      <strong>${Math.round(project.totalRatio * 100)}%</strong>
+      <span class="muted">∑${personCount}人</span>
+      <span class="muted">${project.totalLoad.toFixed(2)}</span>
+    </div>
+  </div>`;
+}
+
 export function businessProjectGroupsView(groups) {
   if (!groups.length) return '<p class="muted">当前筛选范围内暂无人员项目分组。</p>';
   return `<div class="business-group-list">${groups.map((group) => `<details class="business-group" open>
     <summary><strong>${group.biz}</strong><span class="muted">${group.projects.length} 个项目</span></summary>
-    <div class="table-wrap business-project-table"><table>
-      <thead><tr><th>系统 / 项目</th><th>阶段</th><th>∑人员</th><th>人员构成</th><th>投入</th></tr></thead>
-      <tbody>${group.projects.map((project) => `<tr>
-        <td><strong>${escapeHtml(project.projectName)}</strong><br><span class="muted">${escapeHtml(project.system)} · ${escapeHtml(project.cat)}</span></td>
-        <td>${escapeHtml(project.status)}</td>
-        <td>${(() => { const s = new Set(); project.roles.forEach(m => m.forEach((_, p) => s.add(p))); return s.size; })()}</td>
-        <td>${allRoleChips(project)}</td>
-        <td><strong>${Math.round(project.totalRatio * 100)}%</strong><br><span class="muted">${project.totalLoad.toFixed(2)}</span></td>
-      </tr>`).join("")}</tbody>
-    </table></div>
+    <div class="matrix-card-list">
+      <div class="matrix-card-header">
+        <span>项目</span><span>人员构成</span><span>投入</span>
+      </div>
+      ${group.projects.map(matrixProjectCard).join('')}
+    </div>
   </details>`).join("")}</div>`;
 }
 
@@ -535,7 +559,9 @@ export function matrixView() {
 }
 
 export function resourceFilterBar() {
-  const systems = ["all", ...unique(allocations.map((allocation) => allocation.system))];
+  const rawSystems = unique(allocations.map((a) => a.system));
+  const hasUnattributed = rawSystems.some((s) => !s);
+  const systems = ["all", ...(hasUnattributed ? ["未归属系统"] : []), ...rawSystems.filter(Boolean)];
   const roles = ["all", ...unique(allocations.map((allocation) => allocation.role))];
   return `<section class="resource-filter-panel">
     <span class="tag">资源筛选</span>

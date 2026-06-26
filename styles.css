@@ -1626,8 +1626,89 @@ button.person-chip:hover {
   background: var(--surface-2);
 }
 
-.business-project-table table {
-  min-width: 1120px;
+/* milestone-style card list for business-group projects */
+.matrix-card-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.matrix-card-header {
+  display: grid;
+  grid-template-columns: 220px 1fr 76px;
+  gap: 0 16px;
+  padding: 6px 14px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.matrix-project-card {
+  display: grid;
+  grid-template-columns: 220px 1fr 76px;
+  gap: 0 16px;
+  align-items: start;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.1s;
+}
+
+.matrix-project-card:last-child {
+  border-bottom: none;
+}
+
+.matrix-project-card:hover {
+  background: var(--surface-2);
+}
+
+.mpc-left {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.mpc-identity .project-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mpc-phase {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.02em;
+  width: fit-content;
+}
+
+.mpc-phase-early  { background: #e8f0fe; color: #1a73e8; }
+.mpc-phase-active { background: #fff8e1; color: #e65100; }
+.mpc-phase-live   { background: #e8f5e9; color: #2e7d32; }
+.mpc-phase-paused { background: var(--gray-bg); color: var(--muted); }
+
+.mpc-chips {
+  padding-top: 2px;
+}
+
+.mpc-invest {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding-top: 2px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mpc-invest strong {
+  font-size: 13px;
+  color: var(--text);
 }
 
 .people-chip-list {
