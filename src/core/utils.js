@@ -1,5 +1,6 @@
 import { roleWeights } from "../data/mock-data.js";
 import { healthByValue } from "../config/definitions.js";
+import { appSettings } from "./data-store.js";
 
 
 
@@ -17,8 +18,11 @@ export function loadFor(allocation) {
 }
 
 export function loadClass(value) {
-  if (value >= 1.2) return "high";
-  if (value >= 0.6) return "medium";
+  const t = appSettings.payload.loadThresholds;
+  const highThreshold = (t?.mid != null && Number.isFinite(t.mid)) ? t.mid : 1.2;
+  const medThreshold  = (t?.low != null && Number.isFinite(t.low)) ? t.low : 0.6;
+  if (value >= highThreshold) return "high";
+  if (value >= medThreshold)  return "medium";
   return "low";
 }
 

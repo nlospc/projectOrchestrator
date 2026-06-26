@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -13,8 +13,11 @@ export function getDb() {
   _db = new Database(DB_PATH);
   _db.pragma('journal_mode = WAL');
   _db.pragma('foreign_keys = ON');
-  const sql = readFileSync(join(__dirname, 'migrations/001_init.sql'), 'utf8');
-  _db.exec(sql);
+  const migrationsDir = join(__dirname, 'migrations');
+  const files = readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
+  for (const file of files) {
+    _db.exec(readFileSync(join(migrationsDir, file), 'utf8'));
+  }
   return _db;
 }
 

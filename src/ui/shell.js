@@ -1,7 +1,7 @@
 import { projectFilterRoutes, routeGroups, routes } from "../config/routes.js";
 import { filteredProjects, personStats } from "../core/selectors.js";
 import { $ } from "../core/utils.js";
-import { apiImportAllocations, apiImportMilestones, apiImportOverrides, apiImportProjects, bootstrap, milestones, projects } from "../core/data-store.js";
+import { apiImportAllocations, apiImportMilestones, apiImportOverrides, apiImportProjects, apiSaveSettings, appSettings, bootstrap, milestones, projects } from "../core/data-store.js";
 import { parseMilestoneCsv, parseOverrideCsv, parseProjectCsv, parseResourceAllocationCsv } from "../core/importers.js";
 import { state } from "../state/app-state.js";
 import { downloadProjectTemplate, downloadResourceTemplate, settingsView, uploadView } from "../views/admin.js";
@@ -184,15 +184,23 @@ async function loadImportHistory() {
     const body = document.createElement("tbody");
     batches.forEach((batch) => {
       const row = document.createElement("tr");
-      [
+      const cells = [
         new Date(batch.imported_at).toLocaleString("zh-CN"),
-        batch.kind,
+        null,
         batch.filename || "-",
         batch.row_count,
         batch.imported_by || "-",
-      ].forEach((value) => {
+      ];
+      cells.forEach((value, i) => {
         const cell = document.createElement("td");
-        cell.textContent = String(value);
+        if (i === 1) {
+          const badge = document.createElement("span");
+          badge.className = `history-kind-badge ${batch.kind}`;
+          badge.textContent = batch.kind;
+          cell.appendChild(badge);
+        } else {
+          cell.textContent = String(value);
+        }
         row.appendChild(cell);
       });
       body.appendChild(row);
@@ -260,6 +268,31 @@ function goToRoute(nextRoute) {
   state.route = nextRoute;
   window.location.hash = nextRoute;
   render();
+}
+
+const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+function collectSettingsPayload() {
+  const inputs = document.querySelectorAll("[data-settings-path]");
+  const payload = JSON.parse(JSON.stringify(appSettings.payload));
+  inputs.forEach((el) => {
+    const path = el.dataset.settingsPath.split(".");
+    if (path.some((k) => FORBIDDEN_KEYS.has(k))) return;
+    let node = payload;
+    for (let i = 0; i < path.length - 1; i++) {
+      if (!node[path[i]] || typeof node[path[i]] !== "object") node[path[i]] = {};
+      node = node[path[i]];
+    }
+    const key = path[path.length - 1];
+    const raw = el.value;
+    if (el.type === "number") {
+      const num = Number(raw);
+      node[key] = Number.isFinite(num) ? num : null;
+    } else {
+      node[key] = raw;
+    }
+  });
+  return payload;
 }
 
 function bindEvents() {
@@ -333,9 +366,9 @@ function bindEvents() {
       render();
       return;
     }
-    if (actionName === "mock-upload") return toast("????? Excel??? 8 ??????");
-    if (actionName === "mock-project-upload") return toast("??????? Excel?Project ? Milestone Sheet ?????");
-    if (actionName === "mock-resource-upload") return toast(`??????? Excel?${personStats().length} ?????????`);
+    if (actionName === "mock-upload") return toast("已从 Excel 导入 8 个项目");
+    if (actionName === "mock-project-upload") return toast("已从 Excel 导入 Project 和 Milestone Sheet 数据");
+    if (actionName === "mock-resource-upload") return toast(`已从 Excel 导入 ${personStats().length} 条资源记录`);
     if (actionName === "download-resource-template") return downloadResourceTemplate();
     if (actionName === "download-project-template") return downloadProjectTemplate();
     if (actionName === "export-projects-csv") return triggerDownload("/api/export/projects");
@@ -353,8 +386,18 @@ function bindEvents() {
     if (actionName === "export-workload-csv") return exportWorkloadCsv();
     if (actionName === "export-bf-projects") return exportBusFactorProjects();
     if (actionName === "export-bf-people") return exportBusFactorPeople();
-    if (actionName === "save-settings") return toast("??????");
-    if (actionName === "add-milestone-template") return toast("???????????");
+    if (actionName === "save-settings") {
+      const payload = collectSettingsPayload();
+      try {
+        await apiSaveSettings(payload);
+        toast("设置已保存");
+        render();
+      } catch (err) {
+        toast(`保存失败：${err.message}`);
+      }
+      return;
+    }
+    if (actionName === "add-milestone-template") return toast("里程碑节点已新增");
     if (actionName === "save-override") {
       const projectId = action.dataset.projectId;
       const value = document.getElementById("override-health-select")?.value ?? "";

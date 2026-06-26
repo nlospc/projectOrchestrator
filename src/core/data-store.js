@@ -2,6 +2,7 @@
  * Live runtime cache — populated by bootstrap() before app starts.
  * Views/selectors read these arrays; mutations update them optimistically.
  */
+import { DEFAULT_SETTINGS } from '../config/settings-defaults.js';
 
 export const projects = [];
 export const milestones = [];
@@ -9,6 +10,8 @@ export const milestoneChangeLogs = [];
 export const comments = [];
 export const allocations = [];
 export const milestoneNames = [];
+
+export const appSettings = { payload: DEFAULT_SETTINGS, rev: 0, updatedAt: null };
 
 export async function bootstrap() {
   const res = await fetch('/api/bootstrap', {
@@ -35,6 +38,12 @@ export async function bootstrap() {
 
   milestoneNames.length = 0;
   milestoneNames.push(...[...new Set(data.milestones.map(m => m.name))]);
+
+  if (data.settings?.payload) {
+    appSettings.payload = data.settings.payload;
+    appSettings.rev = data.settings.rev ?? 0;
+    appSettings.updatedAt = data.settings.updatedAt ?? null;
+  }
 }
 
 // ── API helpers called by mutations.js ───────────────────────────────────────
@@ -161,6 +170,20 @@ export async function apiImportOverrides(rows, filename) {
 
 export async function apiImportAllocations(rows, filename) {
   return postImport('/api/import/allocations', rows, filename);
+}
+
+export async function apiSaveSettings(payload) {
+  const res = await fetch('/api/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ payload, rev: appSettings.rev }),
+  });
+  if (!res.ok) throw await readApiError(res);
+  const result = await res.json();
+  appSettings.payload = result.payload;
+  appSettings.rev = result.rev;
+  appSettings.updatedAt = result.updatedAt;
+  return result;
 }
 
 export async function apiPatchProject(id, patch, rev = null) {

@@ -3,6 +3,7 @@ import { listProjects } from '../repositories/projects.js';
 import { listMilestones, listChangeLogs } from '../repositories/milestones.js';
 import { listComments } from '../repositories/comments.js';
 import { listAllocations } from '../repositories/allocations.js';
+import { getSettings } from '../repositories/settings.js';
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.get('/bootstrap', (_req, res) => {
       changeLogs: listChangeLogs(),
       comments: listComments(),
       allocations: listAllocations(),
+      settings: getSettings(),
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

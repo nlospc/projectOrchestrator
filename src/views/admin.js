@@ -1,4 +1,4 @@
-import { allocations, milestoneNames, milestones, projects } from "../core/data-store.js";
+import { allocations, milestoneNames, milestones, projects, appSettings } from "../core/data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { downloadCsvTemplate } from "../core/files.js";
 import { milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, resourceTemplateSchema } from "../core/template-schemas.js";
@@ -12,18 +12,28 @@ export function uploadView() {
       <div class="upload-card-head">
         <div>
           <h2>项目数据上传</h2>
-          <p class="muted">用于项目主数据和关键里程碑，不包含任务颗粒度。</p>
+          <p class="muted">项目主数据 · 里程碑 · PMO 覆盖，不含任务颗粒度。</p>
         </div>
-        <div>
-          <button class="ghost-button" data-action="export-all-xlsx">全部导出 Excel</button>
-          <button class="ghost-button" data-action="export-all-csv">全部导出</button>
-          <button class="ghost-button" data-action="download-project-template">下载项目模板</button>
-        </div>
+        <details class="export-menu">
+          <summary class="ghost-button">导出数据 ▾</summary>
+          <div class="export-menu-list">
+            <button data-action="export-all-xlsx">全部导出 Excel</button>
+            <button data-action="export-all-csv">全部导出 CSV</button>
+            <button data-action="download-project-template">下载项目模板</button>
+          </div>
+        </details>
+      </div>
+      <div class="upload-step-pills">
+        <button class="upload-step-pill clickable" data-action="download-project-template">① 下载模板</button>
+        <span class="upload-step-sep">→</span>
+        <span class="upload-step-pill">② 选择 CSV / Excel</span>
+        <span class="upload-step-sep">→</span>
+        <span class="upload-step-pill">③ 确认差异导入</span>
       </div>
       <div class="upload-import-grid">
-        ${uploadImportSlot("Project CSV", "项目主数据。导入后全量替换当前项目表，并清理旧项目关联数据。", "project", "解析并导入 Project CSV", "export-projects-csv")}
-        ${uploadImportSlot("Milestone CSV", "里程碑计划与实际日期。导入后全量替换当前里程碑表。", "milestone", "解析并导入 Milestone CSV", "export-milestones-csv")}
-        ${uploadImportSlot("Override CSV", "PMO 手动健康度覆盖。导入前清空现有覆盖，再应用 CSV。", "override", "解析并导入 Override CSV", "export-overrides-csv")}
+        ${uploadImportSlot("Project CSV", "项目主数据。导入后全量替换当前项目表，并清理旧项目关联数据。", "project", "选择 Project CSV", "export-projects-csv")}
+        ${uploadImportSlot("Milestone CSV", "里程碑计划与实际日期。导入后全量替换当前里程碑表。", "milestone", "选择 Milestone CSV", "export-milestones-csv")}
+        ${uploadImportSlot("Override CSV", "PMO 手动健康度覆盖。导入前清空现有覆盖，再应用 CSV。", "override", "选择 Override CSV", "export-overrides-csv")}
       </div>
       <div class="stack" style="margin-top:14px">
         ${uploadRow("Project Sheet", `${projects.length} 行`, "项目主数据字段完整", "G")}
@@ -39,8 +49,15 @@ export function uploadView() {
         </div>
         <button class="ghost-button" data-action="download-resource-template">下载资源模板</button>
       </div>
+      <div class="upload-step-pills">
+        <button class="upload-step-pill clickable" data-action="download-resource-template">① 下载模板</button>
+        <span class="upload-step-sep">→</span>
+        <span class="upload-step-pill">② 选择 CSV / Excel</span>
+        <span class="upload-step-sep">→</span>
+        <span class="upload-step-pill">③ 确认差异导入</span>
+      </div>
       <div class="upload-import-grid single">
-        ${uploadImportSlot("ResourceAllocation CSV", "人员 x 项目、人员负载和 Bus Factor 统计。导入后替换当前资源分配表。", "resource", "解析并导入资源 CSV", "export-allocations-csv")}
+        ${uploadImportSlot("ResourceAllocation CSV", "人员 x 项目、人员负载和 Bus Factor 统计。导入后替换当前资源分配表。", "resource", "选择资源 CSV", "export-allocations-csv")}
       </div>
       <div class="stack" style="margin-top:14px">
         ${uploadRow("ResourceAllocation Sheet", `${allocations.length} 行 R2 数据`, "可直接用于当前资源视图", "G")}
@@ -64,10 +81,14 @@ export function uploadRow(name, rows, status, health) {
   return `<div class="upload-row"><span><strong>${name}</strong><br><span class="muted">${rows} · ${status}</span></span>${badge(health)}</div>`;
 }
 
+const kindIcons = { project: "📋", milestone: "🗓", override: "🔧", resource: "👥" };
+
 function uploadImportSlot(title, description, kind, buttonText, exportAction) {
   const current = state.uploads[kind] || { tone: "idle", message: "等待选择 CSV 或 Excel 文件" };
+  const icon = kindIcons[kind] ?? "📁";
   return `<div class="dropzone upload-slot" data-upload-kind="${kind}">
     <div>
+      <span class="upload-slot-icon">${icon}</span>
       <strong>${escapeHtml(title)}</strong>
       <p class="muted">${escapeHtml(description)}</p>
       <label class="primary-button" style="cursor:pointer">
@@ -118,51 +139,107 @@ export function downloadProjectTemplate() {
 }
 
 export function settingsView() {
+  const s = appSettings.payload;
+  const hr = s.healthRules ?? {};
+  const lt = s.loadThresholds ?? {};
+  const tf = s.templateFields ?? {};
+
+  const liveTag = `<span class="settings-tag tag-live">影响计算</span>`;
+  const storeTag = `<span class="settings-tag">仅记录</span>`;
+
+  const select = (path, options, current) =>
+    `<select data-settings-path="${path}">${options.map(o => `<option${o === current ? " selected" : ""}>${escapeHtml(o)}</option>`).join("")}</select>`;
+
+  const numInput = (path, value, step = "1", min = "") =>
+    `<input type="number" data-settings-path="${path}" value="${value}" step="${step}"${min ? ` min="${min}"` : ""} style="width:90px">`;
+
   return `<div class="settings-grid">
+
+    <div class="settings-section-sep settings-wide">运行参数</div>
+
     <section class="panel settings-panel">
-      <div class="settings-head"><h2>健康灯规则</h2><button class="primary-button" data-action="save-settings">保存设置</button></div>
+      <div class="settings-head"><h2>健康灯规则</h2></div>
       <div class="settings-form">
-        <label>项目红灯规则<select><option>任一关键里程碑红灯即项目红灯</option><option>两个及以上延期里程碑才红灯</option></select></label>
-        <label>项目黄灯规则<select><option>任一关键里程碑黄灯即项目黄灯</option><option>仅下一个里程碑黄灯才黄灯</option></select></label>
-        <label>手动覆盖优先级<select><option>PMO 手动覆盖优先于系统计算</option><option>系统计算优先</option></select></label>
-        <label>延期阈值 天<input type="number" value="7" min="1" /></label>
+        <label>项目红灯规则 ${storeTag}
+          ${select("healthRules.redRule",
+            ["任一关键里程碑红灯即项目红灯","两个及以上延期里程碑才红灯"],
+            hr.redRule)}
+        </label>
+        <label>项目黄灯规则 ${storeTag}
+          ${select("healthRules.yellowRule",
+            ["任一关键里程碑黄灯即项目黄灯","仅下一个里程碑黄灯才黄灯"],
+            hr.yellowRule)}
+        </label>
+        <label>手动覆盖优先级 ${storeTag}
+          ${select("healthRules.overridePriority",
+            ["PMO 手动覆盖优先于系统计算","系统计算优先"],
+            hr.overridePriority)}
+        </label>
+        <label>延期阈值（天） ${liveTag}
+          ${numInput("healthRules.deviationDays", hr.deviationDays ?? 7, "1", "1")}
+        </label>
       </div>
     </section>
+
     <section class="panel settings-panel">
-      <div class="settings-head"><h2>资源负荷阈值</h2><span class="muted">R2 workload</span></div>
+      <div class="settings-head"><h2>资源负荷阈值 ${liveTag}</h2><span class="muted">当前值立即影响资源视图分类</span></div>
       <div class="settings-form">
-        <label>低负载上限<input type="number" value="0.6" step="0.1" /></label>
-        <label>中负载上限<input type="number" value="1.2" step="0.1" /></label>
-        <label>Bus Factor 风险线<input type="number" value="1" min="1" /></label>
-        <label>Bus Factor 目标值<input type="number" value="3" min="1" /></label>
+        <label>低负载上限 ${liveTag}
+          ${numInput("loadThresholds.low", lt.low ?? 0.6, "0.05", "0")}
+        </label>
+        <label>中负载上限 ${liveTag}
+          ${numInput("loadThresholds.mid", lt.mid ?? 1.2, "0.05", "0")}
+        </label>
+        <label>Bus Factor 风险线 ${liveTag}
+          ${numInput("loadThresholds.bfRisk", lt.bfRisk ?? 1, "1", "1")}
+        </label>
+        <label>Bus Factor 目标值 ${liveTag}
+          ${numInput("loadThresholds.bfTarget", lt.bfTarget ?? 3, "1", "1")}
+        </label>
       </div>
     </section>
+
+    <div class="settings-save-bar settings-wide">
+      <button class="primary-button" data-action="save-settings">保存设置</button>
+      <span class="settings-hint">「影响计算」参数保存后立即生效；「仅记录」参数保存后备查</span>
+    </div>
+
+    <div class="settings-section-sep settings-wide">模板配置</div>
+
     <section class="panel settings-panel settings-wide">
       <div class="settings-head"><h2>里程碑模板</h2><button class="ghost-button" data-action="add-milestone-template">新增节点</button></div>
-      <div class="template-list">${milestoneNames.map((name, index) => `<div class="template-row"><span>${index + 1}</span><input value="${name}" /><select><option>关键节点</option><option>普通节点</option></select><button class="small-button">启用</button></div>`).join("")}</div>
+      <div class="template-list">${milestoneNames.map((name, index) => `<div class="template-row"><span>${index + 1}</span><input value="${escapeHtml(name)}" /><select><option>关键节点</option><option>普通节点</option></select><button class="small-button">启用</button></div>`).join("")}</div>
     </section>
+
     <section class="panel settings-panel settings-wide">
-      <div class="settings-head"><h2>上传模板字段</h2><span class="muted">用于模板下载和导入校验</span></div>
+      <div class="settings-head"><h2>上传模板字段</h2><span class="muted">用于模板下载和导入校验 ${storeTag}</span></div>
       <div class="settings-form two-col">
-        <label>项目模板必填字段<textarea rows="3">项目编号、项目名称、健康度、复杂度、项目状态、当前PM</textarea></label>
-        <label>资源模板必填字段<textarea rows="3">系统、项目、项目复杂度、项目状态、角色、人员、工时投入占比</textarea></label>
+        <label>项目模板必填字段
+          <textarea rows="3" data-settings-path="templateFields.projectRequired">${escapeHtml(tf.projectRequired ?? "")}</textarea>
+        </label>
+        <label>资源模板必填字段
+          <textarea rows="3" data-settings-path="templateFields.resourceRequired">${escapeHtml(tf.resourceRequired ?? "")}</textarea>
+        </label>
       </div>
     </section>
-    <section class="panel settings-panel settings-wide">
+
+    <div class="settings-section-sep settings-wide">参考定义（只读）</div>
+
+    <section class="panel settings-panel settings-wide settings-panel-ref">
       <div class="settings-head"><h2>项目分级标准</h2><span class="muted">按复杂度和治理层级自动推荐分级</span></div>
       <table class="def-table">
         <thead><tr><th>分级</th><th>颜色</th><th>含义</th><th>门禁节奏</th></tr></thead>
         <tbody>${gradeDefinitions.map((g) => `<tr><td><span class="badge grade-${g.value}">${g.value}</span></td><td>${g.color}</td><td>${g.meaning}</td><td>${g.checkCycle}</td></tr>`).join("")}</tbody>
       </table>
     </section>
-    <section class="panel settings-panel settings-wide">
+    <section class="panel settings-panel settings-wide settings-panel-ref">
       <div class="settings-head"><h2>健康度标准</h2><span class="muted">系统自动计算，PMO 可手动覆盖</span></div>
       <table class="def-table">
         <thead><tr><th>健康度</th><th>颜色</th><th>触发条件</th></tr></thead>
         <tbody>${healthDefinitions.map((h) => `<tr><td><span class="badge ${h.value}">${h.label}</span></td><td>${h.color}</td><td>${h.meaning}</td></tr>`).join("")}</tbody>
       </table>
     </section>
-    <section class="panel settings-panel settings-wide">
+    <section class="panel settings-panel settings-wide settings-panel-ref">
       <div class="settings-head"><h2>门禁阶段定义</h2><span class="muted">G0–G6 阶段交付物清单</span></div>
       <table class="def-table">
         <thead><tr><th>门禁</th><th>名称</th><th>交付物</th></tr></thead>

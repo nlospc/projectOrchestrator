@@ -8,6 +8,7 @@ import { insertProject } from './repositories/projects.js';
 import { insertMilestoneRaw, insertChangeLogRaw } from './repositories/milestones.js';
 import { insertCommentRaw } from './repositories/comments.js';
 import { insertAllocationRaw } from './repositories/allocations.js';
+import { seedDefaultSettings } from './repositories/settings.js';
 import {
   projects,
   milestones,
@@ -26,6 +27,7 @@ export function seedIfEmpty() {
   const row = db.prepare(`SELECT value FROM _meta WHERE key = 'seed_version'`).get();
   const currentVersion = row ? Number(row.value) : 0;
 
+  seedDefaultSettings();
   if (currentVersion >= SEED_VERSION) return;
 
   const hasData = db.prepare('SELECT COUNT(*) as n FROM projects').get().n > 0;
