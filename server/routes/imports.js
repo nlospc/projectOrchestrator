@@ -9,6 +9,8 @@ import {
   replaceProjectOverrides,
   replaceProjects,
 } from '../repositories/imports.js';
+import { upsertProposed } from '../repositories/links.js';
+import { proposeLinks } from '../../src/core/matchers.js';
 const router = Router();
 
 const previewKinds = {
@@ -94,7 +96,14 @@ router.post('/import/allocations', (req, res) => {
     const { rows, filename = null } = req.body;
     if (!Array.isArray(rows)) return res.status(422).json({ error: 'rows array required' });
     const count = replaceAllocations(rows, filename);
-    res.json({ ok: true, count });
+    // Auto-propose links for new resource keys; upsertProposed skips confirmed/rejected
+    const proposals = proposeLinks(listAllocations(), listProjects());
+    let proposed = 0;
+    for (const p of proposals) {
+      const result = upsertProposed(p.resourceKey, p.projectId, p.confidence, p.candidates);
+      if (result.status === 'proposed') proposed++;
+    }
+    res.json({ ok: true, count, proposed });
   } catch (err) {
     res.status(409).json({ error: err.message });
   }
