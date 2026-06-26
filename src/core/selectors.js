@@ -168,17 +168,22 @@ export function projectOverflowSegment(project, today) {
 }
 
 /**
- * Count allocated headcount by role category for a project.
- * Keyed on project.id ↔ allocation.projectId.
- * Returns zeros when no allocations match (v1.0 seed uses legacy projectId strings).
+ * Count allocated headcount by role category for a project via confirmed links.
+ * Returns { unmatched: true } when no confirmed link exists for this project.
  *
  * @param {object} project
- * @returns {{ 产品: number, 项目: number, 开发: number }}
+ * @returns {{ 产品: number, 项目: number, 开发: number } | { unmatched: true }}
  */
 export function projectResourceSummary(project) {
+  const linkedResourceKeys = new Set();
+  for (const [resourceKey, projectId] of confirmedLinks) {
+    if (projectId === project.id) linkedResourceKeys.add(resourceKey);
+  }
+  if (linkedResourceKeys.size === 0) return { unmatched: true };
+
   const cats = { 产品: new Set(), 项目: new Set(), 开发: new Set() };
   for (const a of allocations) {
-    if (a.projectId !== project.id) continue;
+    if (!linkedResourceKeys.has(a.projectId)) continue;
     const cat = roleCategory(a.role);
     cats[cat].add(a.person);
   }

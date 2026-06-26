@@ -640,11 +640,13 @@ export function openProject(projectId) {
     </div>
     <div class="drawer-resource-card panel">
       <h3 style="margin-bottom:10px">资源摘要</h3>
-      <div class="detail-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">
-        ${detail("产品", `${res.产品} 人`)}
-        ${detail("项目管理", `${res.项目} 人`)}
-        ${detail("开发", `${res.开发} 人`)}
-      </div>
+      ${res.unmatched
+        ? `<p class="muted" style="margin-bottom:12px">无资源数据 — 该项目暂未关联资源团队</p>`
+        : `<div class="detail-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">
+            ${detail("产品", `${res.产品} 人`)}
+            ${detail("项目管理", `${res.项目} 人`)}
+            ${detail("开发", `${res.开发} 人`)}
+          </div>`}
       <button class="ghost-button" data-goto-matrix="${escapeHtml(projectId)}">查看资源详情 →</button>
     </div>
   `;
