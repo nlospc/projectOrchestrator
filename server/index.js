@@ -10,6 +10,7 @@ import commentsRouter from './routes/comments.js';
 import importsRouter from './routes/imports.js';
 import exportRouter from './routes/exports.js';
 import settingsRouter from './routes/settings.js';
+import linksRouter from './routes/links.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
@@ -37,6 +38,7 @@ app.use('/api', commentsRouter);
 app.use('/api', importsRouter);
 app.use('/api', exportRouter);
 app.use('/api', settingsRouter);
+app.use('/api', linksRouter);
 
 // Static: serve repo root (index.html, app.js, src/, styles.css)
 app.use(express.static(STATIC_ROOT));

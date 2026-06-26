@@ -4,7 +4,7 @@ import { $ } from "../core/utils.js";
 import { apiImportAllocations, apiImportMilestones, apiImportOverrides, apiImportProjects, apiSaveSettings, appSettings, bootstrap, milestones, projects } from "../core/data-store.js";
 import { parseMilestoneCsv, parseOverrideCsv, parseProjectCsv, parseResourceAllocationCsv } from "../core/importers.js";
 import { state } from "../state/app-state.js";
-import { downloadProjectTemplate, downloadResourceTemplate, settingsView, uploadView } from "../views/admin.js";
+import { downloadProjectTemplate, downloadResourceTemplate, reconciliationView, settingsView, uploadView } from "../views/admin.js";
 import { dashboardView, drawerTabContent, openProject, projectsView, timeline } from "../views/projects.js";
 import { cockpitView } from "../views/cockpit.js";
 import { appendComment, setProjectOverride, updateMilestone } from "../core/mutations.js";
@@ -212,6 +212,35 @@ async function loadImportHistory() {
   }
 }
 
+async function loadLinkProposals() {
+  const container = document.getElementById('link-proposed-list');
+  if (!container) return;
+  try {
+    const res = await fetch('/api/links');
+    if (!res.ok) { container.innerHTML = `<p class="muted">加载失败</p>`; return; }
+    const { links } = await res.json();
+    const proposed = links.filter((l) => l.status === 'proposed');
+    if (proposed.length === 0) {
+      container.innerHTML = `<p class="muted">暂无待确认提案</p>`;
+      return;
+    }
+    container.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>资源团队</th><th>候选项目</th><th>置信度</th><th>操作</th></tr></thead>
+      <tbody>${proposed.map((l) => `<tr>
+        <td>${escapeHtml(l.resourceKey)}</td>
+        <td>${l.projectId ? escapeHtml(projects.find(p => p.id === l.projectId)?.name || l.projectId) : '<span class="muted">未找到</span>'}</td>
+        <td>${l.confidence != null ? Math.round(l.confidence * 100) + '%' : '—'}</td>
+        <td>
+          <button class="ghost-button" data-action="link-confirm" data-link-id="${escapeHtml(l.id)}" data-project-id="${escapeHtml(l.projectId || '')}">确认</button>
+          <button class="ghost-button" data-action="link-reject" data-link-id="${escapeHtml(l.id)}">驳回</button>
+        </td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+  } catch (err) {
+    if (container) container.innerHTML = `<p class="muted">加载失败：${escapeHtml(err.message)}</p>`;
+  }
+}
+
 const routeViews = {
   cockpit: cockpitView,
   dashboard: dashboardView,
@@ -223,6 +252,7 @@ const routeViews = {
   people: peopleView,
   upload: uploadView,
   settings: settingsView,
+  links: reconciliationView,
 };
 
 function setupMonitorBoardScrollSync() {
@@ -258,6 +288,7 @@ export function render() {
   const view = $("#view");
   view.innerHTML = (routeViews[state.route] || dashboardView)();
   if (state.route === "upload") loadImportHistory();
+  if (state.route === 'links') loadLinkProposals();
   if (state.route === "projects") {
     setupMonitorBoardScrollSync();
   }
@@ -405,6 +436,65 @@ function bindEvents() {
       return;
     }
     if (actionName === "add-milestone-template") return toast("里程碑节点已新增");
+    if (actionName === 'link-load') {
+      loadLinkProposals();
+      return;
+    }
+    if (actionName === 'link-propose') {
+      try {
+        const res = await fetch('/api/links/propose', { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        toast(`匹配完成：${data.proposed} 条提案`);
+        loadLinkProposals();
+      } catch (err) { toast(`匹配失败：${err.message}`); }
+      return;
+    }
+    if (actionName === 'link-confirm') {
+      try {
+        const res = await fetch(`/api/links/${action.dataset.linkId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'confirmed', projectId: action.dataset.projectId || null, confirmedBy: 'PMO Admin' }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        await bootstrap();
+        render();
+        toast('已确认关联');
+      } catch (err) { toast(`操作失败：${err.message}`); }
+      return;
+    }
+    if (actionName === 'link-reject') {
+      try {
+        const res = await fetch(`/api/links/${action.dataset.linkId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'rejected', confirmedBy: 'PMO Admin' }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        loadLinkProposals();
+        toast('已驳回');
+      } catch (err) { toast(`操作失败：${err.message}`); }
+      return;
+    }
+    if (actionName === 'link-manual') {
+      const resourceKey = action.dataset.resourceKey;
+      const select = document.querySelector(`.link-project-select[data-resource-key="${CSS.escape(resourceKey)}"]`);
+      const projectId = select?.value;
+      if (!projectId) { toast('请先选择项目'); return; }
+      try {
+        const res = await fetch('/api/links', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resourceKey, projectId, confirmedBy: 'PMO Admin' }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        await bootstrap();
+        render();
+        toast('手动关联成功');
+      } catch (err) { toast(`关联失败：${err.message}`); }
+      return;
+    }
     if (actionName === "save-override") {
       const projectId = action.dataset.projectId;
       const value = document.getElementById("override-health-select")?.value ?? "";

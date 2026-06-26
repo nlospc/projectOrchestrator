@@ -22,6 +22,7 @@ export const routeGroups = [
     routes: [
       ["upload", "数据上传"],
       ["settings", "设置"],
+      ["links", "关联中心"],
     ],
   },
 ];

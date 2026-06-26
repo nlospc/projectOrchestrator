@@ -1,4 +1,4 @@
-import { allocations, milestoneNames, milestones, projects, appSettings } from "../core/data-store.js";
+import { allocations, milestoneNames, milestones, projects, appSettings, confirmedLinks } from "../core/data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { downloadCsvTemplate } from "../core/files.js";
 import { milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, resourceTemplateSchema } from "../core/template-schemas.js";
@@ -245,6 +245,76 @@ export function settingsView() {
         <thead><tr><th>门禁</th><th>名称</th><th>交付物</th></tr></thead>
         <tbody>${gateDefinitions.map((g) => `<tr><td><strong>${g.value}</strong></td><td>${g.label}</td><td>${g.deliverables}</td></tr>`).join("")}</tbody>
       </table>
+    </section>
+  </div>`;
+}
+
+export function reconciliationView() {
+  const confirmedKeys = new Set(confirmedLinks.keys());
+  const confirmedProjectIds = new Set(confirmedLinks.values());
+  const allResourceKeys = [...new Set(allocations.map((a) => a.projectId).filter(Boolean))];
+  const unmatchedKeys = allResourceKeys.filter((k) => !confirmedKeys.has(k));
+  const unmatchedProjects = projects.filter((p) => !confirmedProjectIds.has(p.id));
+
+  const unmatchedRows = unmatchedKeys.map((key) => {
+    const sample = allocations.find((a) => a.projectId === key);
+    const projectOptions = projects.map((p) =>
+      `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`).join('');
+    return `<tr>
+      <td><strong>${escapeHtml(sample?.projectName || key)}</strong><br>
+          <span class="muted">${escapeHtml(key)}</span></td>
+      <td>${escapeHtml(sample?.system || '—')}</td>
+      <td>${escapeHtml(sample?.biz || '—')}</td>
+      <td>
+        <select class="link-project-select" data-resource-key="${escapeHtml(key)}">
+          <option value="">选择项目…</option>${projectOptions}
+        </select>
+        <button class="ghost-button" data-action="link-manual" data-resource-key="${escapeHtml(key)}">关联</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const noResourceRows = unmatchedProjects.map((p) =>
+    `<tr><td>${escapeHtml(p.id)}</td><td><strong>${escapeHtml(p.name)}</strong></td>
+     <td>${escapeHtml(p.biz || '—')}</td><td>${escapeHtml(p.status || '—')}</td></tr>`
+  ).join('');
+
+  return `<div class="settings-grid">
+    <div class="settings-section-sep settings-wide">项目 ↔ 资源关联中心</div>
+
+    <section class="panel settings-panel settings-wide">
+      <div class="settings-head">
+        <h2>待确认提案</h2>
+        <button class="ghost-button" data-action="link-propose">运行匹配器</button>
+      </div>
+      <div id="link-proposed-list"><p class="muted">点击「运行匹配器」生成提案，或加载已有提案。</p></div>
+      <button class="ghost-button" style="margin-top:8px" data-action="link-load">加载提案</button>
+    </section>
+
+    <section class="panel settings-panel settings-wide">
+      <div class="settings-head">
+        <h2>未关联资源 <span class="badge Y">${unmatchedKeys.length}</span></h2>
+        <span class="muted">以下资源团队尚未关联到任何规范项目</span>
+      </div>
+      ${unmatchedKeys.length === 0
+        ? '<p class="muted">全部资源已关联 ✓</p>'
+        : `<div class="table-wrap"><table>
+            <thead><tr><th>资源团队</th><th>系统</th><th>业务</th><th>手动关联</th></tr></thead>
+            <tbody>${unmatchedRows}</tbody>
+           </table></div>`}
+    </section>
+
+    <section class="panel settings-panel settings-wide">
+      <div class="settings-head">
+        <h2>无资源项目 <span class="badge Y">${unmatchedProjects.length}</span></h2>
+        <span class="muted">以下项目尚无确认的资源分配</span>
+      </div>
+      ${unmatchedProjects.length === 0
+        ? '<p class="muted">全部项目已有资源 ✓</p>'
+        : `<div class="table-wrap"><table>
+            <thead><tr><th>编号</th><th>项目名称</th><th>业务</th><th>阶段</th></tr></thead>
+            <tbody>${noResourceRows}</tbody>
+           </table></div>`}
     </section>
   </div>`;
 }
