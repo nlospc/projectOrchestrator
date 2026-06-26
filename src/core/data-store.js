@@ -10,6 +10,7 @@ export const milestoneChangeLogs = [];
 export const comments = [];
 export const allocations = [];
 export const milestoneNames = [];
+export const confirmedLinks = new Map();
 
 export const appSettings = { payload: DEFAULT_SETTINGS, rev: 0, updatedAt: null };
 
@@ -38,6 +39,11 @@ export async function bootstrap() {
 
   milestoneNames.length = 0;
   milestoneNames.push(...[...new Set(data.milestones.map(m => m.name))]);
+
+  confirmedLinks.clear();
+  for (const { resourceKey, projectId } of (data.links ?? [])) {
+    confirmedLinks.set(resourceKey, projectId);
+  }
 
   if (data.settings?.payload) {
     appSettings.payload = data.settings.payload;

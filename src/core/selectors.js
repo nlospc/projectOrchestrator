@@ -1,4 +1,4 @@
-import { allocations, milestones, projects } from "./data-store.js";
+import { allocations, confirmedLinks, milestones, projects } from './data-store.js';
 import { state } from "../state/app-state.js";
 import { computeSegments } from "./milestones.js";
 import { effectiveHealth, loadFor, parseDate } from "./utils.js";
@@ -31,31 +31,39 @@ export function filteredProjects() {
 }
 
 export function resourceProjects() {
+  const projectsById = new Map(projects.map((p) => [p.id, p]));
   const rows = new Map();
   allocations.forEach((allocation) => {
     if (!rows.has(allocation.projectId)) {
+      const canonicalId = confirmedLinks.get(allocation.projectId);
+      const canonical = canonicalId ? projectsById.get(canonicalId) : null;
       rows.set(allocation.projectId, {
-        id: allocation.projectId,
-        name: allocation.projectName || allocation.projectId,
-        cat: allocation.cat,
-        dept: allocation.dept,
-        biz: allocation.biz,
+        id:         canonical?.id         ?? allocation.projectId,
+        name:       canonical?.name       ?? allocation.projectName ?? allocation.projectId,
+        biz:        canonical?.biz        ?? allocation.biz,
+        dept:       canonical?.dept       ?? allocation.dept,
+        status:     canonical?.status     ?? allocation.status,
+        complexity: canonical?.complexity ?? allocation.complexity,
+        health:     canonical ? effectiveHealth(canonical) : (
+                      allocation.status === '项目暂停' ? 'R' :
+                      allocation.status === 'UAT'  ? 'Y' : 'G'
+                    ),
+        linked:     Boolean(canonical),
+        // resource-only fields always from allocation
+        cat:    allocation.cat,
         system: allocation.system,
-        status: allocation.status,
-        complexity: allocation.complexity,
-        health: allocation.status === "项目暂停" ? "R" : allocation.status === "UAT" ? "Y" : "G",
       });
     }
   });
   return [...rows.values()].filter((project) => {
     const rf = state.resourceFilters;
     return (
-      (rf.biz    === "all" || project.biz    === rf.biz)    &&
-      (rf.dept   === "all" || project.dept   === rf.dept)   &&
-      (rf.status === "all" || project.status === rf.status) &&
-      (rf.health === "all" || project.health === rf.health) &&
-      (rf.system === "all" ||
-        (rf.system === "未归属系统"
+      (rf.biz    === 'all' || project.biz    === rf.biz)    &&
+      (rf.dept   === 'all' || project.dept   === rf.dept)   &&
+      (rf.status === 'all' || project.status === rf.status) &&
+      (rf.health === 'all' || project.health === rf.health) &&
+      (rf.system === 'all' ||
+        (rf.system === '未归属系统'
           ? !project.system
           : project.system === rf.system))
     );

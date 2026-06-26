@@ -4,6 +4,7 @@ import { listMilestones, listChangeLogs } from '../repositories/milestones.js';
 import { listComments } from '../repositories/comments.js';
 import { listAllocations } from '../repositories/allocations.js';
 import { getSettings } from '../repositories/settings.js';
+import { confirmedLinksMap } from '../repositories/links.js';
 
 const router = Router();
 
@@ -12,6 +13,7 @@ router.get('/bootstrap', (_req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
+    const linksMap = confirmedLinksMap();
     res.json({
       projects: listProjects(),
       milestones: listMilestones(),
@@ -19,6 +21,7 @@ router.get('/bootstrap', (_req, res) => {
       comments: listComments(),
       allocations: listAllocations(),
       settings: getSettings(),
+      links: [...linksMap.entries()].map(([resourceKey, projectId]) => ({ resourceKey, projectId })),
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
