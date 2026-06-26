@@ -16,8 +16,8 @@ triggers:
 
 # UI Optimize — Strategic View Upgrade Skill
 
-Workflow for upgrading any PMO Orchestrator route to the executive-grade
-visual language established by the `#cockpit` (执行驾驶舱) design.
+Workflow for upgrading any PMO Orchestrator route to the executive-grade.
+**Goal:** optimize UI level for high-level manager,like VP/COO/BU head, to handle info of project going. 
 
 ## When to use
 
@@ -74,27 +74,21 @@ Invoke when upgrading one or more of the 9 remaining routes:
 ```
 INPUT: route name(s) to optimize (e.g. "#dashboard #matrix")
 
-PHASE 0 — Audit current view
-  1. Read the view function source
-  2. Screenshot current state (if chrome-devtools available)
-  3. List what's wrong: density, hierarchy, polish gaps
-  4. Write optimization spec to .claude/plans/ui-optimize-{route}.spec.md
-
-PHASE 1 — Design mock (Claude Design MCP)
+PHASE 1 — Design mock (Claude Design MCP) 
   1. get_claude_design_prompt()
   2. create_project() or reuse existing project
   3. finalize_plan → write_files → render_preview
   4. Share open_url with user
   5. WAIT for user to lock ("lock it" / "proceed" / "yes")
 
-PHASE 2 — Decompose into Codex slices
+PHASE 2 — Decompose into Codex slices 
   Rule: one file or concern per slice. Typical decomposition:
     S1: New/updated selectors if view needs derived data
     S2: View function rewrite (or new view module)
     S3: CSS additions to styles.css
     S4: Route/shell wiring changes (if restructuring)
 
-PHASE 3 — Execute via Codex
+PHASE 3 — Execute via Codex 
   For each slice:
     1. Claude writes self-contained spec with:
        - File path(s) to modify

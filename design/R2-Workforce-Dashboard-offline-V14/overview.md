@@ -1,4 +1,4 @@
-this package contains a single compiled deliverable under `R2-Workforce-Dashboard-offline-V14/`:
+ithis package contains a single compiled deliverable under `R2-Workforce-Dashboard-offline-V14/`:
 
 - `index.html` — shell mounting `<div id="root">`
 - `assets/app.js` — ~950 KB minified bundle containing all React components, routing, charts, UI primitives, and **hardcoded workforce data**

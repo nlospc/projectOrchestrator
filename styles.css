@@ -2420,8 +2420,10 @@ button.chart-bar:hover strong {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* busy-row: lift min-width, shrink columns */
   .busy-row {
-    grid-template-columns: 34px minmax(220px, 1.35fr) minmax(220px, 2fr) 64px 76px 72px;
+    min-width: 0;
+    grid-template-columns: 28px minmax(0, 1.2fr) minmax(0, 1.8fr) 56px 70px 60px;
   }
 }
 
@@ -2471,8 +2473,15 @@ button.chart-bar:hover strong {
     min-height: 210px;
   }
 
+  /* busy-row: hide bar and project count cols on mobile */
   .busy-row {
-    grid-template-columns: 34px minmax(220px, 1.35fr) minmax(220px, 2fr) 64px 76px 72px;
+    min-width: 0;
+    grid-template-columns: 28px minmax(0, 1fr) 56px 64px;
+  }
+
+  .busy-row > .bar-track,
+  .busy-row > .muted {
+    display: none;
   }
 
   .template-row {
@@ -4046,8 +4055,40 @@ button.chart-bar:hover strong {
   margin: 16px 0;
 }
 
-/* Responsive for sys-dist */
+/* ─── Hero-strip + Panel-row responsive ─────────────────────────────────── */
+/* Placed after the base .hero-strip (line ~2965) and .panel-row (line ~3089)
+   definitions so these media queries correctly override the base rules.
+   Order matters: 1180px → 900px → 760px each narrower block overrides wider. */
+@media (max-width: 1180px) {
+  .hero-strip {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .panel-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .panel-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Responsive for sys-dist and panel-row at tablet */
 @media (max-width: 900px) {
+  /* hero-strip: 3-col → 2-col at tablet */
+  .hero-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* panel-row: 2-col → 1-col at tablet */
+  .panel-row {
+    grid-template-columns: 1fr;
+  }
+
   .sys-dist-row {
     grid-template-columns: 120px 1fr 44px 44px;
   }
@@ -4122,4 +4163,37 @@ button.chart-bar:hover strong {
 @media (max-width: 768px) {
   .rv-people-grid { grid-template-columns: 1fr 1fr; }
   .rv-people-toolbar { flex-direction: column; align-items: stretch; }
+}
+
+/* ─── Small mobile (≤480px) ─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* hero-strip: single column on small phones */
+  .hero-strip {
+    grid-template-columns: 1fr;
+  }
+
+  /* people grid: single column */
+  .rv-people-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* filter panel: stack all selects */
+  .resource-filter-panel {
+    grid-template-columns: 1fr;
+  }
+
+  /* conc-stats and workforce-grid: stack on tiny screens */
+  .conc-stats,
+  .workforce-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* busy-row: hide rank number too */
+  .busy-row > .rank {
+    display: none;
+  }
+
+  .busy-row {
+    grid-template-columns: minmax(0, 1fr) 56px 64px;
+  }
 }
