@@ -17,7 +17,8 @@ const previewKinds = {
   project: {
     idField: 'id',
     fields: ['id', 'name', 'health', 'complexity', 'status', 'pm', 'category', 'dept', 'biz',
-      'family', 'gate', 'init', 'level', 'product', 'tech', 'batch'],
+      'family', 'gate', 'init', 'level', 'product', 'tech',
+      'planned_start_date', 'planned_end_date'],
     list: listProjects,
   },
   milestone: {
@@ -35,8 +36,8 @@ const previewKinds = {
   },
   resource: {
     idField: 'id',
-    fields: ['id', 'system', 'projectId', 'projectName', 'complexity', 'status', 'role', 'person',
-      'timeRatio', 'cat', 'dept', 'biz', 'outsourced'],
+    fields: ['id', 'projectId', 'projectName', 'role', 'person', 'timeRatio', 'outsourced',
+      'complexity', 'status', 'cat', 'dept', 'biz', 'system'],
     list: listAllocations,
   },
 };

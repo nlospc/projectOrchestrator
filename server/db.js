@@ -16,7 +16,12 @@ export function getDb() {
   const migrationsDir = join(__dirname, 'migrations');
   const files = readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
   for (const file of files) {
-    _db.exec(readFileSync(join(migrationsDir, file), 'utf8'));
+    try {
+      _db.exec(readFileSync(join(migrationsDir, file), 'utf8'));
+    } catch (err) {
+      // ALTER TABLE ADD COLUMN fails if column already exists; safe to ignore.
+      if (!err.message.includes('duplicate column name')) throw err;
+    }
   }
   return _db;
 }

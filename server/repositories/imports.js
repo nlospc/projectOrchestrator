@@ -77,14 +77,14 @@ export function replaceProjects(rows, filename, importedBy) {
       planned_start_date, planned_end_date,
       health, override_health, override_note, override_by, override_at,
       gate, complexity, status, init, level, pm, product, tech, batch,
-      archived, rev, created_at, updated_at
+      extras, archived, rev, created_at, updated_at
     ) VALUES (
       @id, @code, @category, @dept, @biz, @family, @name, @summary,
       @owner_name, @owner_avatar, @program_group,
       @planned_start_date, @planned_end_date,
       @health, @override_health, @override_note, '', '',
       @gate, @complexity, @status, @init, @level, @pm, @product, @tech, @batch,
-      0, 1, @now, @now
+      @extras, 0, 1, @now, @now
     )
   `);
   db.transaction(() => {
@@ -116,6 +116,7 @@ export function replaceProjects(rows, filename, importedBy) {
         product: p.product ?? null,
         tech: p.tech ?? null,
         batch: p.batch ?? null,
+        extras: p.extras != null ? JSON.stringify(p.extras) : null,
         now,
       });
     }

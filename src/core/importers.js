@@ -1,6 +1,6 @@
 import { projects } from "./data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
-import { healthValues, milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, resourceTemplateSchema } from "./template-schemas.js";
+import { healthValues, milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, projectExtrasKeys, resourceTemplateSchema } from "./template-schemas.js";
 
 const healthAliases = {
   R: "R",
@@ -31,6 +31,30 @@ const booleanAliases = {
   "外包": true,
   "内部": false,
 };
+
+// Convert Chinese date string "2026年7月31日" -> "2026-07-31"
+// "2026年8月" (no day) -> "2026-08-01"
+function parseCnDate(str) {
+  const s = String(str || "").trim();
+  const m = s.match(/(\d{4})年(\d{1,2})月(?:(\d{1,2})日)?/);
+  if (!m) return null;
+  const y = m[1];
+  const mo = String(m[2]).padStart(2, "0");
+  const d = m[3] ? String(m[3]).padStart(2, "0") : "01";
+  return `${y}-${mo}-${d}`;
+}
+
+// Convert Excel serial date integer -> "YYYY-MM-DD"
+// Excel epoch: Dec 30, 1899. For serials > 60, subtract 1 to correct leap-year bug.
+function xlSerialToIso(serial) {
+  const n = Number(serial);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const adj = n > 60 ? n - 1 : n;
+  const ms = (adj - 1) * 86400000;
+  const d = new Date(Date.UTC(1900, 0, 1) + ms);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
 
 export function parseCsv(text) {
   const source = String(text || "").replace(/^\uFEFF/, "");
@@ -146,19 +170,29 @@ export function validateRows(rows, schema, options = {}) {
 export function parseProjectCsv(text) {
   return parseTypedCsv(text, projectTemplateSchema, (rows, warnings) =>
     rows.map((row, index) => {
-      const defaults = {
-        health: "G",
-        complexity: 5,
-        status: "未设置",
-        pm: "未指定",
-      };
+      const defaults = { health: "G", complexity: 5, status: "未设置", pm: "未指定" };
       const normalized = { ...row, override: row.override || "" };
-      Object.entries(defaults).forEach(([field, value]) => {
+      for (const [field, value] of Object.entries(defaults)) {
         if (isBlank(normalized[field])) {
           normalized[field] = value;
           warnings.push({ row: index + 2, field, message: `${field} is blank; defaults to ${value}` });
         }
-      });
+      }
+      // Normalize multi-line people cells (newline-joined -> comma-joined)
+      for (const field of ["product", "tech", "pm"]) {
+        if (normalized[field]) {
+          normalized[field] = String(normalized[field]).replace(/\r?\n/g, ", ").trim();
+        }
+      }
+      // Pack extras fields into a sub-object; remove them from the top-level row
+      const extras = {};
+      for (const key of (projectExtrasKeys || [])) {
+        if (normalized[key] !== undefined && normalized[key] !== "") {
+          extras[key] = normalized[key];
+        }
+        delete normalized[key];
+      }
+      normalized.extras = Object.keys(extras).length ? extras : null;
       return normalized;
     })
   );
@@ -171,16 +205,109 @@ export function parseMilestoneCsv(text, projectRows = projects) {
   });
 }
 
+export function parseMilestoneXlsx(aoa) {
+  // Row 0 = merged group labels (skip)
+  // Row 1 = flat column headers
+  // Row 2+ = data (one row per project)
+  const headers = (aoa[1] || []).map(h => String(h ?? "").trim());
+  const dataRows = aoa.slice(2).filter(r => r.some(c => c != null && String(c).trim() !== ""));
+
+  const gateNames = ["G0","G1","G2","G3","G4","G5","G6"];
+  const gateColMap = {};
+  gateNames.forEach(g => {
+    gateColMap[g] = {
+      plan_start: headers.indexOf(`${g}计划开始`),
+      plan_end:   headers.indexOf(`${g}计划结束`),
+      act_start:  headers.indexOf(`${g}实际开始`),
+      act_end:    headers.indexOf(`${g}实际结束`),
+      status:     headers.indexOf(`${g}状态`),
+      note:       headers.indexOf(`${g}备注`),
+    };
+  });
+
+  const projectIdCol = headers.indexOf("项目ID");
+  const projectNameCol = headers.indexOf("项目名称");
+
+  const errors = [];
+  const warnings = [];
+  const validRows = [];
+
+  dataRows.forEach((row, rowIdx) => {
+    const rowNum = rowIdx + 3;
+    const projectId = String(row[projectIdCol] ?? "").trim();
+    const projectName = String(row[projectNameCol] ?? "").trim();
+
+    if (!projectId) {
+      errors.push({ row: rowNum, field: "projectId", message: "项目ID is required" });
+      return;
+    }
+
+    gateNames.forEach((g) => {
+      const cols = gateColMap[g];
+      const planEndRaw = cols.plan_end >= 0 ? row[cols.plan_end] : null;
+      if (planEndRaw == null || String(planEndRaw).trim() === "" || String(planEndRaw).trim() === "0") return;
+
+      const toIso = (val) => {
+        if (val == null || String(val).trim() === "") return null;
+        const n = Number(val);
+        if (Number.isFinite(n) && n > 0) return xlSerialToIso(n);
+        return null;
+      };
+
+      const plannedStart = toIso(cols.plan_start >= 0 ? row[cols.plan_start] : null);
+      const plannedEnd   = toIso(planEndRaw);
+      const actualStart  = toIso(cols.act_start >= 0 ? row[cols.act_start] : null);
+      const actualEnd    = toIso(cols.act_end >= 0 ? row[cols.act_end] : null);
+
+      if (!plannedEnd) {
+        warnings.push({ row: rowNum, field: `${g}计划结束`, message: `${g} 计划结束日期无效，跳过该里程碑` });
+        return;
+      }
+
+      validRows.push({
+        id: `${projectId}-${g}`,
+        projectId,
+        name: g,
+        planned_start_date: plannedStart,
+        planned_end_date: plannedEnd,
+        actual_start_date: actualStart,
+        actual_end_date: actualEnd,
+        note: cols.note >= 0 ? String(row[cols.note] ?? "").trim() : "",
+        delay: delayDays(plannedEnd, actualEnd),
+      });
+    });
+  });
+
+  return { validRows, errors, warnings, headers };
+}
+
 export function parseOverrideCsv(text, projectRows = projects) {
   return parseTypedCsv(text, overrideTemplateSchema, (rows) => rows, { projects: projectRows, requireProjectMatch: true });
 }
 
-export function parseResourceAllocationCsv(text) {
+export function parseResourceAllocationCsv(text, projectRows = []) {
+  const projectById = new Map(
+    (projectRows.length ? projectRows : projects).map(p => [p.id ?? p.projectId, p])
+  );
+
   return parseTypedCsv(text, resourceTemplateSchema, (rows, warnings) =>
     rows.map((row, index) => {
-      const statusWeight = statusWeights[row.status] ?? 0;
-      const roleWeight = roleWeights[row.role]?.[row.status] ?? 0;
-      if (statusWeights[row.status] == null) warnings.push({ row: index + 2, field: "status", message: "Unknown status; statusWeight defaults to 0" });
+      const proj = projectById.get(row.projectId);
+      if (!proj) {
+        warnings.push({
+          row: index + 2,
+          field: "projectId",
+          message: `项目 ${row.projectId} 在项目导入中不存在；复杂度默认 3，状态默认 产品开发`,
+        });
+      }
+      const complexity = proj?.complexity ?? 3;
+      const status = proj?.status ?? "产品开发";
+      const cat = proj?.category ?? proj?.cat ?? null;
+      const dept = proj?.dept ?? null;
+      const biz = proj?.biz ?? null;
+      const system = proj?.family ?? null;
+
+      const roleWeight = roleWeights[row.role]?.[status] ?? 0;
       if (roleWeights[row.role] == null) {
         warnings.push({
           row: index + 2,
@@ -190,16 +317,20 @@ export function parseResourceAllocationCsv(text) {
           role: row.role,
           message: `未知角色「${row.role}」（人员：${row.person}）不在权重矩阵中，负荷按 0 计算，不计入工作量统计`,
         });
-      } else if (roleWeights[row.role]?.[row.status] == null) {
-        warnings.push({ row: index + 2, field: "role", message: "Missing role/status matrix weight; roleWeight defaults to 0" });
       }
       return {
         ...row,
-        statusWeight,
+        complexity,
+        status,
+        cat,
+        dept,
+        biz,
+        system,
+        statusWeight: statusWeights[status] ?? 0,
         roleWeight,
-        load: row.timeRatio * Math.sqrt((row.complexity ?? 3) / 5) * roleWeight,
+        load: row.timeRatio * Math.sqrt(complexity / 5) * roleWeight,
         personKey: row.person,
-        roleStatusKey: `${row.role}|${row.status}`,
+        roleStatusKey: `${row.role}|${status}`,
       };
     })
   );
@@ -262,6 +393,18 @@ function normalizeValue(value, field) {
     const date = new Date(`${trimmed}T00:00:00`);
     if (Number.isNaN(date.getTime())) return { value: trimmed, error: `${field.label} is not a valid date` };
     return { value: trimmed };
+  }
+  if (field.type === "cndate") {
+    if (!trimmed) return { value: "" };
+    const iso = parseCnDate(trimmed);
+    if (!iso) return { value: trimmed, warning: `${field.label} 无法识别为中文日期，已跳过` };
+    return { value: iso };
+  }
+  if (field.type === "xldate") {
+    if (!trimmed || trimmed === "0") return { value: "" };
+    const iso = xlSerialToIso(trimmed);
+    if (!iso) return { value: trimmed, warning: `${field.label} 无法识别为Excel日期序号，已跳过` };
+    return { value: iso };
   }
   return { value: trimmed };
 }

@@ -2,7 +2,7 @@ import { projectFilterRoutes, routeGroups, routes } from "../config/routes.js";
 import { filteredProjects, personStats } from "../core/selectors.js";
 import { $ } from "../core/utils.js";
 import { apiImportAllocations, apiImportMilestones, apiImportOverrides, apiImportProjects, apiSaveSettings, appSettings, bootstrap, milestones, projects } from "../core/data-store.js";
-import { parseMilestoneCsv, parseOverrideCsv, parseProjectCsv, parseResourceAllocationCsv } from "../core/importers.js";
+import { parseMilestoneCsv, parseMilestoneXlsx, parseOverrideCsv, parseProjectCsv, parseResourceAllocationCsv } from "../core/importers.js";
 import { state } from "../state/app-state.js";
 import { downloadProjectTemplate, downloadResourceTemplate, reconciliationView, settingsView, uploadView } from "../views/admin.js";
 import { dashboardView, drawerTabContent, openProject, projectsView, timeline } from "../views/projects.js";
@@ -113,13 +113,18 @@ function setUploadStatus(kind, tone, message) {
 
 const importHandlers = {
   project: {
-    label: "Project CSV",
+    label: "Project Excel",
     parse: parseProjectCsv,
     send: apiImportProjects,
   },
   milestone: {
-    label: "Milestone CSV",
+    label: "Milestone Excel",
     parse: (text) => parseMilestoneCsv(text),
+    parseXlsx: (workbook) => {
+      const ws = workbook.Sheets[workbook.SheetNames[0]];
+      const aoa = window.XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+      return parseMilestoneXlsx(aoa);
+    },
     send: apiImportMilestones,
   },
   override: {
@@ -128,8 +133,8 @@ const importHandlers = {
     send: apiImportOverrides,
   },
   resource: {
-    label: "Resource CSV",
-    parse: parseResourceAllocationCsv,
+    label: "Resource Excel",
+    parse: (text) => parseResourceAllocationCsv(text, projects),
     send: apiImportAllocations,
   },
 };
@@ -689,17 +694,23 @@ function bindEvents() {
       setUploadStatus(importKind, "busy", `正在读取 ${file.name}...`);
       try {
         const extension = file.name.split(".").pop()?.toLowerCase();
-        let text;
+        let parsed;
         if (extension === "xlsx" || extension === "xls") {
           const workbook = await readXlsxFile(file);
-          const firstSheetName = workbook.SheetNames[0];
-          if (!firstSheetName) throw new Error("Excel 文件中没有工作表");
-          text = window.XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheetName]);
+          if (!workbook.SheetNames[0]) throw new Error("Excel 文件中没有工作表");
+          if (handler.parseXlsx) {
+            setUploadStatus(importKind, "busy", `正在解析 ${handler.label}...`);
+            parsed = handler.parseXlsx(workbook);
+          } else {
+            const text = window.XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
+            setUploadStatus(importKind, "busy", `正在解析 ${handler.label}...`);
+            parsed = handler.parse(text);
+          }
         } else {
-          text = await readCsvFile(file);
+          const text = await readCsvFile(file);
+          setUploadStatus(importKind, "busy", `正在解析 ${handler.label}...`);
+          parsed = handler.parse(text);
         }
-        setUploadStatus(importKind, "busy", `正在解析 ${handler.label}...`);
-        const parsed = handler.parse(text);
         if (parsed.errors.length) {
           const e = parsed.errors[0];
           throw new Error(`第 ${e.row} 行 ${e.field}：${e.message}`);
