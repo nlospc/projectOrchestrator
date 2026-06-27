@@ -12,57 +12,57 @@ export function uploadView() {
       <div class="upload-card-head">
         <div>
           <h2>项目数据上传</h2>
-          <p class="muted">项目主数据 · 里程碑 · PMO 覆盖，不含任务颗粒度。</p>
+          <p class="muted">三份文件按顺序导入：① 项目信息 → ② 里程碑 → ③ 资源分配（资源依赖项目数据计算负荷）。</p>
         </div>
         <details class="export-menu">
           <summary class="ghost-button">导出数据 ▾</summary>
           <div class="export-menu-list">
             <button data-action="export-all-xlsx">全部导出 Excel</button>
             <button data-action="export-all-csv">全部导出 CSV</button>
-            <button data-action="download-project-template">下载项目模板</button>
+            <button data-action="download-project-template">导出当前项目 CSV</button>
           </div>
         </details>
       </div>
       <div class="upload-step-pills">
-        <button class="upload-step-pill clickable" data-action="download-project-template">① 下载模板</button>
+        <span class="upload-step-pill">① 准备 xlsx 文件</span>
         <span class="upload-step-sep">→</span>
-        <span class="upload-step-pill">② 选择 CSV / Excel</span>
+        <span class="upload-step-pill">② 选择并上传</span>
         <span class="upload-step-sep">→</span>
         <span class="upload-step-pill">③ 确认差异导入</span>
       </div>
       <div class="upload-import-grid">
-        ${uploadImportSlot("Project CSV", "项目主数据。导入后全量替换当前项目表，并清理旧项目关联数据。", "project", "选择 Project CSV", "export-projects-csv")}
-        ${uploadImportSlot("Milestone CSV", "里程碑计划与实际日期。导入后全量替换当前里程碑表。", "milestone", "选择 Milestone CSV", "export-milestones-csv")}
-        ${uploadImportSlot("Override CSV", "PMO 手动健康度覆盖。导入前清空现有覆盖，再应用 CSV。", "override", "选择 Override CSV", "export-overrides-csv")}
+        ${uploadImportSlot("项目信息 Excel", "27列项目主数据，含复杂度 / 阶段 / 人员 / 中文日期（如：2026年7月31日）。导入后全量替换项目表。", "project", "选择项目信息 Excel", "export-projects-csv")}
+        ${uploadImportSlot("里程碑 Excel", "G0–G6 门禁宽表，日期为 Excel 序列整数（自动转换）。仅支持 .xlsx 格式。导入后全量替换里程碑表。", "milestone", "选择里程碑 Excel", "export-milestones-csv")}
+        ${uploadImportSlot("PMO 覆盖 CSV", "PMO 手动健康度覆盖。导入前清空现有覆盖，再应用文件内容。", "override", "选择覆盖 CSV", "export-overrides-csv")}
       </div>
       <div class="stack" style="margin-top:14px">
-        ${uploadRow("Project Sheet", `${projects.length} 行`, "项目主数据字段完整", "G")}
-        ${uploadRow("Milestone Sheet", `${milestones.length} 行`, "按项目编号关联里程碑", "G")}
-        ${uploadRow("PMO Override", "可选", "手动健康度覆盖仍由系统保存", "Y")}
+        ${uploadRow("项目信息 Excel", `${projects.length} 行`, "必填：项目ID · 项目名称", "G")}
+        ${uploadRow("里程碑 Excel", `${milestones.length} 行`, "必填：项目ID · 项目名称 · 仅 xlsx", "G")}
+        ${uploadRow("PMO 覆盖 CSV", "可选", "手动健康度覆盖仍由系统保存", "Y")}
       </div>
     </section>
     <section class="panel upload-card">
       <div class="upload-card-head">
         <div>
           <h2>资源数据上传</h2>
-          <p class="muted">字段参考 R2 Workforce Dashboard，当前模板包含 R2 提取的资源记录。</p>
+          <p class="muted">7列精简模板：复杂度 / 状态由<strong>项目信息导入</strong>自动关联，请先完成项目导入。</p>
         </div>
-        <button class="ghost-button" data-action="download-resource-template">下载资源模板</button>
+        <button class="ghost-button" data-action="download-resource-template">导出当前资源 CSV</button>
       </div>
       <div class="upload-step-pills">
-        <button class="upload-step-pill clickable" data-action="download-resource-template">① 下载模板</button>
+        <span class="upload-step-pill">① 先导入项目信息</span>
         <span class="upload-step-sep">→</span>
         <span class="upload-step-pill">② 选择 CSV / Excel</span>
         <span class="upload-step-sep">→</span>
         <span class="upload-step-pill">③ 确认差异导入</span>
       </div>
       <div class="upload-import-grid single">
-        ${uploadImportSlot("ResourceAllocation CSV", "人员 x 项目、人员负载和 Bus Factor 统计。导入后替换当前资源分配表。", "resource", "选择资源 CSV", "export-allocations-csv")}
+        ${uploadImportSlot("资源分配 Excel", "7列：分配ID / 项目唯一键 / 项目 / 角色 / 人员 / 工时投入占比 / 是否外包。复杂度和状态由项目数据自动关联，导入后替换当前资源分配表。", "resource", "选择资源分配 Excel", "export-allocations-csv")}
       </div>
       <div class="stack" style="margin-top:14px">
-        ${uploadRow("ResourceAllocation Sheet", `${allocations.length} 行 R2 数据`, "可直接用于当前资源视图", "G")}
-        ${uploadRow("必填字段", "项目 / 角色 / 人员 / 工时投入占比", "缺失会阻断导入", "Y")}
-        ${uploadRow("计算字段", "负荷值 / 角色状态键", "系统根据模板字段自动计算", "G")}
+        ${uploadRow("资源分配 Excel", `${allocations.length} 行`, "必填 6项：分配ID · 项目唯一键 · 项目 · 角色 · 人员 · 工时占比", "G")}
+        ${uploadRow("复杂度 / 状态", "自动关联", "从项目导入数据取值，用于负荷计算", "G")}
+        ${uploadRow("是否外包", "可选", "外包资源在 Bus Factor 分析中单独标记", "Y")}
       </div>
     </section>
     <section class="panel upload-card" style="grid-column:1/-1">
@@ -212,13 +212,16 @@ export function settingsView() {
     </section>
 
     <section class="panel settings-panel settings-wide">
-      <div class="settings-head"><h2>上传模板字段</h2><span class="muted">用于模板下载和导入校验 ${storeTag}</span></div>
+      <div class="settings-head"><h2>上传模板字段</h2><span class="muted">对应 docs/template/ 三份 xlsx 模板的必填列 ${storeTag}</span></div>
       <div class="settings-form two-col">
-        <label>项目模板必填字段
-          <textarea rows="3" data-settings-path="templateFields.projectRequired">${escapeHtml(tf.projectRequired ?? "")}</textarea>
+        <label>项目信息必填字段（project_info_template.xlsx）
+          <textarea rows="2" data-settings-path="templateFields.projectRequired">${escapeHtml(tf.projectRequired ?? "")}</textarea>
         </label>
-        <label>资源模板必填字段
-          <textarea rows="3" data-settings-path="templateFields.resourceRequired">${escapeHtml(tf.resourceRequired ?? "")}</textarea>
+        <label>里程碑必填字段（milestone_info_template.xlsx）
+          <textarea rows="2" data-settings-path="templateFields.milestoneRequired">${escapeHtml(tf.milestoneRequired ?? "")}</textarea>
+        </label>
+        <label>资源分配必填字段（PMO_ResourceAllocation_template.xlsx）
+          <textarea rows="2" data-settings-path="templateFields.resourceRequired">${escapeHtml(tf.resourceRequired ?? "")}</textarea>
         </label>
       </div>
     </section>

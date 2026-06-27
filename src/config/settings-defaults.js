@@ -13,7 +13,8 @@ export const DEFAULT_SETTINGS = {
   },
   milestoneTemplates: [],
   templateFields: {
-    projectRequired: "项目编号、项目名称、健康度、复杂度、项目状态、当前PM",
-    resourceRequired: "系统、项目、项目复杂度、项目状态、角色、人员、工时投入占比",
+    projectRequired: "项目ID、项目名称",
+    milestoneRequired: "项目ID、项目名称",
+    resourceRequired: "分配ID、项目唯一键、项目、角色、人员、工时投入占比",
   },
 };
