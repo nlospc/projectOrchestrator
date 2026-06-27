@@ -1,4 +1,4 @@
-import { projects } from "./data-store.js";
+import { projects, personInfo } from "./data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { healthValues, milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, projectExtrasKeys, resourceTemplateSchema } from "./template-schemas.js";
 
@@ -334,6 +334,142 @@ export function parseResourceAllocationCsv(text, projectRows = []) {
       };
     })
   );
+}
+
+/**
+ * Parse user_info.csv: 姓名 / 角色 / 是否外包
+ * Returns { validRows: [{name, role, outsourced}], errors, warnings }
+ */
+export function parseUserInfoCsv(text) {
+  const rows = parseCsv(text);
+  if (!rows.length) return { validRows: [], errors: [{ row: 1, field: '姓名', message: '文件为空' }], warnings: [] };
+
+  const headers = rows[0].map((h) => String(h ?? '').trim());
+  const nameIdx = headers.indexOf('姓名');
+  const roleIdx = headers.indexOf('角色');
+  const outsourcedIdx = headers.indexOf('是否外包');
+
+  const errors = [];
+  if (nameIdx === -1) errors.push({ row: 1, field: '姓名', message: '缺少姓名列' });
+  if (roleIdx === -1) errors.push({ row: 1, field: '角色', message: '缺少角色列' });
+  if (errors.length) return { validRows: [], errors, warnings: [] };
+
+  const warnings = [];
+  const validRows = [];
+  rows.slice(1).forEach((row, i) => {
+    const name = String(row[nameIdx] ?? '').trim();
+    if (!name) return;
+    const role = String(row[roleIdx] ?? '').trim();
+    const outsourcedRaw = outsourcedIdx >= 0 ? String(row[outsourcedIdx] ?? '').trim() : '';
+    const outsourced = booleanAliases[outsourcedRaw.toLowerCase()] ?? booleanAliases[outsourcedRaw] ?? false;
+    if (!role) warnings.push({ row: i + 2, field: '角色', message: `${name} 缺少角色，已留空` });
+    validRows.push({ name, role, outsourced });
+  });
+
+  return { validRows, errors, warnings };
+}
+
+/**
+ * Parse new pivot/matrix resource allocation xlsx.
+ * Layout:
+ *   Row 0 — group label row (项目基本信息 / 工时投入统计): skip
+ *   Row 1 — headers: [项目ID, 项目名称, person1, person2, ...]
+ *   Row 2+ — data: [projectId, projectName, timeRatio1, timeRatio2, ...]
+ *
+ * personInfoList defaults to the live data-store personInfo array.
+ * projectRows defaults to the live data-store projects array.
+ */
+export function parseResourceAllocationXlsx(aoa, personInfoList = personInfo, projectRows = []) {
+  const resolvedProjects = projectRows.length ? projectRows : projects;
+  const projectById = new Map(resolvedProjects.map((p) => [p.id ?? p.projectId, p]));
+  const personMap = new Map((personInfoList.length ? personInfoList : personInfo).map((p) => [p.name, p]));
+
+  const headers = (aoa[1] || []).map((h) => String(h ?? '').trim());
+  const dataRows = aoa.slice(2).filter((r) => r.some((c) => c != null && String(c).trim() !== ''));
+
+  const errors = [];
+  const warnings = [];
+  const validRows = [];
+
+  const personNames = headers.slice(2);
+
+  dataRows.forEach((row, rowIdx) => {
+    const rowNum = rowIdx + 3;
+    const projectId = String(row[0] ?? '').trim();
+    const projectName = String(row[1] ?? '').trim();
+    if (!projectId) return;
+
+    const proj = projectById.get(projectId);
+    if (!proj) {
+      warnings.push({
+        row: rowNum,
+        field: 'projectId',
+        message: `项目 ${projectId} 在项目导入中不存在；复杂度默认 3，状态默认 产品开发`,
+      });
+    }
+
+    const complexity = proj?.complexity ?? 3;
+    const status = proj?.status ?? '产品开发';
+    const cat = proj?.category ?? proj?.cat ?? null;
+    const dept = proj?.dept ?? null;
+    const biz = proj?.biz ?? null;
+    const system = proj?.family ?? null;
+
+    personNames.forEach((personName, colOffset) => {
+      if (!personName) return;
+      const rawValue = row[colOffset + 2];
+      if (rawValue == null || String(rawValue).trim() === '') return;
+      const timeRatio = Number(rawValue);
+      if (!Number.isFinite(timeRatio) || timeRatio <= 0) return;
+
+      const pInfo = personMap.get(personName);
+      if (!pInfo) {
+        warnings.push({
+          row: rowNum,
+          field: personName,
+          message: `人员「${personName}」不在人员信息表中，角色未知，负荷按 0 计算`,
+        });
+      }
+
+      const role = pInfo?.role ?? '';
+      const outsourced = pInfo?.outsourced ?? false;
+      const roleWeight = roleWeights[role]?.[status] ?? 0;
+
+      if (role && roleWeights[role] == null) {
+        warnings.push({
+          row: rowNum,
+          field: 'role',
+          code: 'unknown-role',
+          person: personName,
+          role,
+          message: `未知角色「${role}」（人员：${personName}）不在权重矩阵中，负荷按 0 计算`,
+        });
+      }
+
+      validRows.push({
+        id: `${projectId}-${personName}`,
+        projectId,
+        projectName: projectName || proj?.name || projectId,
+        person: personName,
+        role,
+        outsourced,
+        timeRatio,
+        complexity,
+        status,
+        cat,
+        dept,
+        biz,
+        system,
+        statusWeight: statusWeights[status] ?? 0,
+        roleWeight,
+        load: timeRatio * Math.sqrt(complexity / 5) * roleWeight,
+        personKey: personName,
+        roleStatusKey: `${role}|${status}`,
+      });
+    });
+  });
+
+  return { validRows, errors, warnings };
 }
 
 function parseTypedCsv(text, schema, transform, validationOptions = {}) {

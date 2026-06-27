@@ -5,6 +5,7 @@ import { listComments } from '../repositories/comments.js';
 import { listAllocations } from '../repositories/allocations.js';
 import { getSettings } from '../repositories/settings.js';
 import { confirmedLinksMap } from '../repositories/links.js';
+import { listPersonInfo } from '../repositories/person-info.js';
 
 const router = Router();
 
@@ -20,6 +21,7 @@ router.get('/bootstrap', (_req, res) => {
       changeLogs: listChangeLogs(),
       comments: listComments(),
       allocations: listAllocations(),
+      personInfo: listPersonInfo(),
       settings: getSettings(),
       links: [...linksMap.entries()].map(([resourceKey, projectId]) => ({ resourceKey, projectId })),
     });

@@ -9,6 +9,7 @@ import {
   replaceProjectOverrides,
   replaceProjects,
 } from '../repositories/imports.js';
+import { listPersonInfo, replacePersonInfo, upsertPerson, deletePerson } from '../repositories/person-info.js';
 import { upsertProposed } from '../repositories/links.js';
 import { proposeLinks } from '../../src/core/matchers.js';
 const router = Router();
@@ -39,6 +40,11 @@ const previewKinds = {
     fields: ['id', 'projectId', 'projectName', 'role', 'person', 'timeRatio', 'outsourced',
       'complexity', 'status', 'cat', 'dept', 'biz', 'system'],
     list: listAllocations,
+  },
+  person_info: {
+    idField: 'name',
+    fields: ['name', 'role', 'outsourced'],
+    list: listPersonInfo,
   },
 };
 
@@ -143,6 +149,51 @@ router.post('/import/overrides', (req, res) => {
     res.json({ ok: true, count });
   } catch (err) {
     res.status(409).json({ error: err.message });
+  }
+});
+
+// POST /api/import/person-info - full replace of the person_info table.
+router.post('/import/person-info', (req, res) => {
+  try {
+    const { rows, filename = null } = req.body;
+    if (!Array.isArray(rows)) return res.status(422).json({ error: 'rows array required' });
+    const count = replacePersonInfo(rows, filename);
+    res.json({ ok: true, count });
+  } catch (err) {
+    res.status(409).json({ error: err.message });
+  }
+});
+
+// GET /api/person-info - list all person info entries.
+router.get('/person-info', (_req, res) => {
+  try {
+    res.json({ personInfo: listPersonInfo() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/person-info - add or update a single person.
+router.post('/person-info', (req, res) => {
+  try {
+    const { name, role, outsourced } = req.body || {};
+    if (!name || String(name).trim() === '') return res.status(422).json({ error: 'name is required' });
+    const person = upsertPerson({ name: String(name).trim(), role: String(role ?? '').trim(), outsourced: !!outsourced });
+    res.json({ ok: true, person });
+  } catch (err) {
+    res.status(409).json({ error: err.message });
+  }
+});
+
+// DELETE /api/person-info/:name - remove a person by name.
+router.delete('/person-info/:name', (req, res) => {
+  try {
+    const name = decodeURIComponent(req.params.name);
+    const deleted = deletePerson(name);
+    if (!deleted) return res.status(404).json({ error: `Person "${name}" not found` });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

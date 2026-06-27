@@ -21,6 +21,7 @@ export const routeGroups = [
     label: "管理",
     routes: [
       ["upload", "数据上传"],
+      ["personnel", "人员配置"],
       ["settings", "设置"],
       ["links", "关联中心"],
     ],

@@ -1,10 +1,10 @@
 import { projectFilterRoutes, routeGroups, routes } from "../config/routes.js";
 import { filteredProjects, personStats } from "../core/selectors.js";
 import { $ } from "../core/utils.js";
-import { apiImportAllocations, apiImportMilestones, apiImportOverrides, apiImportProjects, apiSaveSettings, appSettings, bootstrap, milestones, projects } from "../core/data-store.js";
-import { parseMilestoneCsv, parseMilestoneXlsx, parseOverrideCsv, parseProjectCsv, parseResourceAllocationCsv } from "../core/importers.js";
+import { apiImportAllocations, apiImportMilestones, apiImportOverrides, apiImportProjects, apiUpsertPerson, apiDeletePerson, apiSaveSettings, appSettings, bootstrap, milestones, personInfo, projects } from "../core/data-store.js";
+import { parseMilestoneCsv, parseMilestoneXlsx, parseOverrideCsv, parseProjectCsv, parseResourceAllocationCsv, parseResourceAllocationXlsx } from "../core/importers.js";
 import { state } from "../state/app-state.js";
-import { downloadProjectTemplate, downloadResourceTemplate, reconciliationView, settingsView, uploadView } from "../views/admin.js";
+import { downloadProjectTemplate, downloadResourceTemplate, personInfoView, reconciliationView, settingsView, uploadView } from "../views/admin.js";
 import { dashboardView, drawerTabContent, openProject, projectsView, timeline } from "../views/projects.js";
 import { cockpitView } from "../views/cockpit.js";
 import { appendComment, setProjectOverride, updateMilestone } from "../core/mutations.js";
@@ -135,6 +135,11 @@ const importHandlers = {
   resource: {
     label: "Resource Excel",
     parse: (text) => parseResourceAllocationCsv(text, projects),
+    parseXlsx: (workbook) => {
+      const ws = workbook.Sheets[workbook.SheetNames[0]];
+      const aoa = window.XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+      return parseResourceAllocationXlsx(aoa, personInfo, projects);
+    },
     send: apiImportAllocations,
   },
 };
@@ -258,6 +263,7 @@ const routeViews = {
   upload: uploadView,
   settings: settingsView,
   links: reconciliationView,
+  personnel: personInfoView,
 };
 
 function setupMonitorBoardScrollSync() {
@@ -418,6 +424,7 @@ function bindEvents() {
     if (actionName === "export-milestones-csv") return triggerDownload("/api/export/milestones");
     if (actionName === "export-overrides-csv") return triggerDownload("/api/export/overrides");
     if (actionName === "export-allocations-csv") return triggerDownload("/api/export/allocations");
+    if (actionName === "export-person-info-csv") return triggerDownload("/api/export/person-info");
     if (actionName === "export-all-xlsx") return triggerDownload("/api/export/all.xlsx");
     if (actionName === "export-all-csv") {
       triggerDownload("/api/export/projects");
@@ -511,6 +518,55 @@ function bindEvents() {
       } catch (err) {
         toast(err.message);
       }
+      return;
+    }
+
+    // ── Personnel CRUD ─────────────────────────────────────────────────────
+    if (actionName === "person-edit-toggle") {
+      const row = action.closest("tr");
+      const name = action.dataset.name;
+      const isEditing = row?.classList.contains("editing");
+      document.querySelectorAll("tr.editing").forEach((r) => r.classList.remove("editing"));
+      if (!isEditing && row) row.classList.add("editing");
+      return;
+    }
+    if (actionName === "person-save") {
+      const name = action.dataset.name;
+      const row = action.closest("tr");
+      const roleInput = row?.querySelector(".person-role-input");
+      const outsourcedInput = row?.querySelector(".person-outsourced-input");
+      try {
+        await apiUpsertPerson({ name, role: roleInput?.value ?? '', outsourced: outsourcedInput?.checked ?? false });
+        row?.classList.remove("editing");
+        render();
+        toast(`已保存 ${name}`);
+      } catch (err) { toast(err.message); }
+      return;
+    }
+    if (actionName === "person-delete") {
+      const name = action.dataset.name;
+      if (!window.confirm(`确认删除 ${name}？`)) return;
+      try {
+        await apiDeletePerson(name);
+        render();
+        toast(`已删除 ${name}`);
+      } catch (err) { toast(err.message); }
+      return;
+    }
+    if (actionName === "person-add-save") {
+      const nameInput = document.getElementById("new-person-name");
+      const roleInput = document.getElementById("new-person-role");
+      const outsourcedInput = document.getElementById("new-person-outsourced");
+      const name = nameInput?.value?.trim() ?? '';
+      if (!name) return toast("姓名不能为空");
+      try {
+        await apiUpsertPerson({ name, role: roleInput?.value ?? '', outsourced: outsourcedInput?.checked ?? false });
+        if (nameInput) nameInput.value = '';
+        if (roleInput) roleInput.value = '';
+        if (outsourcedInput) outsourcedInput.checked = false;
+        render();
+        toast(`已添加 ${name}`);
+      } catch (err) { toast(err.message); }
       return;
     }
 

@@ -15,6 +15,6 @@ export const DEFAULT_SETTINGS = {
   templateFields: {
     projectRequired: "项目ID、项目名称",
     milestoneRequired: "项目ID、项目名称",
-    resourceRequired: "分配ID、项目唯一键、项目、角色、人员、工时投入占比",
+    resourceRequired: "项目ID、项目名称（矩阵格式：列为人员，单元格为工时占比）",
   },
 };

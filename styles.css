@@ -4291,3 +4291,10 @@ button.chart-bar:hover strong {
     grid-template-columns: minmax(0, 1fr) 56px 64px;
   }
 }
+
+/* ── Person-info CRUD table ──────────────────────────────────────────────── */
+.person-info-table td { vertical-align: middle; }
+.person-info-table tr.editing .person-view-cells { display: none; }
+.person-info-table tr:not(.editing) .person-edit-cells { display: none; }
+.person-edit-cells[hidden] { display: none; }
+.ghost-button.danger { color: var(--red, #c0392b); }

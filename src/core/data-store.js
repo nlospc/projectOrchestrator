@@ -9,6 +9,7 @@ export const milestones = [];
 export const milestoneChangeLogs = [];
 export const comments = [];
 export const allocations = [];
+export const personInfo = [];
 export const milestoneNames = [];
 export const confirmedLinks = new Map();
 
@@ -36,6 +37,9 @@ export async function bootstrap() {
 
   allocations.length = 0;
   allocations.push(...data.allocations);
+
+  personInfo.length = 0;
+  personInfo.push(...(data.personInfo ?? []));
 
   milestoneNames.length = 0;
   milestoneNames.push(...[...new Set(data.milestones.map(m => m.name))]);
@@ -176,6 +180,34 @@ export async function apiImportOverrides(rows, filename) {
 
 export async function apiImportAllocations(rows, filename) {
   return postImport('/api/import/allocations', rows, filename);
+}
+
+export async function apiUpsertPerson(person) {
+  const res = await fetch('/api/person-info', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(person),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || res.statusText);
+  }
+  const { person: saved } = await res.json();
+  const idx = personInfo.findIndex((p) => p.name === saved.name);
+  if (idx !== -1) personInfo[idx] = saved;
+  else personInfo.push(saved);
+  personInfo.sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+  return saved;
+}
+
+export async function apiDeletePerson(name) {
+  const res = await fetch(`/api/person-info/${encodeURIComponent(name)}`, { method: 'DELETE' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || res.statusText);
+  }
+  const idx = personInfo.findIndex((p) => p.name === name);
+  if (idx !== -1) personInfo.splice(idx, 1);
 }
 
 export async function apiSaveSettings(payload) {

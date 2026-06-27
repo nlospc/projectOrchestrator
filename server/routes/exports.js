@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import { listAllocations } from '../repositories/allocations.js';
 import { listMilestones } from '../repositories/milestones.js';
 import { listProjects } from '../repositories/projects.js';
+import { listPersonInfo } from '../repositories/person-info.js';
 import {
   milestoneTemplateSchema,
   overrideTemplateSchema,
@@ -91,6 +92,17 @@ router.get('/export/overrides', (_req, res) => {
 
 router.get('/export/allocations', (_req, res) => {
   sendCsv(res, 'PMO_ResourceAllocation_Export.csv', resourceTemplateSchema, listAllocations());
+});
+
+const personInfoSchema = [
+  { key: 'name', label: '姓名' },
+  { key: 'role', label: '角色' },
+  { key: 'outsourced', label: '是否外包' },
+];
+
+router.get('/export/person-info', (_req, res) => {
+  const rows = listPersonInfo().map((p) => ({ ...p, outsourced: p.outsourced ? 'TRUE' : 'FALSE' }));
+  sendCsv(res, 'PMO_PersonInfo_Export.csv', personInfoSchema, rows);
 });
 
 export default router;

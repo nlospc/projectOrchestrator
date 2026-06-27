@@ -1,4 +1,4 @@
-import { allocations, milestoneNames, milestones, projects, appSettings, confirmedLinks } from "../core/data-store.js";
+import { allocations, milestoneNames, milestones, projects, personInfo, appSettings, confirmedLinks } from "../core/data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { downloadCsvTemplate } from "../core/files.js";
 import { milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, resourceTemplateSchema } from "../core/template-schemas.js";
@@ -45,24 +45,24 @@ export function uploadView() {
       <div class="upload-card-head">
         <div>
           <h2>资源数据上传</h2>
-          <p class="muted">7列精简模板：复杂度 / 状态由<strong>项目信息导入</strong>自动关联，请先完成项目导入。</p>
+          <p class="muted">矩阵宽表格式：行为项目，列为人员，单元格为工时占比（0–1）。人员角色 / 外包状态由<strong>人员配置</strong>管理，请先在「人员配置」页完成配置。</p>
         </div>
         <button class="ghost-button" data-action="download-resource-template">导出当前资源 CSV</button>
       </div>
       <div class="upload-step-pills">
-        <span class="upload-step-pill">① 先导入项目信息</span>
+        <span class="upload-step-pill">① 人员配置页配置角色</span>
         <span class="upload-step-sep">→</span>
-        <span class="upload-step-pill">② 选择 CSV / Excel</span>
+        <span class="upload-step-pill">② 导入项目信息</span>
         <span class="upload-step-sep">→</span>
-        <span class="upload-step-pill">③ 确认差异导入</span>
+        <span class="upload-step-pill">③ 上传资源分配 Excel</span>
       </div>
       <div class="upload-import-grid single">
-        ${uploadImportSlot("资源分配 Excel", "7列：分配ID / 项目唯一键 / 项目 / 角色 / 人员 / 工时投入占比 / 是否外包。复杂度和状态由项目数据自动关联，导入后替换当前资源分配表。", "resource", "选择资源分配 Excel", "export-allocations-csv")}
+        ${uploadImportSlot("资源分配 Excel", "矩阵宽表：第1行=项目基本信息分组，第2行=表头（项目ID / 项目名称 / 人员姓名...），第3行起=项目行，单元格为工时占比（0–1）。导入后替换当前资源分配表。", "resource", "选择资源分配 Excel", "export-allocations-csv")}
       </div>
       <div class="stack" style="margin-top:14px">
-        ${uploadRow("资源分配 Excel", `${allocations.length} 行`, "必填 6项：分配ID · 项目唯一键 · 项目 · 角色 · 人员 · 工时占比", "G")}
+        ${uploadRow("人员配置", `${personInfo.length} 人已配置`, "在「人员配置」页添加人员及角色", personInfo.length ? "G" : "Y")}
+        ${uploadRow("资源分配 Excel", `${allocations.length} 行`, "矩阵格式：行=项目，列=人员，值=工时占比", "G")}
         ${uploadRow("复杂度 / 状态", "自动关联", "从项目导入数据取值，用于负荷计算", "G")}
-        ${uploadRow("是否外包", "可选", "外包资源在 Bus Factor 分析中单独标记", "Y")}
       </div>
     </section>
     <section class="panel upload-card" style="grid-column:1/-1">
@@ -248,6 +248,54 @@ export function settingsView() {
         <thead><tr><th>门禁</th><th>名称</th><th>交付物</th></tr></thead>
         <tbody>${gateDefinitions.map((g) => `<tr><td><strong>${g.value}</strong></td><td>${g.label}</td><td>${g.deliverables}</td></tr>`).join("")}</tbody>
       </table>
+    </section>
+  </div>`;
+}
+
+const KNOWN_ROLES = ['全栈开发工程师','产品经理','项目经理','前端','后端','测试','运维','Agent开发','UI/UX','模型','架构师'];
+
+function roleOptions(selected) {
+  return KNOWN_ROLES.map((r) => `<option value="${escapeHtml(r)}"${r === selected ? ' selected' : ''}>${escapeHtml(r)}</option>`).join('');
+}
+
+export function personInfoView() {
+  const tableRows = personInfo.map((p) => `<tr data-person="${escapeHtml(p.name)}">
+    <td class="person-view-cells">${escapeHtml(p.name)}</td>
+    <td class="person-view-cells">${escapeHtml(p.role)}</td>
+    <td class="person-view-cells">${p.outsourced ? '<span class="badge Y">外包</span>' : '<span class="badge G">内部</span>'}</td>
+    <td class="person-view-cells">
+      <button class="ghost-button" data-action="person-edit-toggle" data-name="${escapeHtml(p.name)}">编辑</button>
+      <button class="ghost-button danger" data-action="person-delete" data-name="${escapeHtml(p.name)}">删除</button>
+    </td>
+    <td class="person-edit-cells">
+      <select class="person-role-input">${roleOptions(p.role)}</select>
+      <label style="margin-left:8px"><input type="checkbox" class="person-outsourced-input"${p.outsourced ? ' checked' : ''}> 外包</label>
+    </td>
+    <td class="person-edit-cells">
+      <button class="ghost-button" data-action="person-save" data-name="${escapeHtml(p.name)}">保存</button>
+      <button class="ghost-button" data-action="person-edit-toggle" data-name="${escapeHtml(p.name)}">取消</button>
+    </td>
+  </tr>`).join('');
+
+  return `<div class="settings-grid">
+    <section class="panel settings-panel settings-wide">
+      <div class="settings-head">
+        <h2>人员配置 <span class="badge G">${personInfo.length}</span></h2>
+        <button class="ghost-button" data-action="export-person-info-csv">导出 CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table class="def-table person-info-table">
+          <thead><tr><th>姓名</th><th>角色</th><th>类型</th><th></th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+      <div class="settings-head" style="margin-top:20px"><h3>添加人员</h3></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="new-person-name" type="text" placeholder="姓名" style="width:120px">
+        <select id="new-person-role"><option value="">-- 角色 --</option>${roleOptions('')}</select>
+        <label><input id="new-person-outsourced" type="checkbox"> 外包</label>
+        <button class="ghost-button" data-action="person-add-save">添加</button>
+      </div>
     </section>
   </div>`;
 }

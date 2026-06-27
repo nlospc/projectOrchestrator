@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS person_info (
+  name TEXT PRIMARY KEY,
+  role TEXT NOT NULL DEFAULT '',
+  outsourced INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL
+);
