@@ -12,7 +12,7 @@ export function uploadView() {
       <div class="upload-card-head">
         <div>
           <h2>项目数据上传</h2>
-          <p class="muted">三份文件按顺序导入：① 项目信息 → ② 里程碑 → ③ 资源分配（资源依赖项目数据计算负荷）。</p>
+          <p class="muted">两份文件按顺序导入：① 项目信息 → ② 里程碑（里程碑依赖项目 ID 关联）。</p>
         </div>
         <details class="export-menu">
           <summary class="ghost-button">导出数据 ▾</summary>
@@ -26,7 +26,7 @@ export function uploadView() {
       <div class="upload-step-pills">
         <span class="upload-step-pill">① 准备 xlsx 文件</span>
         <span class="upload-step-sep">→</span>
-        <span class="upload-step-pill">② 选择并上传</span>
+        <span class="upload-step-pill">② 选择或拖拽上传</span>
         <span class="upload-step-sep">→</span>
         <span class="upload-step-pill">③ 确认差异导入</span>
       </div>
@@ -43,12 +43,12 @@ export function uploadView() {
       <div class="upload-card-head">
         <div>
           <h2>资源数据上传</h2>
-          <p class="muted">矩阵宽表格式：行为项目，列为人员，单元格为工时占比（0–1）。人员角色 / 外包状态由<strong>人员配置</strong>管理，请先在「人员配置」页完成配置。</p>
+          <p class="muted">矩阵宽表格式：行为项目，列为人员，单元格为工时占比（0–1）。人员角色 / 外包状态请先在 <a href="#person-info" style="color:var(--primary)">人员配置</a> 页完成配置。</p>
         </div>
         <button class="ghost-button" data-action="download-resource-template">导出当前资源 CSV</button>
       </div>
       <div class="upload-step-pills">
-        <span class="upload-step-pill">① 人员配置页配置角色</span>
+        <a href="#person-info" class="upload-step-pill clickable">① 人员配置页配置角色</a>
         <span class="upload-step-sep">→</span>
         <span class="upload-step-pill">② 导入项目信息</span>
         <span class="upload-step-sep">→</span>
@@ -82,20 +82,22 @@ export function uploadRow(name, rows, status, health) {
 const kindIcons = { project: "📋", milestone: "🗓", override: "🔧", resource: "👥" };
 
 function uploadImportSlot(title, description, kind, buttonText, exportAction) {
-  const current = state.uploads[kind] || { tone: "idle", message: "等待选择 CSV 或 Excel 文件" };
+  const current = state.uploads[kind] || { tone: "idle", message: "等待选择文件，或拖拽至此" };
   const icon = kindIcons[kind] ?? "📁";
   return `<div class="dropzone upload-slot" data-upload-kind="${kind}">
-    <div>
+    <div class="upload-slot-header">
       <span class="upload-slot-icon">${icon}</span>
       <strong>${escapeHtml(title)}</strong>
-      <p class="muted">${escapeHtml(description)}</p>
+    </div>
+    <p class="muted" style="font-size:12px;margin:0">${escapeHtml(description)}</p>
+    <div class="upload-slot-actions">
       <label class="primary-button" style="cursor:pointer">
         ${escapeHtml(buttonText)}
         <input type="file" accept=".csv,.xlsx,.xls" data-import="${kind}" hidden>
       </label>
       <button class="ghost-button" data-action="${exportAction}">导出当前数据</button>
-      <div class="upload-status ${escapeHtml(current.tone)}" role="status">${escapeHtml(current.message)}</div>
     </div>
+    <div class="upload-status ${escapeHtml(current.tone)}" role="status">${escapeHtml(current.message)}</div>
   </div>`;
 }
 

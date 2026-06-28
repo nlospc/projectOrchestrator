@@ -638,6 +638,36 @@ function bindEvents() {
     }
   });
 
+  // ── Drag-and-drop for upload dropzones ────────────────────────────────────
+  document.addEventListener("dragover", (event) => {
+    const slot = event.target.closest(".upload-slot");
+    if (!slot) return;
+    event.preventDefault();
+    slot.classList.add("drag-over");
+  });
+
+  document.addEventListener("dragleave", (event) => {
+    const slot = event.target.closest(".upload-slot");
+    if (!slot || slot.contains(event.relatedTarget)) return;
+    slot.classList.remove("drag-over");
+  });
+
+  document.addEventListener("drop", (event) => {
+    const slot = event.target.closest(".upload-slot");
+    if (!slot) return;
+    event.preventDefault();
+    slot.classList.remove("drag-over");
+    const kind = slot.dataset.uploadKind;
+    const input = slot.querySelector(`input[data-import="${kind}"]`);
+    if (!input) return;
+    const file = event.dataTransfer?.files?.[0];
+    if (!file) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+
   document.addEventListener("change", async (event) => {
     // ── CSV/Excel import (admin upload dropzones) ──────────────────────────
     const importKind = event.target.dataset.import;
