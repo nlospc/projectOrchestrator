@@ -1,4 +1,4 @@
-import { allocations, milestoneNames, milestones, projects, personInfo, appSettings, confirmedLinks } from "../core/data-store.js";
+import { allocations, milestoneNames, milestones, projects, personInfo, appSettings } from "../core/data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { downloadCsvTemplate } from "../core/files.js";
 import { milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, resourceTemplateSchema } from "../core/template-schemas.js";
@@ -33,12 +33,10 @@ export function uploadView() {
       <div class="upload-import-grid">
         ${uploadImportSlot("项目信息 Excel", "27列项目主数据，含复杂度 / 阶段 / 人员 / 中文日期（如：2026年7月31日）。导入后全量替换项目表。", "project", "选择项目信息 Excel", "export-projects-csv")}
         ${uploadImportSlot("里程碑 Excel", "G0–G6 门禁宽表，日期为 Excel 序列整数（自动转换）。仅支持 .xlsx 格式。导入后全量替换里程碑表。", "milestone", "选择里程碑 Excel", "export-milestones-csv")}
-        ${uploadImportSlot("PMO 覆盖 CSV", "PMO 手动健康度覆盖。导入前清空现有覆盖，再应用文件内容。", "override", "选择覆盖 CSV", "export-overrides-csv")}
       </div>
       <div class="stack" style="margin-top:14px">
         ${uploadRow("项目信息 Excel", `${projects.length} 行`, "必填：项目ID · 项目名称", "G")}
         ${uploadRow("里程碑 Excel", `${milestones.length} 行`, "必填：项目ID · 项目名称 · 仅 xlsx", "G")}
-        ${uploadRow("PMO 覆盖 CSV", "可选", "手动健康度覆盖仍由系统保存", "Y")}
       </div>
     </section>
     <section class="panel upload-card">
@@ -254,26 +252,38 @@ export function settingsView() {
 
 const KNOWN_ROLES = ['全栈开发工程师','产品经理','项目经理','前端','后端','测试','运维','Agent开发','UI/UX','模型','架构师'];
 
-function roleOptions(selected) {
-  return KNOWN_ROLES.map((r) => `<option value="${escapeHtml(r)}"${r === selected ? ' selected' : ''}>${escapeHtml(r)}</option>`).join('');
+function roleOptions(selected, includeBlank = false) {
+  const roles = [
+    ...(includeBlank ? [''] : []),
+    ...(selected && !KNOWN_ROLES.includes(selected) ? [selected] : []),
+    ...KNOWN_ROLES,
+  ];
+  return roles.map((r) => `<option value="${escapeHtml(r)}"${r === selected ? ' selected' : ''}>${escapeHtml(r || '-- 角色 --')}</option>`).join('');
 }
 
 export function personInfoView() {
   const tableRows = personInfo.map((p) => `<tr data-person="${escapeHtml(p.name)}">
-    <td class="person-view-cells">${escapeHtml(p.name)}</td>
-    <td class="person-view-cells">${escapeHtml(p.role)}</td>
-    <td class="person-view-cells">${p.outsourced ? '<span class="badge Y">外包</span>' : '<span class="badge G">内部</span>'}</td>
-    <td class="person-view-cells">
-      <button class="ghost-button" data-action="person-edit-toggle" data-name="${escapeHtml(p.name)}">编辑</button>
-      <button class="ghost-button danger" data-action="person-delete" data-name="${escapeHtml(p.name)}">删除</button>
+    <td>
+      <span class="person-view-cells">${escapeHtml(p.name)}</span>
+      <input class="person-edit-cells person-name-input" value="${escapeHtml(p.name)}" readonly>
     </td>
-    <td class="person-edit-cells">
-      <select class="person-role-input">${roleOptions(p.role)}</select>
-      <label style="margin-left:8px"><input type="checkbox" class="person-outsourced-input"${p.outsourced ? ' checked' : ''}> 外包</label>
+    <td>
+      <span class="person-view-cells">${escapeHtml(p.role)}</span>
+      <select class="person-edit-cells person-role-input">${roleOptions(p.role, true)}</select>
     </td>
-    <td class="person-edit-cells">
-      <button class="ghost-button" data-action="person-save" data-name="${escapeHtml(p.name)}">保存</button>
-      <button class="ghost-button" data-action="person-edit-toggle" data-name="${escapeHtml(p.name)}">取消</button>
+    <td>
+      <span class="person-view-cells">${p.outsourced ? '<span class="badge Y">外包</span>' : '<span class="badge G">内部</span>'}</span>
+      <label class="person-edit-cells person-outsourced-label"><input type="checkbox" class="person-outsourced-input"${p.outsourced ? ' checked' : ''}> 外包</label>
+    </td>
+    <td>
+      <span class="person-view-cells person-row-actions">
+        <button class="ghost-button" data-action="person-edit-toggle" data-name="${escapeHtml(p.name)}">编辑</button>
+        <button class="ghost-button danger" data-action="person-delete" data-name="${escapeHtml(p.name)}">删除</button>
+      </span>
+      <span class="person-edit-cells person-row-actions">
+        <button class="ghost-button" data-action="person-save" data-name="${escapeHtml(p.name)}">保存</button>
+        <button class="ghost-button" data-action="person-edit-toggle" data-name="${escapeHtml(p.name)}">取消</button>
+      </span>
     </td>
   </tr>`).join('');
 
@@ -296,76 +306,6 @@ export function personInfoView() {
         <label><input id="new-person-outsourced" type="checkbox"> 外包</label>
         <button class="ghost-button" data-action="person-add-save">添加</button>
       </div>
-    </section>
-  </div>`;
-}
-
-export function reconciliationView() {
-  const confirmedKeys = new Set(confirmedLinks.keys());
-  const confirmedProjectIds = new Set(confirmedLinks.values());
-  const allResourceKeys = [...new Set(allocations.map((a) => a.projectId).filter(Boolean))];
-  const unmatchedKeys = allResourceKeys.filter((k) => !confirmedKeys.has(k));
-  const unmatchedProjects = projects.filter((p) => !confirmedProjectIds.has(p.id));
-
-  const unmatchedRows = unmatchedKeys.map((key) => {
-    const sample = allocations.find((a) => a.projectId === key);
-    const projectOptions = projects.map((p) =>
-      `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`).join('');
-    return `<tr>
-      <td><strong>${escapeHtml(sample?.projectName || key)}</strong><br>
-          <span class="muted">${escapeHtml(key)}</span></td>
-      <td>${escapeHtml(sample?.system || '—')}</td>
-      <td>${escapeHtml(sample?.biz || '—')}</td>
-      <td>
-        <select class="link-project-select" data-resource-key="${escapeHtml(key)}">
-          <option value="">选择项目…</option>${projectOptions}
-        </select>
-        <button class="ghost-button" data-action="link-manual" data-resource-key="${escapeHtml(key)}">关联</button>
-      </td>
-    </tr>`;
-  }).join('');
-
-  const noResourceRows = unmatchedProjects.map((p) =>
-    `<tr><td>${escapeHtml(p.id)}</td><td><strong>${escapeHtml(p.name)}</strong></td>
-     <td>${escapeHtml(p.biz || '—')}</td><td>${escapeHtml(p.status || '—')}</td></tr>`
-  ).join('');
-
-  return `<div class="settings-grid">
-    <div class="settings-section-sep settings-wide">项目 ↔ 资源关联中心</div>
-
-    <section class="panel settings-panel settings-wide">
-      <div class="settings-head">
-        <h2>待确认提案</h2>
-        <button class="ghost-button" data-action="link-propose">运行匹配器</button>
-      </div>
-      <div id="link-proposed-list"><p class="muted">点击「运行匹配器」生成提案，或加载已有提案。</p></div>
-      <button class="ghost-button" style="margin-top:8px" data-action="link-load">加载提案</button>
-    </section>
-
-    <section class="panel settings-panel settings-wide">
-      <div class="settings-head">
-        <h2>未关联资源 <span class="badge Y">${unmatchedKeys.length}</span></h2>
-        <span class="muted">以下资源团队尚未关联到任何规范项目</span>
-      </div>
-      ${unmatchedKeys.length === 0
-        ? '<p class="muted">全部资源已关联 ✓</p>'
-        : `<div class="table-wrap"><table>
-            <thead><tr><th>资源团队</th><th>系统</th><th>业务</th><th>手动关联</th></tr></thead>
-            <tbody>${unmatchedRows}</tbody>
-           </table></div>`}
-    </section>
-
-    <section class="panel settings-panel settings-wide">
-      <div class="settings-head">
-        <h2>无资源项目 <span class="badge Y">${unmatchedProjects.length}</span></h2>
-        <span class="muted">以下项目尚无确认的资源分配</span>
-      </div>
-      ${unmatchedProjects.length === 0
-        ? '<p class="muted">全部项目已有资源 ✓</p>'
-        : `<div class="table-wrap"><table>
-            <thead><tr><th>编号</th><th>项目名称</th><th>业务</th><th>阶段</th></tr></thead>
-            <tbody>${noResourceRows}</tbody>
-           </table></div>`}
     </section>
   </div>`;
 }

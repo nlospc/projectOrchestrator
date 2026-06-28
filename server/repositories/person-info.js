@@ -15,6 +15,45 @@ export function upsertPerson({ name, role, outsourced }) {
   return { name, role: role ?? '', outsourced: !!outsourced, updatedAt: now };
 }
 
+export function upsertPersonInfoRows(rows) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const insert = db.prepare(
+    'INSERT OR REPLACE INTO person_info (name, role, outsourced, updated_at) VALUES (@name, @role, @outsourced, @now)'
+  );
+  db.transaction(() => {
+    for (const r of rows) {
+      insert.run({ name: r.name, role: r.role ?? '', outsourced: r.outsourced ? 1 : 0, now });
+    }
+  })();
+  return rows.length;
+}
+
+export function syncAllocationPersonMetadata(rows) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const update = db.prepare(`
+    UPDATE allocations
+    SET role = @role,
+        outsourced = @outsourced,
+        updated_at = @now
+    WHERE person = @name
+  `);
+  let matchedRows = 0;
+  db.transaction(() => {
+    for (const r of rows) {
+      const result = update.run({
+        name: r.name,
+        role: r.role ?? '',
+        outsourced: r.outsourced ? 1 : 0,
+        now,
+      });
+      matchedRows += result.changes;
+    }
+  })();
+  return matchedRows;
+}
+
 export function deletePerson(name) {
   const info = getDb().prepare('DELETE FROM person_info WHERE name = ?').run(name);
   return info.changes > 0;

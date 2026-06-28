@@ -433,17 +433,70 @@ function matrixProjectCard(project) {
   </div>`;
 }
 
+function matrixRoleBar(project) {
+  const buckets = new Map();
+  project.roles.forEach((peopleMap, role) => {
+    const { cat } = roleCategory(role);
+    buckets.set(cat, (buckets.get(cat) || 0) + peopleMap.size);
+  });
+  const total = [...buckets.values()].reduce((s, n) => s + n, 0) || 1;
+  const segments = [...buckets.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, count]) =>
+      `<span class="mx-role-seg mx-rb-${cat}" style="flex:${count}" title="${cat} ${count}人"></span>`
+    ).join('');
+  return `<div class="mx-role-bar" title="角色构成">${segments}</div>`;
+}
+
 export function businessProjectGroupsView(groups) {
   if (!groups.length) return '<p class="muted">当前筛选范围内暂无人员项目分组。</p>';
-  return `<div class="business-group-list">${groups.map((group) => `<details class="business-group" open>
-    <summary><strong>${group.biz}</strong><span class="muted">${group.projects.length} 个项目</span></summary>
-    <div class="matrix-card-list">
-      <div class="matrix-card-header">
-        <span>项目</span><span>人员构成</span><span>投入</span>
-      </div>
-      ${group.projects.map(matrixProjectCard).join('')}
-    </div>
-  </details>`).join("")}</div>`;
+  return `<div class="mx-dense-wrap">
+    <table class="mx-dense-table">
+      <thead>
+        <tr>
+          <th class="mx-col-project">项目</th>
+          <th class="mx-col-system">系统 · 分类</th>
+          <th class="mx-col-bar">角色构成</th>
+          <th class="mx-col-people">人员</th>
+          <th class="mx-col-ratio">投入%</th>
+          <th class="mx-col-load">负荷</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${groups.map((group) => {
+          const groupLoad = group.projects.reduce((s, p) => s + p.totalLoad, 0);
+          const groupPeople = new Set(
+            group.projects.flatMap(p => [...p.roles.values()].flatMap(m => [...m.keys()]))
+          ).size;
+          const projectRows = group.projects.map((project) => {
+            const personCount = (() => { const s = new Set(); project.roles.forEach(m => m.forEach((_, p) => s.add(p))); return s.size; })();
+            const avgLoad = personCount ? project.totalLoad / personCount : 0;
+            const loadCls = avgLoad >= 1.2 ? 'R' : avgLoad >= 0.6 ? 'Y' : 'G';
+            const sc = projectStatusClass(project.status);
+            return `<tr class="mx-proj-row">
+              <td class="mx-col-project">
+                <span class="mx-phase-dot mx-dot-${sc}"></span>
+                <span class="mx-proj-name" title="${escapeHtml(project.projectName)}">${escapeHtml(project.projectName)}</span>
+              </td>
+              <td class="mx-col-system mx-sys-cell" title="${escapeHtml(project.system || '')} · ${escapeHtml(project.cat || '')}">
+                ${escapeHtml(project.system || '—')} · ${escapeHtml(project.cat || '—')}
+              </td>
+              <td class="mx-col-bar">${matrixRoleBar(project)}</td>
+              <td class="mx-col-people">${personCount}</td>
+              <td class="mx-col-ratio">${Math.round(project.totalRatio * 100)}%</td>
+              <td class="mx-col-load mx-load-${loadCls}">${project.totalLoad.toFixed(1)}</td>
+            </tr>`;
+          }).join('');
+          return `<tr class="mx-group-row">
+            <td colspan="6">
+              <span class="mx-group-name">${escapeHtml(group.biz)}</span>
+              <span class="mx-group-meta">${group.projects.length} 个项目 · ${groupPeople} 人 · 总负荷 ${groupLoad.toFixed(1)}</span>
+            </td>
+          </tr>${projectRows}`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
 }
 
 export function rolePeopleCell(project, aliases) {
@@ -498,60 +551,53 @@ export function matrixView() {
     ? (allAllocs.reduce((s, a) => s + (a.complexity || 0), 0) / allAllocs.length).toFixed(1)
     : '–';
 
+  const totalProjects = groups.reduce((sum, g) => sum + g.projects.length, 0);
+
   return `<div class="resource-workspace people-project-workspace">
-    <div class="hero-strip">
-      <div class="hero-card confidence">
-        <span class="hero-label">覆盖系统</span>
-        <span class="hero-value">${systemCount}</span>
-        <span class="hero-sub">系统 / 平台</span>
-      </div>
-      <div class="hero-card clickable" data-route="resource">
-        <span class="hero-label">参与项目</span>
-        <span class="hero-value">${list.length}</span>
-        <span class="hero-sub">活跃 ${activeProjects} 个</span>
-      </div>
-      <div class="hero-card clickable" data-route="people">
-        <span class="hero-label">矩阵人数</span>
-        <span class="hero-value">${peopleCount}</span>
-        <span class="hero-sub">人员 × 项目</span>
-      </div>
-      <div class="hero-card clickable">
-        <span class="hero-label">业务部门</span>
-        <span class="hero-value">${bizCount}</span>
-        <span class="hero-sub">分组</span>
-      </div>
-      <div class="hero-card">
-        <span class="hero-label">平均复杂度</span>
-        <span class="hero-value">${avgComplexity}</span>
-        <span class="hero-sub">1–5 标度</span>
-      </div>
+    <div class="mx-stat-bar">
+      <span class="mx-stat-item"><span class="mx-stat-label">系统</span><strong class="mx-stat-val">${systemCount}</strong></span>
+      <span class="mx-stat-sep"></span>
+      <span class="mx-stat-item clickable" data-route="resource"><span class="mx-stat-label">项目</span><strong class="mx-stat-val">${list.length}</strong><span class="mx-stat-sub">活跃 ${activeProjects}</span></span>
+      <span class="mx-stat-sep"></span>
+      <span class="mx-stat-item clickable" data-route="people"><span class="mx-stat-label">人员</span><strong class="mx-stat-val">${peopleCount}</strong></span>
+      <span class="mx-stat-sep"></span>
+      <span class="mx-stat-item"><span class="mx-stat-label">业务</span><strong class="mx-stat-val">${bizCount}</strong><span class="mx-stat-sub">个部门</span></span>
+      <span class="mx-stat-sep"></span>
+      <span class="mx-stat-item"><span class="mx-stat-label">平均复杂度</span><strong class="mx-stat-val">${avgComplexity}</strong></span>
     </div>
 
     ${focusBanner}
     ${resourceFilterBar()}
 
-    <section class="panel cockpit-panel benchmark-panel">
-      <div class="panel-header">
-        <span class="panel-title">角色 × 项目阶段 参与度</span>
-        <div class="rv-seg-legend">
-          <span><i class="rv-seg-swatch G"></i>高参与</span>
-          <span><i class="rv-seg-swatch Y"></i>中参与</span>
-          <span><i class="rv-seg-swatch" style="background:var(--gray-bg)"></i>低参与</span>
-        </div>
-      </div>
-      <p class="panel-hint">矩阵为 R2 V7 负荷公式中的角色阶段权重来源：复杂度 × 状态权重 × 角色参与度。</p>
+    <details class="mx-benchmark-details">
+      <summary>
+        <span>角色 × 阶段权重参考 (R2 V7)</span>
+        <span class="mx-benchmark-legend">
+          <i class="bench-cell high" style="font-style:normal;font-size:10px;padding:1px 5px">高参与 ≥70%</i>
+          <i class="bench-cell medium" style="font-style:normal;font-size:10px;padding:1px 5px">中 30–69%</i>
+          <i class="bench-cell low" style="font-style:normal;font-size:10px;padding:1px 5px">低 &lt;30%</i>
+        </span>
+      </summary>
       ${benchmarkParticipationMatrix()}
-    </section>
+    </details>
 
-    <section class="panel cockpit-panel business-groups-panel">
+    <section class="panel cockpit-panel business-groups-panel mx-groups-section">
       <div class="panel-header">
-        <span class="panel-title">业务部门分组项目人员</span>
-        <span class="panel-badge info">${groups.reduce((sum, group) => sum + group.projects.length, 0)} 个项目</span>
+        <span class="panel-title">项目人员矩阵</span>
+        <div class="mx-role-legend">
+          <span class="mx-rb-pm">产品</span>
+          <span class="mx-rb-proj">项目</span>
+          <span class="mx-rb-agent">Agent</span>
+          <span class="mx-rb-tech">技术</span>
+          <span class="mx-rb-qa">测试</span>
+          <span class="mx-rb-other">其他</span>
+        </div>
+        <span class="panel-badge info">${totalProjects} 个项目</span>
       </div>
       ${groups.length
         ? businessProjectGroupsView(groups)
         : focus
-          ? `<p class="muted" style="padding:16px">资源数据中暂无与该 PMO 项目直接关联的记录（allocation.projectId 尚未与 PMO 项目 ID 对齐）。</p>`
+          ? `<p class="muted" style="padding:16px">资源数据中暂无与该 PMO 项目直接关联的记录。</p>`
           : '<p class="muted" style="padding:16px">当前筛选范围内暂无人员项目分组。</p>'
       }
     </section>

@@ -357,12 +357,19 @@ export function parseUserInfoCsv(text) {
   const warnings = [];
   const validRows = [];
   rows.slice(1).forEach((row, i) => {
+    const rowNumber = i + 2;
     const name = String(row[nameIdx] ?? '').trim();
-    if (!name) return;
+    if (!name) {
+      warnings.push({ row: rowNumber, field: '姓名', message: '姓名为空，已跳过该行' });
+      return;
+    }
     const role = String(row[roleIdx] ?? '').trim();
     const outsourcedRaw = outsourcedIdx >= 0 ? String(row[outsourcedIdx] ?? '').trim() : '';
     const outsourced = booleanAliases[outsourcedRaw.toLowerCase()] ?? booleanAliases[outsourcedRaw] ?? false;
-    if (!role) warnings.push({ row: i + 2, field: '角色', message: `${name} 缺少角色，已留空` });
+    if (!role) warnings.push({ row: rowNumber, field: '角色', message: `${name} 缺少角色，已留空` });
+    if (outsourcedRaw && booleanAliases[outsourcedRaw.toLowerCase()] === undefined && booleanAliases[outsourcedRaw] === undefined) {
+      warnings.push({ row: rowNumber, field: '是否外包', message: `${name} 的是否外包值无法识别，默认 FALSE` });
+    }
     validRows.push({ name, role, outsourced });
   });
 

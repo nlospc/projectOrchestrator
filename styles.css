@@ -1262,6 +1262,10 @@ button.cell:hover {
   gap: 16px;
 }
 
+.resource-workspace > * {
+  min-width: 0;
+}
+
 .resource-page-head {
   display: flex;
   align-items: flex-start;
@@ -1710,6 +1714,267 @@ button.person-chip:hover {
   font-size: 13px;
   color: var(--text);
 }
+
+/* ── Matrix dense-view ── */
+
+.mx-stat-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.mx-stat-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 4px 16px;
+  cursor: default;
+  border-radius: 6px;
+  transition: background 0.1s;
+}
+
+.mx-stat-item.clickable { cursor: pointer; }
+.mx-stat-item.clickable:hover { background: var(--surface-2); }
+
+.mx-stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.mx-stat-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.mx-stat-sub {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.mx-stat-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--line);
+  flex-shrink: 0;
+}
+
+.mx-benchmark-details {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.mx-benchmark-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface-2);
+  list-style: none;
+  user-select: none;
+}
+
+.mx-benchmark-details > summary::-webkit-details-marker { display: none; }
+.mx-benchmark-details > summary::before {
+  content: "▸";
+  font-size: 10px;
+  margin-right: 4px;
+  transition: transform 0.15s;
+}
+.mx-benchmark-details[open] > summary::before { transform: rotate(90deg); }
+
+.mx-benchmark-legend {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.mx-groups-section { padding: 0; }
+.mx-groups-section .panel-header { padding: 10px 14px; }
+
+.mx-dense-wrap {
+  overflow-x: auto;
+}
+
+.mx-dense-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.mx-dense-table thead th {
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.mx-group-row td {
+  padding: 5px 10px;
+  background: color-mix(in srgb, var(--primary, #1a73e8) 6%, var(--surface-2));
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid color-mix(in srgb, var(--primary, #1a73e8) 20%, var(--line));
+  font-size: 11px;
+}
+
+.mx-group-name {
+  font-weight: 700;
+  color: var(--text);
+  margin-right: 10px;
+}
+
+.mx-group-meta {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.mx-proj-row {
+  border-bottom: 1px solid var(--line);
+  transition: background 0.08s;
+}
+.mx-proj-row:hover { background: var(--surface-2); }
+
+.mx-proj-row td {
+  padding: 5px 10px;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.mx-col-project {
+  min-width: 200px;
+  max-width: 240px;
+}
+
+.mx-col-system {
+  min-width: 120px;
+  max-width: 160px;
+  color: var(--muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mx-col-bar {
+  min-width: 100px;
+  width: 130px;
+}
+
+.mx-col-people,
+.mx-col-ratio,
+.mx-col-load {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mx-col-people { width: 44px; color: var(--muted); }
+.mx-col-ratio  { width: 52px; }
+.mx-col-load   { width: 52px; font-weight: 700; }
+
+.mx-load-R { color: var(--red); }
+.mx-load-Y { color: var(--yellow); }
+.mx-load-G { color: var(--green); }
+
+.mx-phase-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+.mx-dot-early  { background: #1a73e8; }
+.mx-dot-active { background: #e65100; }
+.mx-dot-live   { background: #2e7d32; }
+.mx-dot-paused { background: var(--muted); }
+.mx-dot- { background: var(--line); }
+
+.mx-proj-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.mx-sys-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mx-role-bar {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  width: 100%;
+  min-width: 80px;
+  background: var(--line);
+}
+
+.mx-role-seg { display: block; min-width: 2px; }
+
+.mx-rb-pm    { background: #1a73e8; }
+.mx-rb-proj  { background: #6b7280; }
+.mx-rb-agent { background: #7c3aed; }
+.mx-rb-tech  { background: #2e7d32; }
+.mx-rb-qa    { background: #e65100; }
+.mx-rb-other { background: #c62828; }
+
+.mx-role-legend {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.mx-role-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+}
+
+.mx-role-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.mx-role-legend .mx-rb-pm::before    { background: #1a73e8; }
+.mx-role-legend .mx-rb-proj::before  { background: #6b7280; }
+.mx-role-legend .mx-rb-agent::before { background: #7c3aed; }
+.mx-role-legend .mx-rb-tech::before  { background: #2e7d32; }
+.mx-role-legend .mx-rb-qa::before    { background: #e65100; }
+.mx-role-legend .mx-rb-other::before { background: #c62828; }
+
+/* ── end Matrix dense-view ── */
 
 .people-chip-list {
   display: flex;
@@ -4294,7 +4559,24 @@ button.chart-bar:hover strong {
 
 /* ── Person-info CRUD table ──────────────────────────────────────────────── */
 .person-info-table td { vertical-align: middle; }
+.person-info-table input,
+.person-info-table select {
+  max-width: 180px;
+}
+.person-name-input {
+  background: var(--gray-bg);
+  color: var(--muted);
+}
+.person-outsourced-label,
+.person-row-actions {
+  align-items: center;
+  gap: 8px;
+}
 .person-info-table tr.editing .person-view-cells { display: none; }
 .person-info-table tr:not(.editing) .person-edit-cells { display: none; }
+.person-info-table tr.editing .person-edit-cells.person-row-actions,
+.person-info-table tr.editing .person-edit-cells.person-outsourced-label {
+  display: inline-flex;
+}
 .person-edit-cells[hidden] { display: none; }
 .ghost-button.danger { color: var(--red, #c0392b); }
