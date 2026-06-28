@@ -2,7 +2,7 @@ import { projectFilterRoutes, routeGroups, routes } from "../config/routes.js";
 import { filteredProjects, personStats } from "../core/selectors.js";
 import { $ } from "../core/utils.js";
 import { apiImportAllocations, apiImportMilestones, apiImportProjects, apiUpsertPerson, apiDeletePerson, apiSaveSettings, appSettings, bootstrap, milestones, personInfo, projects } from "../core/data-store.js";
-import { parseMilestoneCsv, parseMilestoneXlsx, parseProjectCsv, parseResourceAllocationCsv, parseResourceAllocationXlsx } from "../core/importers.js";
+import { parseMilestoneCsv, parseMilestoneXlsx, parseProjectCsv, parseResourceAllocationMatrixCsv, parseResourceAllocationXlsx } from "../core/importers.js";
 import { state } from "../state/app-state.js";
 import { downloadProjectTemplate, downloadResourceTemplate, personInfoView, settingsView, uploadView } from "../views/admin.js";
 import { dashboardView, drawerTabContent, openProject, projectsView, timeline } from "../views/projects.js";
@@ -129,7 +129,7 @@ const importHandlers = {
   },
   resource: {
     label: "Resource Excel",
-    parse: (text) => parseResourceAllocationCsv(text, projects),
+    parse: (text) => parseResourceAllocationMatrixCsv(text, personInfo, projects),
     parseXlsx: (workbook) => {
       const ws = workbook.Sheets[workbook.SheetNames[0]];
       const aoa = window.XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });

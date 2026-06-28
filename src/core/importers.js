@@ -476,7 +476,14 @@ export function parseResourceAllocationXlsx(aoa, personInfoList = personInfo, pr
     });
   });
 
-  return { validRows, errors, warnings };
+  const seen = new Map();
+  for (const row of validRows) seen.set(row.id, row);
+  return { validRows: [...seen.values()], errors, warnings };
+}
+
+export function parseResourceAllocationMatrixCsv(text, personInfoList = personInfo, projectRows = []) {
+  const aoa = parseCsv(text);
+  return parseResourceAllocationXlsx(aoa, personInfoList, projectRows);
 }
 
 function parseTypedCsv(text, schema, transform, validationOptions = {}) {
