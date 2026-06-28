@@ -1342,11 +1342,11 @@ button.cell:hover {
 }
 
 .resource-filter-panel {
-  display: grid;
-  grid-template-columns: auto repeat(5, minmax(120px, 1fr)) auto;
-  gap: 10px;
-  align-items: end;
-  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+  padding: 10px 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
@@ -1354,9 +1354,24 @@ button.cell:hover {
 
 .resource-filter-panel .tag {
   align-self: center;
+  flex-shrink: 0;
   background: var(--surface-2);
   display: inline-flex;
+  align-items: center;
   gap: 5px;
+  padding-right: 14px;
+  margin-right: 2px;
+  border-right: 1px solid var(--line-strong);
+}
+
+.resource-filter-panel label {
+  flex: 0 0 auto;
+  min-width: 84px;
+}
+
+.resource-filter-panel select {
+  padding: 5px 8px;
+  font-size: 13px;
 }
 
 .rf-active-count {
@@ -1376,12 +1391,13 @@ button.cell:hover {
 }
 
 .rf-reset {
-  align-self: end;
+  align-self: flex-end;
+  margin-left: auto;
   white-space: nowrap;
 }
 
 .rf-reset-placeholder {
-  display: block;
+  display: none;
 }
 
 .resource-alert-strip,
@@ -2592,7 +2608,6 @@ button.chart-bar:hover strong {
   .resource-chart-grid,
   .resource-insight-grid,
   .overalloc-grid,
-  .resource-filter-panel,
   .detail-grid {
     grid-template-columns: 1fr;
   }
@@ -4318,9 +4333,18 @@ button.chart-bar:hover strong {
     grid-template-columns: 1fr;
   }
 
-  /* filter panel: stack all selects */
+  /* filter panel: stack on small screens */
   .resource-filter-panel {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .resource-filter-panel .tag {
+    border-right: none;
+    padding-right: 0;
+    margin-right: 0;
+  }
+  .rf-reset {
+    margin-left: 0;
   }
 
   /* conc-stats and workforce-grid: stack on tiny screens */

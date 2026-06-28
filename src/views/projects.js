@@ -201,7 +201,6 @@ export function projectsView() {
   const metrics = projectsViewMetrics(list);
   const { groupBy, includeArchived } = state.filters;
   const groupOptions = [
-    ["family", "按产品族"],
     ["none", "不分组"],
     ["dept", "按部门"],
     ["owner", "按负责人"],
@@ -361,7 +360,6 @@ export function groupProjects(list, today = state.today) {
   const groupBy = state.filters?.groupBy ?? "none";
 
   function getKey(p) {
-    if (groupBy === "family") return p.family || "未分类";
     if (groupBy === "dept")  return p.dept  || "未知部门";
     if (groupBy === "owner") return projectProductManagerName(p) || "未知负责人";
     if (groupBy === "rag")   return projectRag(p, today);

@@ -1,7 +1,7 @@
 import { projectFilterRoutes, routeGroups, routes } from "../config/routes.js";
 import { filteredProjects, personStats } from "../core/selectors.js";
 import { $ } from "../core/utils.js";
-import { apiImportAllocations, apiImportMilestones, apiImportProjects, apiUpsertPerson, apiDeletePerson, apiSaveSettings, appSettings, bootstrap, milestones, personInfo, projects } from "../core/data-store.js";
+import { allocations, apiImportAllocations, apiImportMilestones, apiImportProjects, apiUpsertPerson, apiDeletePerson, apiSaveSettings, appSettings, bootstrap, milestones, personInfo, projects } from "../core/data-store.js";
 import { parseMilestoneCsv, parseMilestoneXlsx, parseProjectCsv, parseResourceAllocationMatrixCsv, parseResourceAllocationXlsx } from "../core/importers.js";
 import { state } from "../state/app-state.js";
 import { downloadProjectTemplate, downloadResourceTemplate, personInfoView, settingsView, uploadView } from "../views/admin.js";
@@ -778,13 +778,25 @@ function bindEvents() {
 
     const resourceFilter = event.target.closest("[data-resource-filter]");
     if (!resourceFilter) return;
-    state.resourceFilters[resourceFilter.dataset.resourceFilter] = resourceFilter.value;
+    const rfKey = resourceFilter.dataset.resourceFilter;
+    const rfVal = resourceFilter.value;
+    state.resourceFilters[rfKey] = rfVal;
+    // cascade: system → auto-set family; family → reset system if no longer in family
+    if (rfKey === "system" && rfVal !== "all") {
+      const hit = allocations.find(a => a.system === rfVal);
+      const proj = hit ? projects.find(p => p.id === hit.project_key) : null;
+      if (proj?.family) state.resourceFilters.family = proj.family;
+    } else if (rfKey === "family" && rfVal !== "all" && state.resourceFilters.system !== "all") {
+      const hit = allocations.find(a => a.system === state.resourceFilters.system);
+      const proj = hit ? projects.find(p => p.id === hit.project_key) : null;
+      if (!proj || proj.family !== rfVal) state.resourceFilters.system = "all";
+    }
     render();
   });
 
   $("#reset-filters").addEventListener("click", () => {
     state.filters = { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "none", includeArchived: false };
-    state.resourceFilters = { system: "all", role: "all", outsource: "all", projectFocus: null, biz: "all", dept: "all", status: "all", health: "all" };
+    state.resourceFilters = { system: "all", role: "all", outsource: "all", projectFocus: null, biz: "all", family: "all", dept: "all", status: "all", health: "all" };
     render();
   });
 }

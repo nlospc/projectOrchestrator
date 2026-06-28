@@ -633,13 +633,22 @@ export function matrixView() {
 }
 
 export function resourceFilterBar() {
-  const rawSystems = unique(allocations.map((a) => a.system));
+  const f = state.resourceFilters;
+  const systemFamilyMap = new Map(
+    allocations.map(a => {
+      const proj = projects.find(p => p.id === a.project_key);
+      return [a.system, proj?.family ?? null];
+    })
+  );
+  const filteredAllocations = f.family === "all"
+    ? allocations
+    : allocations.filter(a => systemFamilyMap.get(a.system) === f.family);
+  const rawSystems = unique(filteredAllocations.map((a) => a.system));
   const hasUnattributed = rawSystems.some((s) => !s);
   const systems = ["all", ...(hasUnattributed ? ["未归属系统"] : []), ...rawSystems.filter(Boolean)];
   const roles = ["all", ...unique(allocations.map((allocation) => allocation.role))];
   const familyList = ["all", ...unique(projects.map((p) => p.family).filter(Boolean))];
   const deptList = ["all", ...unique(allocations.map((a) => a.dept).filter(Boolean))];
-  const f = state.resourceFilters;
   const activeCount = [f.system, f.role, f.outsource, f.family, f.dept].filter((v) => v && v !== "all").length;
   return `<section class="resource-filter-panel">
     <span class="tag">资源筛选${activeCount > 0 ? `<em class="rf-active-count">${activeCount}</em>` : ""}</span>
@@ -650,7 +659,7 @@ export function resourceFilterBar() {
       <option value="internal" ${f.outsource === "internal" ? "selected" : ""}>内部</option>
       <option value="external" ${f.outsource === "external" ? "selected" : ""}>外包</option>
     </select></label>
-    <label>产品族<select data-resource-filter="family">${familyList.map((v) => `<option value="${v}" ${f.family === v ? "selected" : ""}>${v === "all" ? "全部产品族" : v}</option>`).join("")}</select></label>
+    <label>产品族名称<select data-resource-filter="family">${familyList.map((v) => `<option value="${v}" ${f.family === v ? "selected" : ""}>${v === "all" ? "全部产品族" : v}</option>`).join("")}</select></label>
     <label>部门<select data-resource-filter="dept">${deptList.map((v) => `<option value="${v}" ${f.dept === v ? "selected" : ""}>${v === "all" ? "全部部门" : v}</option>`).join("")}</select></label>
     ${activeCount > 0 ? '<button class="ghost-button rf-reset" data-action="reset-resource-filters">清除</button>' : '<span class="rf-reset-placeholder"></span>'}
   </section>`;
