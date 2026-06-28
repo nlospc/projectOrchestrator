@@ -380,6 +380,11 @@ function bindEvents() {
       render();
       return;
     }
+    if (actionName === "reset-resource-filters") {
+      state.resourceFilters = { system: "all", role: "all", outsource: "all", projectFocus: state.resourceFilters.projectFocus, biz: "all", family: "all", dept: "all", status: "all", health: "all" };
+      render();
+      return;
+    }
     if (actionName === "mock-upload") return toast("已从 Excel 导入 8 个项目");
     if (actionName === "mock-project-upload") return toast("已从 Excel 导入 Project 和 Milestone Sheet 数据");
     if (actionName === "mock-resource-upload") return toast(`已从 Excel 导入 ${personStats().length} 条资源记录`);

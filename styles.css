@@ -1343,7 +1343,7 @@ button.cell:hover {
 
 .resource-filter-panel {
   display: grid;
-  grid-template-columns: auto repeat(3, minmax(160px, 1fr));
+  grid-template-columns: auto repeat(5, minmax(120px, 1fr)) auto;
   gap: 10px;
   align-items: end;
   padding: 12px;
@@ -1355,6 +1355,33 @@ button.cell:hover {
 .resource-filter-panel .tag {
   align-self: center;
   background: var(--surface-2);
+  display: inline-flex;
+  gap: 5px;
+}
+
+.rf-active-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.rf-reset {
+  align-self: end;
+  white-space: nowrap;
+}
+
+.rf-reset-placeholder {
+  display: block;
 }
 
 .resource-alert-strip,

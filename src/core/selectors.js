@@ -41,6 +41,7 @@ export function resourceProjects() {
         id:         canonical?.id         ?? allocation.projectId,
         name:       canonical?.name       ?? allocation.projectName ?? allocation.projectId,
         biz:        canonical?.biz        ?? allocation.biz,
+        family:     canonical?.family     ?? null,
         dept:       canonical?.dept       ?? allocation.dept,
         status:     canonical?.status     ?? allocation.status,
         complexity: canonical?.complexity ?? allocation.complexity,
@@ -59,6 +60,7 @@ export function resourceProjects() {
     const rf = state.resourceFilters;
     return (
       (rf.biz    === 'all' || project.biz    === rf.biz)    &&
+      (rf.family === 'all' || project.family === rf.family) &&
       (rf.dept   === 'all' || project.dept   === rf.dept)   &&
       (rf.status === 'all' || project.status === rf.status) &&
       (rf.health === 'all' || project.health === rf.health) &&

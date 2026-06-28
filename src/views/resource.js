@@ -637,19 +637,22 @@ export function resourceFilterBar() {
   const hasUnattributed = rawSystems.some((s) => !s);
   const systems = ["all", ...(hasUnattributed ? ["未归属系统"] : []), ...rawSystems.filter(Boolean)];
   const roles = ["all", ...unique(allocations.map((allocation) => allocation.role))];
-  const bizList = ["all", ...unique(allocations.map((a) => a.biz).filter(Boolean))];
+  const familyList = ["all", ...unique(projects.map((p) => p.family).filter(Boolean))];
   const deptList = ["all", ...unique(allocations.map((a) => a.dept).filter(Boolean))];
+  const f = state.resourceFilters;
+  const activeCount = [f.system, f.role, f.outsource, f.family, f.dept].filter((v) => v && v !== "all").length;
   return `<section class="resource-filter-panel">
-    <span class="tag">资源筛选</span>
-    <label>系统<select data-resource-filter="system">${systems.map((value) => `<option value="${value}" ${state.resourceFilters.system === value ? "selected" : ""}>${value === "all" ? "全部系统" : value}</option>`).join("")}</select></label>
-    <label>角色<select data-resource-filter="role">${roles.map((value) => `<option value="${value}" ${state.resourceFilters.role === value ? "selected" : ""}>${value === "all" ? "全部角色" : value}</option>`).join("")}</select></label>
+    <span class="tag">资源筛选${activeCount > 0 ? `<em class="rf-active-count">${activeCount}</em>` : ""}</span>
+    <label>系统<select data-resource-filter="system">${systems.map((value) => `<option value="${value}" ${f.system === value ? "selected" : ""}>${value === "all" ? "全部系统" : value}</option>`).join("")}</select></label>
+    <label>角色<select data-resource-filter="role">${roles.map((value) => `<option value="${value}" ${f.role === value ? "selected" : ""}>${value === "all" ? "全部角色" : value}</option>`).join("")}</select></label>
     <label>人员类型<select data-resource-filter="outsource">
-      <option value="all" ${state.resourceFilters.outsource === "all" ? "selected" : ""}>全部人员</option>
-      <option value="internal" ${state.resourceFilters.outsource === "internal" ? "selected" : ""}>内部</option>
-      <option value="external" ${state.resourceFilters.outsource === "external" ? "selected" : ""}>外包</option>
+      <option value="all" ${f.outsource === "all" ? "selected" : ""}>全部人员</option>
+      <option value="internal" ${f.outsource === "internal" ? "selected" : ""}>内部</option>
+      <option value="external" ${f.outsource === "external" ? "selected" : ""}>外包</option>
     </select></label>
-    <label>业务<select data-resource-filter="biz">${bizList.map((v) => `<option value="${v}" ${state.resourceFilters.biz === v ? "selected" : ""}>${v === "all" ? "全部业务" : v}</option>`).join("")}</select></label>
-    <label>部门<select data-resource-filter="dept">${deptList.map((v) => `<option value="${v}" ${state.resourceFilters.dept === v ? "selected" : ""}>${v === "all" ? "全部部门" : v}</option>`).join("")}</select></label>
+    <label>产品族<select data-resource-filter="family">${familyList.map((v) => `<option value="${v}" ${f.family === v ? "selected" : ""}>${v === "all" ? "全部产品族" : v}</option>`).join("")}</select></label>
+    <label>部门<select data-resource-filter="dept">${deptList.map((v) => `<option value="${v}" ${f.dept === v ? "selected" : ""}>${v === "all" ? "全部部门" : v}</option>`).join("")}</select></label>
+    ${activeCount > 0 ? '<button class="ghost-button rf-reset" data-action="reset-resource-filters">清除</button>' : '<span class="rf-reset-placeholder"></span>'}
   </section>`;
 }
 
