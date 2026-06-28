@@ -58,8 +58,8 @@ function diffDays(a, b) {
 }
 
 /**
- * @param {import('../data/mock-data.js').Milestone[]} milestones
- * @param {import('../data/mock-data.js').Project}    project
+ * @param {object[]} milestones
+ * @param {object}   project
  * @param {Date}                                       today
  * @returns {Segment[]}
  */
