@@ -235,6 +235,8 @@ const routeViews = {
 function setupMonitorBoardScrollSync() {
   adjustMonitorBoardHeight();
   window.addEventListener("resize", () => adjustMonitorBoardHeight());
+  // Defer so the browser has painted the gantt before we measure scrollWidth
+  requestAnimationFrame(() => centerTodayInBoard());
 }
 
 function adjustMonitorBoardHeight() {
@@ -248,6 +250,19 @@ function adjustMonitorBoardHeight() {
   const constrainedHeight = Math.max(420, availableHeight);
 
   monitorBoard.style.maxHeight = `${constrainedHeight}px`;
+}
+
+function centerTodayInBoard() {
+  const board = document.querySelector("[data-monitor-board]");
+  if (!board) return;
+  const ganttHead = board.querySelector(".gantt-head");
+  const todayLine = board.querySelector(".gantt-header .month-today-line");
+  if (!ganttHead || !todayLine) return;
+  const leftPct = parseFloat(todayLine.style.left) / 100;
+  const ganttWidth = ganttHead.scrollWidth;
+  const frozenWidth = 360;
+  const visibleWidth = board.clientWidth - frozenWidth;
+  board.scrollLeft = Math.max(0, leftPct * ganttWidth - visibleWidth / 2);
 }
 
 export function render() {
@@ -354,10 +369,37 @@ function bindEvents() {
       return;
     }
 
+    const sortByToggle = event.target.closest("[data-sortby-toggle]");
+    if (sortByToggle) {
+      const menu = sortByToggle.parentElement?.querySelector("[data-sortby-menu]");
+      if (!menu) return;
+      const nextOpen = menu.hidden;
+      document.querySelectorAll("[data-groupby-menu],[data-sortby-menu]").forEach(m => { m.hidden = true; });
+      menu.hidden = !nextOpen;
+      sortByToggle.setAttribute("aria-expanded", String(nextOpen));
+      return;
+    }
+
+    const sortByOption = event.target.closest("[data-sortby-option]");
+    if (sortByOption) {
+      state.filters.sortBy = sortByOption.dataset.sortbyOption;
+      document.querySelectorAll("[data-sortby-menu]").forEach(m => { m.hidden = true; });
+      document.querySelectorAll("[data-sortby-toggle]").forEach(t => { t.setAttribute("aria-expanded", "false"); });
+      refreshProjectTimeline();
+      return;
+    }
+
+    const granularityChip = event.target.closest("[data-granularity]");
+    if (granularityChip) {
+      state.filters.granularity = granularityChip.dataset.granularity;
+      render();
+      return;
+    }
+
     if (!event.target.closest(".gantt-group-control")) {
-      document.querySelectorAll("[data-groupby-menu]").forEach((menu) => { menu.hidden = true; });
-      document.querySelectorAll("[data-groupby-toggle]").forEach((toggle) => {
-        toggle.setAttribute("aria-expanded", "false");
+      document.querySelectorAll("[data-groupby-menu],[data-sortby-menu]").forEach(m => { m.hidden = true; });
+      document.querySelectorAll("[data-groupby-toggle],[data-sortby-toggle]").forEach(t => {
+        t.setAttribute("aria-expanded", "false");
       });
     }
 
@@ -369,6 +411,15 @@ function bindEvents() {
 
     const action = event.target.closest("[data-action]");
     const actionName = action?.dataset.action;
+    if (actionName === "center-today") {
+      centerTodayInBoard();
+      return;
+    }
+    if (actionName === "clear-search") {
+      const input = document.getElementById("project-search");
+      if (input) { input.value = ""; input.dispatchEvent(new Event("input")); }
+      return;
+    }
     if (actionName === "health-filter") {
       state.filters.health = action.dataset.value;
       $("#filter-health").value = action.dataset.value;
@@ -627,11 +678,9 @@ function bindEvents() {
 
   document.addEventListener("input", (event) => {
     if (event.target.id === "project-search") {
-      const term = event.target.value.trim().toLowerCase();
-      const rows = filteredProjects().filter((project) =>
-        [project.id, project.name, project.pm, project.product, project.tech].join(" ").toLowerCase().includes(term)
-      );
-      $("#project-timeline-wrap").innerHTML = timeline(rows);
+      const clearBtn = document.querySelector("[data-action='clear-search']");
+      if (clearBtn) clearBtn.hidden = !event.target.value;
+      refreshProjectTimeline();
       return;
     }
     if (event.target.id === "people-search") {
@@ -795,7 +844,7 @@ function bindEvents() {
   });
 
   $("#reset-filters").addEventListener("click", () => {
-    state.filters = { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "none", includeArchived: false };
+    state.filters = { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "none", includeArchived: false, granularity: "month", sortBy: "default" };
     state.resourceFilters = { system: "all", role: "all", outsource: "all", projectFocus: null, biz: "all", family: "all", dept: "all", status: "all", health: "all" };
     render();
   });

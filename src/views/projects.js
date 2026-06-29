@@ -1,7 +1,8 @@
 import { comments, milestoneChangeLogs, milestones, projects } from "../core/data-store.js";
 import {
-  $, addMonths, badge, detail, effectiveHealth, escapeHtml, kpi,
-  monthEnd, monthLabel, monthStart,
+  $, addMonths, addQuarters, addWeeks, badge, detail, effectiveHealth, escapeHtml, kpi,
+  monthEnd, monthLabel, monthStart, quarterEnd, quarterLabel, quarterStart,
+  weekEnd, weekLabel, weekStart,
 } from "../core/utils.js";
 import { computeSegments } from "../core/milestones.js";
 import {
@@ -196,10 +197,17 @@ function projectsMiniDonut(metrics) {
 
 // ─── Projects Gantt view ──────────────────────────────────────────────────────
 
+const SORT_OPTIONS = [
+  ["default", "RAG + 偏差"],
+  ["deviation", "最大偏差↓"],
+  ["next-date", "最近里程碑↑"],
+  ["name", "项目名称↑"],
+];
+
 export function projectsView() {
   const list = filteredProjects();
   const metrics = projectsViewMetrics(list);
-  const { groupBy, includeArchived } = state.filters;
+  const { groupBy, includeArchived, granularity = "month", sortBy = "default" } = state.filters;
   const groupOptions = [
     ["none", "不分组"],
     ["dept", "按部门"],
@@ -207,6 +215,7 @@ export function projectsView() {
     ["rag", "按状态"],
   ];
   const groupLabel = groupOptions.find(([value]) => value === groupBy)?.[1] ?? "不分组";
+  const sortLabel = SORT_OPTIONS.find(([value]) => value === sortBy)?.[1] ?? "RAG + 偏差";
   return `<div class="projects-hero-strip">
     <div class="projects-hero-stat">
       <span class="hero-num">${metrics.total}</span>
@@ -233,7 +242,10 @@ export function projectsView() {
           <h2>关键里程碑监控</h2>
           <p class="muted">里程碑连续段甘特图 · 5场景算法 · 点击项目行查看详情</p>
         </div>
-        <input id="project-search" placeholder="搜索项目、编号、负责人" />
+        <div class="project-search-wrap">
+          <input id="project-search" placeholder="搜索项目、编号、负责人" autocomplete="off" />
+          <button class="search-clear-btn" data-action="clear-search" hidden aria-label="清除搜索">✕</button>
+        </div>
       </div>
       <div class="gantt-toolbar">
         <div class="gantt-toolbar-label gantt-group-control">
@@ -252,14 +264,31 @@ export function projectsView() {
               </button>`).join("")}
           </div>
         </div>
+        <div class="gantt-toolbar-label gantt-group-control">
+          <span>排序</span>
+          <button class="gantt-group-toggle" type="button" data-sortby-toggle aria-haspopup="listbox" aria-expanded="false">
+            ${sortLabel}
+          </button>
+          <div class="gantt-group-menu" data-sortby-menu role="listbox" hidden>
+            ${SORT_OPTIONS.map(([value, label]) => `
+              <button type="button"
+                class="gantt-group-option${sortBy === value ? " active" : ""}"
+                data-sortby-option="${value}"
+                role="option"
+                aria-selected="${sortBy === value}">
+                ${label}
+              </button>`).join("")}
+          </div>
+        </div>
         <label class="gantt-toolbar-label gantt-toolbar-check">
           <input type="checkbox" data-project-filter="includeArchived" ${includeArchived ? "checked" : ""}>
           包含已归档
         </label>
+        <button class="ghost-button gantt-today-btn" type="button" data-action="center-today">今天</button>
         <div class="granularity-chips">
-          <span class="granularity-chip active" title="当前视图模式">月</span>
-          <span class="granularity-chip disabled" title="v1.1 功能">周</span>
-          <span class="granularity-chip disabled" title="v1.1 功能">季度</span>
+          <span class="granularity-chip${granularity === "week" ? " active" : ""}" data-granularity="week">周</span>
+          <span class="granularity-chip${granularity === "month" ? " active" : ""}" data-granularity="month">月</span>
+          <span class="granularity-chip${granularity === "quarter" ? " active" : ""}" data-granularity="quarter">季</span>
         </div>
       </div>
       <div class="seg-legend">
@@ -274,6 +303,16 @@ export function projectsView() {
     </section>`;
 }
 
+function getAxisConfig(granularity) {
+  if (granularity === "week") {
+    return { periodStart: weekStart, periodEnd: weekEnd, step: d => addWeeks(d, 1), label: weekLabel, tickMinPx: 72 };
+  }
+  if (granularity === "quarter") {
+    return { periodStart: quarterStart, periodEnd: quarterEnd, step: d => addQuarters(d, 1), label: quarterLabel, tickMinPx: 240 };
+  }
+  return { periodStart: monthStart, periodEnd: monthEnd, step: d => addMonths(d, 1), label: d => `${monthLabel(d)} ${d.getFullYear()}`, tickMinPx: 132 };
+}
+
 export function timeline(list) {
   const today = state.today;
 
@@ -281,7 +320,6 @@ export function timeline(list) {
     return '<div class="monitor-board-empty">当前筛选条件下没有项目。</div>';
   }
 
-  // Gather all segments to extend axis to include actual-completion dates
   const allSegs = list.flatMap(p => {
     const ms = milestones
       .filter(m => m.projectId === p.id)
@@ -289,8 +327,6 @@ export function timeline(list) {
     return ms.length ? computeSegments(ms, p, today) : [];
   });
 
-  // Project imports do not require project-level dates, so milestone bounds must
-  // also contribute to the axis or valid uploaded milestones never render.
   const startDates = [
     ...list.filter(p => p.planned_start_date).map(p => new Date(p.planned_start_date)),
     ...allSegs.map(s => s.segStart),
@@ -305,16 +341,16 @@ export function timeline(list) {
     return '<div class="monitor-board-empty">里程碑数据缺少日期。</div>';
   }
 
-  const tlStart = monthStart(new Date(Math.min(...startDates.map(d => d.getTime()))));
-  const tlEnd   = monthEnd(new Date(Math.max(...endDates.map(d => d.getTime()))));
+  const axis = getAxisConfig(state.filters.granularity ?? "month");
+  const tlStart = axis.periodStart(new Date(Math.min(...startDates.map(d => d.getTime()))));
+  const tlEnd   = axis.periodEnd(new Date(Math.max(...endDates.map(d => d.getTime()))));
   const totalMs = tlEnd.getTime() - tlStart.getTime();
 
-  const months = [];
-  for (let c = new Date(tlStart); c <= tlEnd; c = addMonths(c, 1)) {
-    months.push(new Date(c));
+  const ticks = [];
+  for (let c = new Date(tlStart); c <= tlEnd; c = axis.step(c)) {
+    ticks.push(new Date(c));
   }
 
-  // pct: Date → percentage of full timeline width (number, unclamped)
   function pct(date) {
     return (date.getTime() - tlStart.getTime()) / totalMs * 100;
   }
@@ -331,23 +367,19 @@ export function timeline(list) {
     ...g.projects.map(p => ({ type: "project", project: p })),
   ]);
 
-  // One scroll container (.monitor-board) holds a 2-column grid: a frozen
-  // project-list column (sticky left) and the gantt timeline. Each logical row
-  // emits exactly two grid cells (list + gantt) so their heights stay locked,
-  // and the single container yields one vertical + one horizontal scrollbar.
   const bodyCells = rows.map(row =>
     row.type === "group"
-      ? groupRow(row.group) + ganttGroupRow(row.group, months)
+      ? groupRow(row.group) + ganttGroupRow(row.group, ticks)
       : projectListRow(row.project, today) +
-        ganttProjectRow(row.project, months, today, pct, wPct, showToday, todayLeft)
+        ganttProjectRow(row.project, ticks, today, pct, wPct, showToday, todayLeft)
   ).join("");
 
-  return `<div class="monitor-board" data-monitor-board style="--month-count:${months.length}">
+  return `<div class="monitor-board" data-monitor-board style="--month-count:${ticks.length};--tick-min-px:${axis.tickMinPx}px">
     <div class="monitor-grid">
       <div class="project-list-head mb-corner">项目列表</div>
       <div class="gantt-header mb-monthhead">
         <div class="gantt-head">
-          ${months.map(m => `<span>${monthLabel(m)} ${m.getFullYear()}</span>`).join("")}
+          ${ticks.map(t => `<span>${axis.label(t)}</span>`).join("")}
           ${showToday ? `<div class="month-today-line" style="left:${todayLeft}%"></div>` : ""}
         </div>
       </div>
@@ -368,21 +400,38 @@ export function groupProjects(list, today = state.today) {
 
   const RAG_ORD = { R: 0, Y: 1, G: 2, gray: 3 };
 
-  function sortWeight(p) {
-    const rag = projectRag(p, today);
-    const ms = milestones
-      .filter(m => m.projectId === p.id)
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+  function projectMaxDev(p) {
+    const ms = milestones.filter(m => m.projectId === p.id).sort((a, b) => a.sortOrder - b.sortOrder);
     const segs = ms.length ? computeSegments(ms, p, today) : [];
-    const maxDev = Math.max(0, ...segs.filter(s => s.scenario === 2 || s.scenario === 4).map(s => s.deviationDays));
-    return [RAG_ORD[rag] ?? 3, -maxDev];
+    return Math.max(0, ...segs.filter(s => s.scenario === 2 || s.scenario === 4).map(s => s.deviationDays));
   }
 
-  const sorted = [...list].sort((a, b) => {
-    const [ra, da] = sortWeight(a);
-    const [rb, db] = sortWeight(b);
-    return ra !== rb ? ra - rb : da - db;
-  });
+  function sortWeight(p) {
+    return [RAG_ORD[projectRag(p, today)] ?? 3, -projectMaxDev(p)];
+  }
+
+  function nextMilestoneDate(p) {
+    const upcoming = milestones
+      .filter(m => m.projectId === p.id && !m.actual_end_date)
+      .sort((a, b) => new Date(a.planned_end_date) - new Date(b.planned_end_date));
+    return upcoming.length ? new Date(upcoming[0].planned_end_date) : new Date(9999, 0, 1);
+  }
+
+  const sortBy = state.filters?.sortBy ?? "default";
+  let sorted;
+  if (sortBy === "name") {
+    sorted = [...list].sort((a, b) => a.name.localeCompare(b.name, "zh"));
+  } else if (sortBy === "deviation") {
+    sorted = [...list].sort((a, b) => projectMaxDev(b) - projectMaxDev(a));
+  } else if (sortBy === "next-date") {
+    sorted = [...list].sort((a, b) => nextMilestoneDate(a) - nextMilestoneDate(b));
+  } else {
+    sorted = [...list].sort((a, b) => {
+      const [ra, da] = sortWeight(a);
+      const [rb, db] = sortWeight(b);
+      return ra !== rb ? ra - rb : da - db;
+    });
+  }
 
   const map = new Map();
   for (const p of sorted) {
@@ -534,7 +583,8 @@ function renderSegment(seg, milestone, projectId, pct, wPct, addDivider) {
     ? `<div class="seg-divider" style="left:${pct(seg.segEnd).toFixed(2)}%"></div>`
     : "";
 
-  return `<div class="gantt-segment seg-hue-${seg.hue} seg-tone-${seg.tone}"
+  const isNarrow = parseFloat(width) < 3;
+  return `<div class="gantt-segment seg-hue-${seg.hue} seg-tone-${seg.tone}${isNarrow ? " seg-narrow" : ""}"
        style="${styleVal}"
        data-open-project="${escapeHtml(projectId)}"
        data-milestone-id="${escapeHtml(seg.milestoneId)}"

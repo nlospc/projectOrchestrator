@@ -59,6 +59,46 @@ export function monthLabel(date) {
   return ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"][date.getMonth()];
 }
 
+export function weekStart(date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const day = d.getDay();
+  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day)); // Monday-based
+  return d;
+}
+
+export function weekEnd(date) {
+  const s = weekStart(date);
+  return new Date(s.getFullYear(), s.getMonth(), s.getDate() + 6);
+}
+
+export function addWeeks(date, count) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  d.setDate(d.getDate() + count * 7);
+  return d;
+}
+
+export function weekLabel(date) {
+  return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+}
+
+export function quarterStart(date) {
+  const q = Math.floor(date.getMonth() / 3);
+  return new Date(date.getFullYear(), q * 3, 1);
+}
+
+export function quarterEnd(date) {
+  const q = Math.floor(date.getMonth() / 3);
+  return new Date(date.getFullYear(), q * 3 + 3, 0);
+}
+
+export function addQuarters(date, count) {
+  return new Date(date.getFullYear(), date.getMonth() + count * 3, 1);
+}
+
+export function quarterLabel(date) {
+  return `Q${Math.floor(date.getMonth() / 3) + 1} ${date.getFullYear()}`;
+}
+
 export function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")

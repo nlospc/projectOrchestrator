@@ -476,6 +476,38 @@ textarea {
   user-select: none;
 }
 
+.gantt-today-btn {
+  font-size: 12px;
+  padding: 3px 10px;
+}
+
+.project-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.project-search-wrap input {
+  width: 100%;
+  padding-right: 24px;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.search-clear-btn:hover {
+  color: var(--text);
+}
+
 .granularity-chips {
   display: flex;
   gap: 4px;
@@ -487,9 +519,15 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 12px;
   font-size: 12px;
-  cursor: default;
+  cursor: pointer;
   background: var(--bg);
   color: var(--text);
+  user-select: none;
+}
+
+.granularity-chip:hover {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .granularity-chip.active {
@@ -498,9 +536,8 @@ textarea {
   border-color: var(--primary);
 }
 
-.granularity-chip.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.granularity-chip.active:hover {
+  color: #fff;
 }
 
 /* ── Project focus banner (T9) ───────────────────────────────────────────── */
@@ -757,7 +794,7 @@ tbody tr:hover {
 
 .monitor-grid {
   display: grid;
-  grid-template-columns: 360px max(980px, calc(var(--month-count) * 132px));
+  grid-template-columns: 360px max(980px, calc(var(--month-count) * var(--tick-min-px, 132px)));
   width: max-content;
 }
 
@@ -895,7 +932,7 @@ tbody tr:hover {
 
 .gantt-head {
   display: grid;
-  grid-template-columns: repeat(var(--month-count), minmax(132px, 1fr));
+  grid-template-columns: repeat(var(--month-count), minmax(var(--tick-min-px, 132px), 1fr));
   min-width: max(980px, calc(var(--month-count) * 132px));
   height: 44px;
   background: var(--surface-2);
@@ -933,7 +970,7 @@ tbody tr:hover {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: repeat(var(--month-count), minmax(132px, 1fr));
+  grid-template-columns: repeat(var(--month-count), minmax(var(--tick-min-px, 132px), 1fr));
   pointer-events: none;
 }
 
@@ -2694,6 +2731,10 @@ button.chart-bar:hover strong {
   font-weight: 700;
   pointer-events: none;
   line-height: 1;
+}
+
+.seg-narrow .seg-label {
+  display: none;
 }
 
 /* Anchor markers ◇ ◆ */
