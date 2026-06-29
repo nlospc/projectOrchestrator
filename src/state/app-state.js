@@ -3,7 +3,7 @@ import { routes } from "../config/routes.js";
 export const state = {
   route: window.location.hash.replace("#", "") || "cockpit",
   selectedProjectId: null,
-  filters: { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "none", includeArchived: false, granularity: "month", sortBy: "default" },
+  filters: { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "family", includeArchived: false, granularity: "month", sortBy: "default" },
   resourceFilters: { system: "all", role: "all", outsource: "all", projectFocus: null, biz: "all", family: "all", dept: "all", status: "all", health: "all" },
   drawer: { projectId: null, scrollToMilestoneId: null, activeTab: "milestones" },
   uploads: {},

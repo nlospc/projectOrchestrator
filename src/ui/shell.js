@@ -844,7 +844,7 @@ function bindEvents() {
   });
 
   $("#reset-filters").addEventListener("click", () => {
-    state.filters = { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "none", includeArchived: false, granularity: "month", sortBy: "default" };
+    state.filters = { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "family", includeArchived: false, granularity: "month", sortBy: "default" };
     state.resourceFilters = { system: "all", role: "all", outsource: "all", projectFocus: null, biz: "all", family: "all", dept: "all", status: "all", health: "all" };
     render();
   });
