@@ -575,14 +575,14 @@ export function matrixView() {
   return `<div class="resource-workspace people-project-workspace">
     <div class="hero-strip">
       <div class="hero-card confidence">
-        <span class="hero-label">覆盖系统</span>
-        <span class="hero-value">${systemCount}</span>
-        <span class="hero-sub">系统 / 平台</span>
-      </div>
-      <div class="hero-card clickable" data-route="resource">
         <span class="hero-label">参与项目</span>
         <span class="hero-value">${list.length}</span>
         <span class="hero-sub">活跃 ${activeProjects} 个</span>
+      </div>
+      <div class="hero-card clickable" data-route="resource">
+        <span class="hero-label">覆盖系统</span>
+        <span class="hero-value">${systemCount}</span>
+        <span class="hero-sub">系统 / 平台</span>
       </div>
       <div class="hero-card clickable" data-route="people">
         <span class="hero-label">矩阵人数</span>
