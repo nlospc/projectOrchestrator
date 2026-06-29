@@ -1,50 +1,52 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
-## Running the App
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-Use ECC-style workflow. Do not write code yet.
+## 1. Think Before Coding
 
-We are starting a new project from design phase.
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
 
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
 
-## Architecture
-The repo gonna develop a PMO Orchestrator platform for internal server deployment.
+## 2. Simplicity First
 
-Goal:
-- Data sources: Excel upload
-- Project progress: project-level milestone timeline, planned vs actual dates, red/yellow/green status per milestone segment
-- Resource view: people-to-project allocation board and table. function reference:@./R2-Workforce-Dashboard-offline-V14 which you could overview the from @./R2-Workforce-Dashboard-offline-V14/overview.md rather than read all code. keep this prototype code only if it is valid to reuse.
-- Manual override: users can mark project health status
-- Deployment: internal network server
-- Priority: design first, implementation later
+**Minimum code that solves the problem. Nothing speculative.**
 
-## Data structure
-when you need to design data structure, you could find it from @./docs/data-sequences.md
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
 
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
-## Implementation Workflow
+## 3. Surgical Changes
 
-Default execution model for all feature work in this repo:
+**Touch only what you must. Clean up only your own mess.**
 
-### Roles
-- **Claude (Orchestrator + Auditor):** owns spec writing, task decomposition, design (via Claude Design MCP), code review, metric verification, and gated commits. Claude hands Codex one scoped slice at a time.
-- **Codex (Executor):** implements code changes via `/codex:rescue`. Receives a self-contained spec per slice — file paths, function signatures, formulas, and the visual contract. Does not make architectural decisions.
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
 
-### Flow
-1. **Spec & Design** — Claude writes metric/feature spec, generates hi-fi mock via Claude Design MCP, iterates until locked.
-2. **Decompose** — Claude breaks the spec into Codex-sized slices (one file or concern per slice).
-3. **Execute** — Claude delegates each slice to Codex via `/codex:rescue` with explicit instructions.
-4. **Audit** — Claude reviews every Codex deliverable: `code-reviewer` agent, formula verification against `docs/data-sequences.md`, run app + screenshot via chrome-devtools, regression check.
-5. **Gate** — Conventional commit only after audit passes. No batch commits.
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
 
-### Rules
-- Codex never touches more than one concern per slice.
-- Claude never skips the audit step.
-- If Codex output fails audit, Claude writes a fix spec and re-delegates (not manual edit).
-- Design artifacts (Claude Design mock) are locked before any code slice begins.
+The test: Every changed line should trace directly to the user's request.
 
-## Export
-- Ask questions only if a blocker exists.
-- Otherwise make reasonable assumptions and mark them.
+## 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
