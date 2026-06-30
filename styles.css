@@ -933,7 +933,7 @@ tbody tr:hover {
 .gantt-head {
   display: grid;
   grid-template-columns: repeat(var(--month-count), minmax(var(--tick-min-px, 132px), 1fr));
-  min-width: max(980px, calc(var(--month-count) * 132px));
+  min-width: max(980px, calc(var(--month-count) * var(--tick-min-px, 132px)));
   height: 44px;
   background: var(--surface-2);
   color: var(--muted);
