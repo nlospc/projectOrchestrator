@@ -568,8 +568,9 @@ export function matrixView() {
   const activeProjects = list.filter(p => p.status !== '项目暂停').length;
   const peopleCount = new Set(allAllocs.map(a => a.person)).size;
   const bizCount = groups.length;
-  const avgComplexity = allAllocs.length
-    ? (allAllocs.reduce((s, a) => s + (a.complexity || 0), 0) / allAllocs.length).toFixed(1)
+  const complexityProjects = list.filter(p => p.complexity);
+  const avgComplexity = complexityProjects.length
+    ? (complexityProjects.reduce((s, p) => s + p.complexity, 0) / complexityProjects.length).toFixed(1)
     : '–';
 
   return `<div class="resource-workspace people-project-workspace">
@@ -636,7 +637,7 @@ export function resourceFilterBar() {
   const f = state.resourceFilters;
   const systemFamilyMap = new Map(
     allocations.map(a => {
-      const proj = projects.find(p => p.id === a.project_key);
+      const proj = projects.find(p => p.id === a.projectId);
       return [a.system, proj?.family ?? null];
     })
   );
