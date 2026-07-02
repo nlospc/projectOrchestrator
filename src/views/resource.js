@@ -935,6 +935,21 @@ export function rolesView() {
   </div>`;
 }
 
+const PEOPLE_SORT_COMPARATORS = {
+  load: (a, b) => b.load - a.load,
+  ratio: (a, b) => b.ratio - a.ratio,
+  projects: (a, b) => b.projects.length - a.projects.length,
+  name: (a, b) => a.person.localeCompare(b.person, "zh"),
+};
+
+// Pure sort shared by peopleView's initial render and the people-search
+// input handler (shell.js), so the active sort chip stays honored while
+// searching. Falls back to load-desc for an unknown/missing sortKey.
+export function sortedPeople(people, sortKey) {
+  const compare = PEOPLE_SORT_COMPARATORS[sortKey] || PEOPLE_SORT_COMPARATORS.load;
+  return [...people].sort(compare);
+}
+
 export function peopleView() {
   const list = resourceProjects();
   const people = personStats(list);
