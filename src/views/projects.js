@@ -1,4 +1,4 @@
-import { comments, milestoneChangeLogs, milestones, projects } from "../core/data-store.js";
+import { appSettings, comments, milestoneChangeLogs, milestones, projects } from "../core/data-store.js";
 import {
   $, addMonths, addQuarters, addWeeks, badge, detail, escapeHtml, kpi,
   monthEnd, monthLabel, monthStart, quarterEnd, quarterLabel, quarterStart,
@@ -8,7 +8,7 @@ import { computeSegments } from "../core/milestones.js";
 import {
   filteredProjects, overviewMetrics,
   projectOverflowSegment, projectRag, projectResourceSummary,
-  projectsViewMetrics,
+  projectsViewMetrics, ragFromSegments,
 } from "../core/selectors.js";
 import { state } from "../state/app-state.js";
 
@@ -391,47 +391,47 @@ export function timeline(list) {
 
 export function groupProjects(list, today = state.today) {
   const groupBy = state.filters?.groupBy ?? "none";
+  const threshold = appSettings.payload?.healthRules?.deviationDays ?? 7;
+
+  // P1 perf fix: precompute segments/rag/maxDev/nextDate ONCE per project.
+  // Previously projectRag()/computeSegments() were called from inside the
+  // default-sort comparator, recomputing O(n log n) times instead of O(n),
+  // plus again for group counts and rag-groupBy keys.
+  const derived = new Map(list.map((p) => {
+    const ms = milestones.filter((m) => m.projectId === p.id).sort((a, b) => a.sortOrder - b.sortOrder);
+    const segs = ms.length ? computeSegments(ms, p, today) : [];
+    const rag = ragFromSegments(p, segs, threshold);
+    const maxDev = Math.max(0, ...segs.filter((s) => s.scenario === 2 || s.scenario === 4).map((s) => s.deviationDays));
+    const upcoming = ms.filter((m) => !m.actual_end_date).sort((a, b) => new Date(a.planned_end_date) - new Date(b.planned_end_date));
+    const nextDate = upcoming.length ? new Date(upcoming[0].planned_end_date) : new Date(9999, 0, 1);
+    return [p.id, { rag, maxDev, nextDate }];
+  }));
 
   function getKey(p) {
     if (groupBy === "family") return p.family || "未归属产品族";
     if (groupBy === "dept")  return p.dept  || "未知部门";
     if (groupBy === "owner") return projectProductManagerName(p) || "未知负责人";
-    if (groupBy === "rag")   return projectRag(p, today);
+    if (groupBy === "rag")   return derived.get(p.id).rag;
     return "__all__";
   }
 
   const RAG_ORD = { R: 0, Y: 1, G: 2, gray: 3 };
-
-  function projectMaxDev(p) {
-    const ms = milestones.filter(m => m.projectId === p.id).sort((a, b) => a.sortOrder - b.sortOrder);
-    const segs = ms.length ? computeSegments(ms, p, today) : [];
-    return Math.max(0, ...segs.filter(s => s.scenario === 2 || s.scenario === 4).map(s => s.deviationDays));
-  }
-
-  function sortWeight(p) {
-    return [RAG_ORD[projectRag(p, today)] ?? 3, -projectMaxDev(p)];
-  }
-
-  function nextMilestoneDate(p) {
-    const upcoming = milestones
-      .filter(m => m.projectId === p.id && !m.actual_end_date)
-      .sort((a, b) => new Date(a.planned_end_date) - new Date(b.planned_end_date));
-    return upcoming.length ? new Date(upcoming[0].planned_end_date) : new Date(9999, 0, 1);
-  }
 
   const sortBy = state.filters?.sortBy ?? "default";
   let sorted;
   if (sortBy === "name") {
     sorted = [...list].sort((a, b) => a.name.localeCompare(b.name, "zh"));
   } else if (sortBy === "deviation") {
-    sorted = [...list].sort((a, b) => projectMaxDev(b) - projectMaxDev(a));
+    sorted = [...list].sort((a, b) => derived.get(b.id).maxDev - derived.get(a.id).maxDev);
   } else if (sortBy === "next-date") {
-    sorted = [...list].sort((a, b) => nextMilestoneDate(a) - nextMilestoneDate(b));
+    sorted = [...list].sort((a, b) => derived.get(a.id).nextDate - derived.get(b.id).nextDate);
   } else {
     sorted = [...list].sort((a, b) => {
-      const [ra, da] = sortWeight(a);
-      const [rb, db] = sortWeight(b);
-      return ra !== rb ? ra - rb : da - db;
+      const da = derived.get(a.id);
+      const db = derived.get(b.id);
+      const ra = RAG_ORD[da.rag] ?? 3;
+      const rb = RAG_ORD[db.rag] ?? 3;
+      return ra !== rb ? ra - rb : db.maxDev - da.maxDev;
     });
   }
 
@@ -446,9 +446,9 @@ export function groupProjects(list, today = state.today) {
   return [...map.entries()].map(([key, ps]) => ({
     key,
     label: groupBy === "rag" ? (RAG_LABELS[key] ?? key) : key,
-    redCount: ps.filter(p => projectRag(p, today) === "R").length,
-    yellowCount: ps.filter(p => projectRag(p, today) === "Y").length,
-    greenCount: ps.filter(p => projectRag(p, today) === "G").length,
+    redCount: ps.filter((p) => derived.get(p.id).rag === "R").length,
+    yellowCount: ps.filter((p) => derived.get(p.id).rag === "Y").length,
+    greenCount: ps.filter((p) => derived.get(p.id).rag === "G").length,
     projects: ps,
   }));
 }
