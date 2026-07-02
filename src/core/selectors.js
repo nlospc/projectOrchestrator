@@ -137,16 +137,15 @@ export function personStats(projectList = resourceProjects()) {
  * @param {Date}   today
  * @returns {"R"|"Y"|"G"|"gray"}
  */
-export function projectRag(project, today) {
+/**
+ * Classify RAG from already-computed segments. Split out of projectRag() so
+ * callers that already need `segments` for another reason (e.g. groupProjects'
+ * maxDev calculation) don't have to pay for computeSegments() a second time.
+ */
+export function ragFromSegments(project, segments, threshold) {
   if (project.archived) return "gray";
   if (project.override) return project.override;
-  const ms = milestones
-    .filter((m) => m.projectId === project.id)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
-  if (ms.length === 0) return "gray";
-
-  const threshold = appSettings.payload?.healthRules?.deviationDays ?? 7;
-  const segments = computeSegments(ms, project, today);
+  if (segments.length === 0) return "gray";
 
   let hasYellow = false;
   for (const seg of segments) {
@@ -155,6 +154,15 @@ export function projectRag(project, today) {
     if (seg.scenario === 5) hasYellow = true;
   }
   return hasYellow ? "Y" : "G";
+}
+
+export function projectRag(project, today) {
+  const ms = milestones
+    .filter((m) => m.projectId === project.id)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const threshold = appSettings.payload?.healthRules?.deviationDays ?? 7;
+  const segments = ms.length ? computeSegments(ms, project, today) : [];
+  return ragFromSegments(project, segments, threshold);
 }
 
 /**
