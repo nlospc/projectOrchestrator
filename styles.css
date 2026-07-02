@@ -2291,10 +2291,6 @@ button.chart-bar:hover strong {
   gap: 12px;
 }
 
-.settings-form.two-col {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 .template-list {
   display: grid;
   gap: 8px;
@@ -2616,8 +2612,7 @@ button.chart-bar:hover strong {
   .upload-layout,
   .upload-import-grid,
   .settings-grid,
-  .settings-form,
-  .settings-form.two-col {
+  .settings-form {
     grid-template-columns: 1fr;
   }
 

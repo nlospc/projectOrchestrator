@@ -143,7 +143,6 @@ export function settingsView() {
   const s = appSettings.payload;
   const hr = s.healthRules ?? {};
   const lt = s.loadThresholds ?? {};
-  const tf = s.templateFields ?? {};
 
   const liveTag = `<span class="settings-tag tag-live">影响计算</span>`;
   const storeTag = `<span class="settings-tag">仅记录</span>`;
@@ -206,21 +205,6 @@ export function settingsView() {
       <div class="settings-head"><h2>里程碑模板</h2><button class="ghost-button" data-action="add-milestone-template">新增节点</button></div>
       <div class="template-list" id="milestone-template-list">${effectiveMilestoneTemplates(s, milestoneNames).map((template, index) => milestoneTemplateRow(template, index)).join("")}</div>
       <p class="muted" style="font-size:12px;margin:10px 0 0">模板随「保存设置」一并保存；空名称的行保存时自动忽略，停用的节点保留配置备查。</p>
-    </section>
-
-    <section class="panel settings-panel settings-wide">
-      <div class="settings-head"><h2>上传模板字段</h2><span class="muted">对应 docs/template/ 三份 xlsx 模板的必填列 ${storeTag}</span></div>
-      <div class="settings-form two-col">
-        <label>项目信息必填字段（project_info_template.xlsx）
-          <textarea rows="2" data-settings-path="templateFields.projectRequired">${escapeHtml(tf.projectRequired ?? "")}</textarea>
-        </label>
-        <label>里程碑必填字段（milestone_info_template.xlsx）
-          <textarea rows="2" data-settings-path="templateFields.milestoneRequired">${escapeHtml(tf.milestoneRequired ?? "")}</textarea>
-        </label>
-        <label>资源分配必填字段（PMO_ResourceAllocation_template.xlsx）
-          <textarea rows="2" data-settings-path="templateFields.resourceRequired">${escapeHtml(tf.resourceRequired ?? "")}</textarea>
-        </label>
-      </div>
     </section>
 
     <div class="settings-save-bar settings-wide">
