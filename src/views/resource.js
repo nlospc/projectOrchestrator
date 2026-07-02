@@ -635,9 +635,10 @@ export function matrixView() {
 
 export function resourceFilterBar() {
   const f = state.resourceFilters;
+  const projectsById = new Map(projects.map(p => [p.id, p]));
   const systemFamilyMap = new Map(
     allocations.map(a => {
-      const proj = projects.find(p => p.id === a.projectId);
+      const proj = projectsById.get(a.projectId);
       return [a.system, proj?.family ?? null];
     })
   );
@@ -701,8 +702,11 @@ export function systemProjectView() {
   </section>`;
 }
 
-export function matrixCell(person, projectId) {
-  const items = allocations.filter((a) => {
+// `items`, when provided, skips the auto-filter -- lets workloadView pass a
+// pre-indexed bucket instead of re-scanning the whole allocations array per
+// (person x project) cell (was O(people x projects x allocations)).
+export function matrixCell(person, projectId, items = null) {
+  const rows = items ?? allocations.filter((a) => {
     const resourceFilters = state.resourceFilters;
     return (
       a.person === person &&
@@ -713,9 +717,9 @@ export function matrixCell(person, projectId) {
         (resourceFilters.outsource === "external" && a.outsourced))
     );
   });
-  if (!items.length) return `<td><span class="load-empty">-</span></td>`;
-  const ratio = items.reduce((sum, item) => sum + item.timeRatio, 0);
-  const load = items.reduce((sum, item) => sum + loadFor(item), 0);
+  if (!rows.length) return `<td><span class="load-empty">-</span></td>`;
+  const ratio = rows.reduce((sum, item) => sum + item.timeRatio, 0);
+  const load = rows.reduce((sum, item) => sum + loadFor(item), 0);
   return `<td><button class="cell ${loadClass(load)}" data-open-person="${person}"><strong>${Math.round(ratio * 100)}%</strong><small>${load.toFixed(2)}</small></button></td>`;
 }
 
@@ -728,6 +732,15 @@ export function workloadView() {
   const high = stats.filter((person) => person.load >= loadThresholds.mid).length;
   const totalRatio = all.reduce((sum, allocation) => sum + allocation.timeRatio, 0);
   const outsourcedRatio = all.length ? Math.round((all.filter((allocation) => allocation.outsourced).length / all.length) * 100) : 0;
+  // `all` already applies the same scope + role/outsource filters matrixCell
+  // would otherwise recompute per cell -- index it once instead of
+  // rescanning the whole allocations array for every (person x project) pair.
+  const cellIndex = new Map();
+  for (const a of all) {
+    const key = `${a.person}|${a.projectId}`;
+    if (!cellIndex.has(key)) cellIndex.set(key, []);
+    cellIndex.get(key).push(a);
+  }
 
   return `<div class="resource-workspace workload-heatmap-workspace">
     <div class="hero-strip">
@@ -778,7 +791,7 @@ export function workloadView() {
           </tr></thead>
           <tbody>${stats.map((person) => `<tr class="clickable" data-open-person="${escapeHtml(person.person)}">
             <td class="rv-rowhead"><strong>${escapeHtml(person.person)}</strong><span>${escapeHtml(person.role)}${person.outsourced ? ' · 外包' : ' · 内部'}</span></td>
-            ${projectIds.map((id) => matrixCell(person.person, id)).join('')}
+            ${projectIds.map((id) => matrixCell(person.person, id, cellIndex.get(`${person.person}|${id}`) || [])).join('')}
           </tr>`).join('')}</tbody>
         </table>
       </div>

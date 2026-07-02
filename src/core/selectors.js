@@ -337,8 +337,9 @@ export function cockpitMetrics(projectList = filteredProjects()) {
   const bf1Count = bfRows.filter(r => r.bf <= 1).length;
   const overAllocated = stats.filter(p => p.ratio > 1).length;
   const overloaded = stats.filter(p => p.load >= loadThresholds.mid).length;
+  const statsByPerson = new Map(stats.map(s => [s.person, s]));
   const keyPersons = keyPeopleRiskRows(bfRows).slice(0, 5).map(kp => {
-    const personInfo = stats.find(s => s.person === kp.person);
+    const personInfo = statsByPerson.get(kp.person);
     return {
       person: kp.person,
       role: personInfo?.role || "",
