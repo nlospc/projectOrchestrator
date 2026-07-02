@@ -226,7 +226,7 @@ export function overallocatedCard(person) {
 export function busyRankingRow(person, index, maxLoad) {
   const level = loadLevel(person.load);
   const width = Math.max(4, Math.round((person.load / Math.max(maxLoad, 1)) * 100));
-  return `<button class="busy-row" data-open-person="${person.person}">
+  return `<button class="busy-row" data-open-person="${escapeHtml(person.person)}">
     <span class="rank">${index + 1}</span>
     <span class="busy-person">${personChip(person, false)}${person.ratio > 1 ? '<span class="over-tag">超分配</span>' : ""}</span>
     <span class="bar-track"><span class="bar-fill ${level.key}" style="width:${width}%"></span></span>
@@ -339,7 +339,7 @@ export function workloadSummaryTable(rows) {
     <thead><tr><th>排名</th><th>人员</th><th>角色</th><th>来源</th><th>项目数</th><th>工时占比</th><th>计算负荷</th><th>等级</th><th>超分配</th></tr></thead>
     <tbody>${rows.map((person, index) => {
       const level = loadLevel(person.load);
-      return `<tr class="clickable" data-open-person="${person.person}"><td>${index + 1}</td><td><strong>${person.person}</strong></td><td>${person.role}</td><td>${person.outsourced ? "外包" : "内部"}</td><td>${person.projects.length}</td><td>${Math.round(person.ratio * 100)}%</td><td>${person.load.toFixed(2)}</td><td><span class="badge ${level.key}">${level.label}</span></td><td>${person.ratio > 1 ? '<span class="over-tag">是</span>' : '<span class="muted">否</span>'}</td></tr>`;
+      return `<tr class="clickable" data-open-person="${escapeHtml(person.person)}"><td>${index + 1}</td><td><strong>${escapeHtml(person.person)}</strong></td><td>${escapeHtml(person.role)}</td><td>${person.outsourced ? "外包" : "内部"}</td><td>${person.projects.length}</td><td>${Math.round(person.ratio * 100)}%</td><td>${person.load.toFixed(2)}</td><td><span class="badge ${level.key}">${level.label}</span></td><td>${person.ratio > 1 ? '<span class="over-tag">是</span>' : '<span class="muted">否</span>'}</td></tr>`;
     }).join("")}</tbody>
   </table></div>`;
 }
@@ -720,7 +720,7 @@ export function matrixCell(person, projectId, items = null) {
   if (!rows.length) return `<td><span class="load-empty">-</span></td>`;
   const ratio = rows.reduce((sum, item) => sum + item.timeRatio, 0);
   const load = rows.reduce((sum, item) => sum + loadFor(item), 0);
-  return `<td><button class="cell ${loadClass(load)}" data-open-person="${person}"><strong>${Math.round(ratio * 100)}%</strong><small>${load.toFixed(2)}</small></button></td>`;
+  return `<td><button class="cell ${loadClass(load)}" data-open-person="${escapeHtml(person)}"><strong>${Math.round(ratio * 100)}%</strong><small>${load.toFixed(2)}</small></button></td>`;
 }
 
 export function workloadView() {
@@ -814,7 +814,7 @@ export function donutChart(rows) {
 export function horizontalRiskBars(rows) {
   if (!rows.length) return '<p class="muted">当前筛选范围内没有关键人风险。</p>';
   const max = Math.max(...rows.map((row) => row.load), 1);
-  return `<div class="bf-bars">${rows.map((row, index) => `<button class="bf-bar-row" data-open-person="${row.person}"><span class="rank">${index + 1}</span><strong>${row.person}</strong><span class="bar-track"><span class="bar-fill ${row.singlePoint ? "R" : "Y"}" style="width:${Math.max(4, Math.round((row.load / max) * 100))}%"></span></span><span class="mono">${row.load.toFixed(2)}</span><span class="muted">${row.projectCount} 项</span></button>`).join("")}</div>`;
+  return `<div class="bf-bars">${rows.map((row, index) => `<button class="bf-bar-row" data-open-person="${escapeHtml(row.person)}"><span class="rank">${index + 1}</span><strong>${escapeHtml(row.person)}</strong><span class="bar-track"><span class="bar-fill ${row.singlePoint ? "R" : "Y"}" style="width:${Math.max(4, Math.round((row.load / max) * 100))}%"></span></span><span class="mono">${row.load.toFixed(2)}</span><span class="muted">${row.projectCount} 项</span></button>`).join("")}</div>`;
 }
 
 export function busFactorRedlineCard(row) {
