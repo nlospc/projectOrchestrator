@@ -1,7 +1,7 @@
 import { projectFilterRoutes, routeGroups, routes } from "../config/routes.js";
 import { filteredProjects, personStats } from "../core/selectors.js";
 import { applyResourceFilterCascade } from "../core/resource-filters.js";
-import { $ } from "../core/utils.js";
+import { $, debounce } from "../core/utils.js";
 import { allocations, apiImportAllocations, apiImportMilestones, apiImportProjects, apiUpsertPerson, apiDeletePerson, apiSaveSettings, appSettings, bootstrap, milestones, personInfo, projects } from "../core/data-store.js";
 import { parseMilestoneCsv, parseMilestoneXlsx, parseProjectCsv, parseResourceAllocationMatrixCsv, parseResourceAllocationXlsx } from "../core/importers.js";
 import { state } from "../state/app-state.js";
@@ -693,20 +693,25 @@ function bindEvents() {
   document.addEventListener("visibilitychange", () => { if (!document.hidden) syncFromServer(); });
   window.addEventListener("pmo:stale", () => syncFromServer({ force: true }));
 
+  const debouncedRefreshProjectTimeline = debounce(() => refreshProjectTimeline(), 150);
+  const debouncedRefreshPeopleGrid = debounce((term) => {
+    const rows = personStats().filter((person) =>
+      [person.person, person.role, person.dept].join(" ").toLowerCase().includes(term)
+    );
+    const sorted = sortedPeople(rows, state.resourceFilters.peopleSort);
+    const grid = $("#people-grid");
+    if (grid) grid.innerHTML = sorted.map((person) => peopleCard(person)).join("");
+  }, 150);
+
   document.addEventListener("input", (event) => {
     if (event.target.id === "project-search") {
       const clearBtn = document.querySelector("[data-action='clear-search']");
       if (clearBtn) clearBtn.hidden = !event.target.value;
-      refreshProjectTimeline();
+      debouncedRefreshProjectTimeline();
       return;
     }
     if (event.target.id === "people-search") {
-      const term = event.target.value.trim().toLowerCase();
-      const rows = personStats().filter((person) =>
-        [person.person, person.role, person.dept].join(" ").toLowerCase().includes(term)
-      );
-      const sorted = sortedPeople(rows, state.resourceFilters.peopleSort);
-      $("#people-grid").innerHTML = sorted.map((person) => peopleCard(person)).join("");
+      debouncedRefreshPeopleGrid(event.target.value.trim().toLowerCase());
     }
   });
 
