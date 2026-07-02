@@ -1,6 +1,6 @@
 import { comments, milestoneChangeLogs, milestones, projects } from "../core/data-store.js";
 import {
-  $, addMonths, addQuarters, addWeeks, badge, detail, effectiveHealth, escapeHtml, kpi,
+  $, addMonths, addQuarters, addWeeks, badge, detail, escapeHtml, kpi,
   monthEnd, monthLabel, monthStart, quarterEnd, quarterLabel, quarterStart,
   weekEnd, weekLabel, weekStart,
 } from "../core/utils.js";

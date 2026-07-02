@@ -6,10 +6,6 @@ import { appSettings } from "./data-store.js";
 
 export const $ = (selector) => document.querySelector(selector);
 
-export function effectiveHealth(project) {
-  return project.override || project.health;
-}
-
 export function loadFor(allocation) {
   const status = allocation.status;
   const complexity = allocation.complexity ?? 3;

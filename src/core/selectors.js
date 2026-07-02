@@ -1,7 +1,7 @@
 import { allocations, appSettings, confirmedLinks, milestones, projects } from './data-store.js';
 import { state } from "../state/app-state.js";
 import { computeSegments } from "./milestones.js";
-import { effectiveHealth, getLoadThresholds, loadFor, parseDate } from "./utils.js";
+import { getLoadThresholds, loadFor, parseDate } from "./utils.js";
 
 // ─── Role-category mapping for projectResourceSummary ────────────────────────
 // Roles not listed here fall into "开发" (catch-all for technical staff).
@@ -25,6 +25,7 @@ function isDueWithin(milestone, today, n) {
 // ─── Existing selectors (unchanged) ──────────────────────────────────────────
 
 export function filteredProjects() {
+  const today = state.today ?? new Date();
   return projects.filter((project) => {
     const filters = state.filters;
     if (!filters.includeArchived && project.archived) return false;
@@ -32,13 +33,14 @@ export function filteredProjects() {
       (filters.dept === "all" || project.dept === filters.dept) &&
       (filters.biz === "all" || project.biz === filters.biz) &&
       (filters.status === "all" || project.status === filters.status) &&
-      (filters.health === "all" || effectiveHealth(project) === filters.health) &&
+      (filters.health === "all" || projectRag(project, today) === filters.health) &&
       (filters.pm === "all" || project.pm === filters.pm)
     );
   });
 }
 
 export function resourceProjects() {
+  const today = state.today ?? new Date();
   const projectsById = new Map(projects.map((p) => [p.id, p]));
   const rows = new Map();
   allocations.forEach((allocation) => {
@@ -53,7 +55,7 @@ export function resourceProjects() {
         dept:       canonical?.dept       ?? allocation.dept,
         status:     canonical?.status     ?? allocation.status,
         complexity: canonical?.complexity ?? allocation.complexity,
-        health:     canonical ? effectiveHealth(canonical) : (
+        health:     canonical ? projectRag(canonical, today) : (
                       allocation.status === '项目暂停' ? 'R' :
                       allocation.status === 'UAT'  ? 'Y' : 'G'
                     ),
@@ -128,6 +130,8 @@ export function personStats(projectList = resourceProjects()) {
  * Y — any milestone is scenario⑤ (eroded), and no R condition fires
  * G — all milestones are scenario① or ③
  * gray — project.archived === true OR no milestones
+ * override — project.override ("R"|"Y"|"G"), when set, wins over the
+ *            computed result (but archived still wins over override; D-1)
  *
  * @param {object} project
  * @param {Date}   today
@@ -135,6 +139,7 @@ export function personStats(projectList = resourceProjects()) {
  */
 export function projectRag(project, today) {
   if (project.archived) return "gray";
+  if (project.override) return project.override;
   const ms = milestones
     .filter((m) => m.projectId === project.id)
     .sort((a, b) => a.sortOrder - b.sortOrder);
