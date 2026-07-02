@@ -1,8 +1,8 @@
 import "./helpers/browser-shim.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { projects, milestones } from "../src/core/data-store.js";
-import { projectRag, filteredProjects } from "../src/core/selectors.js";
+import { projects, milestones, allocations, confirmedLinks } from "../src/core/data-store.js";
+import { projectRag, filteredProjects, resourceProjects } from "../src/core/selectors.js";
 import { state } from "../src/state/app-state.js";
 
 // D-1 (user-confirmed): projectRag() is the single health source for both
@@ -61,4 +61,24 @@ test("health filter uses computed projectRag, not the stale static health field,
 
   const filtered = filteredProjects();
   assert.equal(filtered.length, 0, "project should NOT match health=R filter once computed RAG (G) overrides the stale static field");
+});
+
+test("resourceProjects uses computed projectRag for linked (canonical) projects, not the stale static health field", () => {
+  resetStore();
+  allocations.length = 0;
+  confirmedLinks.clear();
+
+  const p = { id: "P1", name: "P1", archived: false, override: "", health: "R", dept: "D", biz: "B", status: "产品开发", pm: "PM" };
+  projects.push(p);
+  milestones.push({
+    id: "M1", projectId: "P1", sortOrder: 1, name: "M1",
+    planned_start_date: "2026-06-01", planned_end_date: "2026-06-10",
+    actual_start_date: "2026-06-01", actual_end_date: "2026-06-05",
+  });
+  confirmedLinks.set("RES-1", "P1");
+  allocations.push({ projectId: "RES-1", projectName: "P1", person: "Alice", role: "后端", status: "产品开发", complexity: 3, timeRatio: 1 });
+  state.today = new Date("2026-07-02");
+
+  const rows = resourceProjects();
+  assert.equal(rows[0].health, "G", "linked project's health should follow computed RAG (G), not the stale static field (R)");
 });
