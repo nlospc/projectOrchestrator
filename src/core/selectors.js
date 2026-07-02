@@ -201,6 +201,7 @@ export function projectResourceSummary(project) {
 }
 
 export function busFactorRows() {
+  const { bfRisk, bfTarget } = getLoadThresholds();
   return resourceProjects().map((project) => {
     const peopleLoads = new Map();
     const roleCoverage = new Map();
@@ -235,7 +236,7 @@ export function busFactorRows() {
       topShare: total ? (top?.load || 0) / total : 0,
       singleRoles,
       roleCoverage,
-      risk: bf <= 1 ? "R" : bf === 2 ? "Y" : "G",
+      risk: bf <= bfRisk ? "R" : bf < bfTarget ? "Y" : "G",
     };
   }).sort((a, b) => a.bf - b.bf || b.topShare - a.topShare);
 }

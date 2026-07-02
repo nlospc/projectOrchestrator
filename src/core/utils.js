@@ -17,13 +17,16 @@ export function loadFor(allocation) {
   return allocation.timeRatio * Math.sqrt(complexity / 5) * roleWeight;
 }
 
-// Single source for the configured (or default) low/mid load thresholds.
-// Read by loadClass() and by every view that classifies or labels load.
+// Single source for the configured (or default) load/bus-factor thresholds.
+// Read by loadClass() and by every view/selector that classifies or labels
+// load or bus-factor risk.
 export function getLoadThresholds() {
   const t = appSettings.payload.loadThresholds;
   const mid = (t?.mid != null && Number.isFinite(t.mid)) ? t.mid : 1.2;
   const low = (t?.low != null && Number.isFinite(t.low)) ? t.low : 0.6;
-  return { low, mid };
+  const bfRisk = (t?.bfRisk != null && Number.isFinite(t.bfRisk)) ? t.bfRisk : 1;
+  const bfTarget = (t?.bfTarget != null && Number.isFinite(t.bfTarget)) ? t.bfTarget : 3;
+  return { low, mid, bfRisk, bfTarget };
 }
 
 export function loadClass(value) {
