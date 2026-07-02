@@ -1,7 +1,7 @@
 import { projectFilterRoutes, routeGroups, routes } from "../config/routes.js";
 import { filteredProjects, personStats } from "../core/selectors.js";
 import { applyResourceFilterCascade } from "../core/resource-filters.js";
-import { $, debounce } from "../core/utils.js";
+import { $, debounce, escapeHtml } from "../core/utils.js";
 import { allocations, apiImportAllocations, apiImportMilestones, apiImportProjects, apiUpsertPerson, apiDeletePerson, apiSaveSettings, appSettings, bootstrap, milestones, personInfo, projects } from "../core/data-store.js";
 import { parseMilestoneCsv, parseMilestoneXlsx, parseProjectCsv, parseResourceAllocationMatrixCsv, parseResourceAllocationXlsx } from "../core/importers.js";
 import { state } from "../state/app-state.js";
@@ -59,7 +59,7 @@ function initNav() {
 function fillSelect(selector, values, allLabel) {
   const element = $(selector);
   element.innerHTML = values
-    .map((value) => `<option value="${value}">${value === "all" ? allLabel : value}</option>`)
+    .map((value) => `<option value="${escapeHtml(value)}">${value === "all" ? allLabel : escapeHtml(value)}</option>`)
     .join("");
 }
 

@@ -921,7 +921,7 @@ export function busFactorView() {
       </div>
       <div class="table-wrap"><table>
         <thead><tr><th>项目</th><th>总负荷</th><th>Bus Factor</th><th>关键贡献人</th><th>Top 贡献占比</th><th>参与人数</th><th>单人覆盖角色</th><th>项目健康</th><th>风险解释</th></tr></thead>
-        <tbody>${rows.map((row) => `<tr><td><strong>${row.project.name}</strong><br><span class="muted">${row.project.system}</span></td><td>${row.total.toFixed(2)}</td><td><strong>${row.bf}</strong></td><td>${row.contributors.slice(0, 3).map((c) => `${c.person} ${c.load.toFixed(2)}`).join(' / ')}</td><td>${Math.round(row.topShare * 100)}%</td><td>${row.peopleCount}</td><td>${row.singleRoles.length ? row.singleRoles.join(' / ') : '<span class="muted">-</span>'}</td><td>${badge(row.project.health)}</td><td>${busFactorExplain(row)}</td></tr>`).join('')}</tbody>
+        <tbody>${rows.map((row) => `<tr><td><strong>${escapeHtml(row.project.name)}</strong><br><span class="muted">${escapeHtml(row.project.system)}</span></td><td>${row.total.toFixed(2)}</td><td><strong>${row.bf}</strong></td><td>${row.contributors.slice(0, 3).map((c) => `${escapeHtml(c.person)} ${c.load.toFixed(2)}`).join(' / ')}</td><td>${Math.round(row.topShare * 100)}%</td><td>${row.peopleCount}</td><td>${row.singleRoles.length ? escapeHtml(row.singleRoles.join(' / ')) : '<span class="muted">-</span>'}</td><td>${badge(row.project.health)}</td><td>${busFactorExplain(row)}</td></tr>`).join('')}</tbody>
       </table></div>
     </div>
   </div>`;
@@ -1063,12 +1063,12 @@ export function openPerson(personName) {
   const totalRatio = items.reduce((sum, item) => sum + item.timeRatio, 0);
   const primary = items[0];
   $("#drawer").innerHTML = `<div class="drawer-header">
-    <div><p class="eyebrow">Resource Detail</p><h2>${personName}</h2></div>
+    <div><p class="eyebrow">Resource Detail</p><h2>${escapeHtml(personName)}</h2></div>
     <button class="ghost-button" data-close-drawer>关闭</button>
   </div>
   <div class="detail-grid">
-    ${detail("主要角色", primary.role)}
-    ${detail("部门组织", primary.dept)}
+    ${detail("主要角色", escapeHtml(primary.role))}
+    ${detail("部门组织", escapeHtml(primary.dept))}
     ${detail("来源", primary.outsourced ? "外包" : "内部")}
     ${detail("参与项目", items.length)}
     ${detail("总投入比例", `${Math.round(totalRatio * 100)}%`)}
@@ -1080,7 +1080,7 @@ export function openPerson(personName) {
     <h2>项目负荷贡献拆解</h2>
     <div class="table-wrap"><table>
       <thead><tr><th>项目</th><th>阶段</th><th>复杂度</th><th>角色</th><th>投入比例</th><th>负荷贡献</th><th>项目健康</th></tr></thead>
-      <tbody>${items.map((item) => `<tr><td><strong>${item.project.name}</strong></td><td>${item.project.status}</td><td>${item.project.complexity}</td><td>${item.role}</td><td>${Math.round(item.timeRatio * 100)}%</td><td>${item.load.toFixed(2)}</td><td>${badge(item.project.health)}</td></tr>`).join("")}</tbody>
+      <tbody>${items.map((item) => `<tr><td><strong>${escapeHtml(item.project.name)}</strong></td><td>${escapeHtml(item.project.status)}</td><td>${item.project.complexity}</td><td>${escapeHtml(item.role)}</td><td>${Math.round(item.timeRatio * 100)}%</td><td>${item.load.toFixed(2)}</td><td>${badge(item.project.health)}</td></tr>`).join("")}</tbody>
     </table></div>
   </section>`;
   $("#drawer-backdrop").hidden = false;
