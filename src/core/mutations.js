@@ -47,6 +47,14 @@ function prevMilestone(m) {
   return idx > 0 ? peers[idx - 1] : null;
 }
 
+function nextMilestone(m) {
+  const peers = milestones
+    .filter((x) => x.projectId === m.projectId)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const idx = peers.findIndex((x) => x.id === m.id);
+  return idx >= 0 && idx < peers.length - 1 ? peers[idx + 1] : null;
+}
+
 /**
  * Update one or more fields on a milestone.
  * planned_* changes require a non-empty reason.
@@ -66,6 +74,14 @@ export async function updateMilestone(id, patch, reason = "") {
       if (new Date(patch.actual_end_date) < new Date(prev.actual_end_date)) {
         throw new Error(
           `actual_end_date (${patch.actual_end_date}) 不能早于上一里程碑的 actual_end_date (${prev.actual_end_date})`
+        );
+      }
+    }
+    const next = nextMilestone(m);
+    if (next?.actual_end_date) {
+      if (new Date(patch.actual_end_date) > new Date(next.actual_end_date)) {
+        throw new Error(
+          `actual_end_date (${patch.actual_end_date}) 不能晚于下一里程碑的 actual_end_date (${next.actual_end_date})`
         );
       }
     }
