@@ -20,6 +20,7 @@ import {
   peopleCard,
   peopleView,
   resourceOverviewView,
+  sortedPeople,
   workloadView,
 } from "../views/resource.js";
 
@@ -397,6 +398,21 @@ function bindEvents() {
       return;
     }
 
+    const peopleSortChip = event.target.closest("[data-people-sort]");
+    if (peopleSortChip) {
+      state.resourceFilters.peopleSort = peopleSortChip.dataset.peopleSort;
+      document.querySelectorAll(".rv-sort-chip").forEach((chip) => {
+        chip.classList.toggle("active", chip.dataset.peopleSort === state.resourceFilters.peopleSort);
+      });
+      const term = document.getElementById("people-search")?.value.trim().toLowerCase() ?? "";
+      const rows = personStats().filter((person) =>
+        [person.person, person.role, person.dept].join(" ").toLowerCase().includes(term)
+      );
+      const grid = document.getElementById("people-grid");
+      if (grid) grid.innerHTML = sortedPeople(rows, state.resourceFilters.peopleSort).map((person) => peopleCard(person)).join("");
+      return;
+    }
+
     if (!event.target.closest(".gantt-group-control")) {
       document.querySelectorAll("[data-groupby-menu],[data-sortby-menu]").forEach(m => { m.hidden = true; });
       document.querySelectorAll("[data-groupby-toggle],[data-sortby-toggle]").forEach(t => {
@@ -433,7 +449,7 @@ function bindEvents() {
       return;
     }
     if (actionName === "reset-resource-filters") {
-      state.resourceFilters = { system: "all", role: "all", outsource: "all", projectFocus: state.resourceFilters.projectFocus, biz: "all", family: "all", dept: "all", status: "all", health: "all" };
+      state.resourceFilters = { system: "all", role: "all", outsource: "all", projectFocus: state.resourceFilters.projectFocus, biz: "all", family: "all", dept: "all", status: "all", health: "all", peopleSort: state.resourceFilters.peopleSort };
       render();
       return;
     }
@@ -689,7 +705,8 @@ function bindEvents() {
       const rows = personStats().filter((person) =>
         [person.person, person.role, person.dept].join(" ").toLowerCase().includes(term)
       );
-      $("#people-grid").innerHTML = rows.map((person) => peopleCard(person)).join("");
+      const sorted = sortedPeople(rows, state.resourceFilters.peopleSort);
+      $("#people-grid").innerHTML = sorted.map((person) => peopleCard(person)).join("");
     }
   });
 
@@ -840,7 +857,7 @@ function bindEvents() {
 
   $("#reset-filters").addEventListener("click", () => {
     state.filters = { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "family", includeArchived: false, granularity: "month", sortBy: "default" };
-    state.resourceFilters = { system: "all", role: "all", outsource: "all", projectFocus: null, biz: "all", family: "all", dept: "all", status: "all", health: "all" };
+    state.resourceFilters = { system: "all", role: "all", outsource: "all", projectFocus: null, biz: "all", family: "all", dept: "all", status: "all", health: "all", peopleSort: "load" };
     render();
   });
 }

@@ -961,6 +961,7 @@ export function peopleView() {
   const high = people.filter(p => p.load >= loadThresholds.mid).length;
   const overallocated = people.filter(p => p.ratio > 1).length;
   const avgProjects = totalPeople ? (people.reduce((s, p) => s + p.projects.length, 0) / totalPeople).toFixed(1) : '0';
+  const peopleSort = state.resourceFilters.peopleSort || "load";
 
   return `<div class="resource-workspace people-index-workspace">
     <div class="hero-strip">
@@ -998,16 +999,16 @@ export function peopleView() {
         <div class="panel-header" style="gap:10px"><span class="panel-title">人员索引</span><span class="panel-badge info">${totalPeople} 人</span></div>
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
           <div class="rv-sort">
-            <button class="rv-sort-chip active" data-people-sort="load">负荷 ↓</button>
-            <button class="rv-sort-chip" data-people-sort="ratio">工时占比</button>
-            <button class="rv-sort-chip" data-people-sort="projects">项目数</button>
-            <button class="rv-sort-chip" data-people-sort="name">姓名</button>
+            <button class="rv-sort-chip${peopleSort === "load" ? " active" : ""}" data-people-sort="load">负荷 ↓</button>
+            <button class="rv-sort-chip${peopleSort === "ratio" ? " active" : ""}" data-people-sort="ratio">工时占比</button>
+            <button class="rv-sort-chip${peopleSort === "projects" ? " active" : ""}" data-people-sort="projects">项目数</button>
+            <button class="rv-sort-chip${peopleSort === "name" ? " active" : ""}" data-people-sort="name">姓名</button>
           </div>
           <input class="rv-people-search" id="people-search" placeholder="搜索人员、角色、部门…">
         </div>
       </div>
       <div class="rv-people-grid" id="people-grid">
-        ${[...people].sort((a, b) => b.load - a.load).map(person => peopleCard(person)).join('')}
+        ${sortedPeople(people, peopleSort).map(person => peopleCard(person)).join('')}
       </div>
     </div>
   </div>`;
