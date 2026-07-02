@@ -5,7 +5,8 @@ import { $, debounce, escapeHtml } from "../core/utils.js";
 import { allocations, apiImportAllocations, apiImportMilestones, apiImportProjects, apiUpsertPerson, apiDeletePerson, apiSaveSettings, appSettings, bootstrap, milestones, personInfo, projects } from "../core/data-store.js";
 import { parseMilestoneCsv, parseMilestoneXlsx, parseProjectCsv, parseResourceAllocationMatrixCsv, parseResourceAllocationXlsx } from "../core/importers.js";
 import { state } from "../state/app-state.js";
-import { downloadProjectTemplate, downloadResourceTemplate, personInfoView, settingsView, uploadView } from "../views/admin.js";
+import { downloadProjectTemplate, downloadResourceTemplate, milestoneTemplateRow, personInfoView, settingsView, uploadView } from "../views/admin.js";
+import { MILESTONE_TEMPLATE_TYPES, normalizeMilestoneTemplates } from "../core/milestone-templates.js";
 import { dashboardView, drawerTabContent, openProject, projectsView, timeline } from "../views/projects.js";
 import { cockpitView } from "../views/cockpit.js";
 import { appendComment, setProjectOverride, updateMilestone } from "../core/mutations.js";
@@ -316,7 +317,29 @@ function collectSettingsPayload() {
       node[key] = raw;
     }
   });
+  if (document.getElementById("milestone-template-list")) {
+    const rows = [...document.querySelectorAll("[data-template-row]")].map((row) => ({
+      name: row.querySelector('[data-template-field="name"]')?.value ?? "",
+      type: row.querySelector('[data-template-field="type"]')?.value ?? "",
+      enabled: row.dataset.enabled !== "false",
+    }));
+    payload.milestoneTemplates = normalizeMilestoneTemplates(rows);
+  }
   return payload;
+}
+
+function markSettingsDirty() {
+  const bar = document.querySelector(".settings-save-bar");
+  if (!bar || bar.classList.contains("dirty")) return;
+  bar.classList.add("dirty");
+  const hint = bar.querySelector(".settings-hint");
+  if (hint) hint.textContent = "有未保存的更改，点击「保存设置」生效";
+}
+
+function renumberTemplateRows() {
+  document.querySelectorAll("[data-template-row] > span").forEach((badge, index) => {
+    badge.textContent = String(index + 1);
+  });
 }
 
 function bindEvents() {
@@ -485,7 +508,32 @@ function bindEvents() {
       }
       return;
     }
-    if (actionName === "add-milestone-template") return toast("里程碑节点已新增");
+    if (actionName === "add-milestone-template") {
+      const list = document.getElementById("milestone-template-list");
+      if (!list) return;
+      list.insertAdjacentHTML("beforeend", milestoneTemplateRow({ name: "", type: MILESTONE_TEMPLATE_TYPES[0], enabled: true }, list.children.length));
+      list.lastElementChild?.querySelector('[data-template-field="name"]')?.focus();
+      markSettingsDirty();
+      return;
+    }
+    if (actionName === "template-toggle") {
+      const row = action.closest("[data-template-row]");
+      if (!row) return;
+      const enabled = row.dataset.enabled === "false";
+      row.dataset.enabled = String(enabled);
+      row.classList.toggle("disabled", !enabled);
+      action.textContent = enabled ? "停用" : "启用";
+      markSettingsDirty();
+      return;
+    }
+    if (actionName === "template-delete") {
+      const row = action.closest("[data-template-row]");
+      if (!row) return;
+      row.remove();
+      renumberTemplateRows();
+      markSettingsDirty();
+      return;
+    }
     if (actionName === "save-override") {
       const projectId = action.dataset.projectId;
       const value = document.getElementById("override-health-select")?.value ?? "";
@@ -675,6 +723,8 @@ function bindEvents() {
   let lastSyncAt = Date.now();
   async function syncFromServer({ force = false } = {}) {
     if (syncing) return;
+    // A focus-triggered re-render would discard unsaved settings edits.
+    if (!force && document.querySelector(".settings-save-bar.dirty")) return;
     if (!force && Date.now() < suppressSyncUntil) return;
     if (!force && Date.now() - lastSyncAt < 1500) return; // de-dupe focus+visibility
     syncing = true;
@@ -704,6 +754,10 @@ function bindEvents() {
   }, 150);
 
   document.addEventListener("input", (event) => {
+    if (event.target.closest("[data-settings-path],[data-template-field]")) {
+      markSettingsDirty();
+      return;
+    }
     if (event.target.id === "project-search") {
       const clearBtn = document.querySelector("[data-action='clear-search']");
       if (clearBtn) clearBtn.hidden = !event.target.value;
@@ -746,6 +800,11 @@ function bindEvents() {
   });
 
   document.addEventListener("change", async (event) => {
+    if (event.target.closest("[data-settings-path],[data-template-field]")) {
+      markSettingsDirty();
+      return;
+    }
+
     // ── CSV/Excel import (admin upload dropzones) ──────────────────────────
     const importKind = event.target.dataset.import;
     if (importKind) {

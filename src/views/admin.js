@@ -4,6 +4,7 @@ import { downloadCsvTemplate } from "../core/files.js";
 import { milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, resourceTemplateSchema } from "../core/template-schemas.js";
 import { badge, escapeHtml, loadFor } from "../core/utils.js";
 import { gateDefinitions, gradeDefinitions, healthDefinitions } from "../config/definitions.js";
+import { MILESTONE_TEMPLATE_TYPES, effectiveMilestoneTemplates } from "../core/milestone-templates.js";
 import { state } from "../state/app-state.js";
 
 export function uploadView() {
@@ -199,16 +200,12 @@ export function settingsView() {
       </div>
     </section>
 
-    <div class="settings-save-bar settings-wide">
-      <button class="primary-button" data-action="save-settings">保存设置</button>
-      <span class="settings-hint">「影响计算」参数保存后立即生效；「仅记录」参数保存后备查</span>
-    </div>
-
     <div class="settings-section-sep settings-wide">模板配置</div>
 
     <section class="panel settings-panel settings-wide">
       <div class="settings-head"><h2>里程碑模板</h2><button class="ghost-button" data-action="add-milestone-template">新增节点</button></div>
-      <div class="template-list">${milestoneNames.map((name, index) => `<div class="template-row"><span>${index + 1}</span><input value="${escapeHtml(name)}" /><select><option>关键节点</option><option>普通节点</option></select><button class="small-button">启用</button></div>`).join("")}</div>
+      <div class="template-list" id="milestone-template-list">${effectiveMilestoneTemplates(s, milestoneNames).map((template, index) => milestoneTemplateRow(template, index)).join("")}</div>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">模板随「保存设置」一并保存；空名称的行保存时自动忽略，停用的节点保留配置备查。</p>
     </section>
 
     <section class="panel settings-panel settings-wide">
@@ -225,6 +222,11 @@ export function settingsView() {
         </label>
       </div>
     </section>
+
+    <div class="settings-save-bar settings-wide">
+      <button class="primary-button" data-action="save-settings">保存设置</button>
+      <span class="settings-hint">「影响计算」参数保存后立即生效；模板与「仅记录」参数保存后备查</span>
+    </div>
 
     <div class="settings-section-sep settings-wide">参考定义（只读）</div>
 
@@ -249,6 +251,18 @@ export function settingsView() {
         <tbody>${gateDefinitions.map((g) => `<tr><td><strong>${g.value}</strong></td><td>${g.label}</td><td>${g.deliverables}</td></tr>`).join("")}</tbody>
       </table>
     </section>
+  </div>`;
+}
+
+export function milestoneTemplateRow(template, index) {
+  return `<div class="template-row${template.enabled ? "" : " disabled"}" data-template-row data-enabled="${template.enabled}">
+    <span>${index + 1}</span>
+    <input data-template-field="name" value="${escapeHtml(template.name)}" placeholder="节点名称" />
+    <select data-template-field="type">${MILESTONE_TEMPLATE_TYPES.map((type) => `<option${type === template.type ? " selected" : ""}>${type}</option>`).join("")}</select>
+    <div class="template-row-actions">
+      <button class="small-button" data-action="template-toggle">${template.enabled ? "停用" : "启用"}</button>
+      <button class="small-button danger" data-action="template-delete">删除</button>
+    </div>
   </div>`;
 }
 

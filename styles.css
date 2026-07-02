@@ -2318,6 +2318,21 @@ button.chart-bar:hover strong {
   font-weight: 800;
 }
 
+.template-row-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.template-row.disabled input,
+.template-row.disabled select {
+  opacity: 0.55;
+}
+
+.small-button.danger {
+  color: var(--red, #c0392b);
+}
+
 .dropzone strong {
   font-size: 15px;
 }
@@ -2430,6 +2445,15 @@ button.chart-bar:hover strong {
 .settings-hint {
   font-size: 12px;
   color: var(--muted);
+}
+
+.settings-save-bar.dirty {
+  border-color: var(--primary);
+}
+
+.settings-save-bar.dirty .settings-hint {
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .settings-form label {
@@ -2681,7 +2705,7 @@ button.chart-bar:hover strong {
   }
 
   .template-row select,
-  .template-row button {
+  .template-row .template-row-actions {
     grid-column: 2 / 3;
   }
 }
