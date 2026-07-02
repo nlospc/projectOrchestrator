@@ -14,6 +14,14 @@ function roleCategory(role) {
   return ROLE_TO_CATEGORY[role] ?? "开发";
 }
 
+// Due window predicate shared by cockpitMetrics (wave) and projectsViewMetrics
+// (milestonesDue30). D-2: 0 <= days-until-due <= n -- already-overdue,
+// unfinished milestones are excluded (they surface via 立即行动/slipping).
+function isDueWithin(milestone, today, n) {
+  const days = Math.round((new Date(milestone.planned_end_date) - today) / 86400000);
+  return days >= 0 && days <= n;
+}
+
 // ─── Existing selectors (unchanged) ──────────────────────────────────────────
 
 export function filteredProjects() {
@@ -304,11 +312,9 @@ export function cockpitMetrics(projectList = filteredProjects()) {
   const upcoming = milestones.filter(m =>
     !m.actual_end_date && projectIds.has(m.projectId)
   );
-  const daysUntil = d => Math.round((new Date(d) - today) / 86400000);
-  const inWindow = (m, n) => { const days = daysUntil(m.planned_end_date); return days >= 0 && days <= n; };
-  const d30 = upcoming.filter(m => inWindow(m, 30)).length;
-  const d60 = upcoming.filter(m => inWindow(m, 60)).length;
-  const d90 = upcoming.filter(m => inWindow(m, 90)).length;
+  const d30 = upcoming.filter(m => isDueWithin(m, today, 30)).length;
+  const d60 = upcoming.filter(m => isDueWithin(m, today, 60)).length;
+  const d90 = upcoming.filter(m => isDueWithin(m, today, 90)).length;
 
   // 1.4 Concentration Risk
   const stats = personStats(projectList);
@@ -450,10 +456,7 @@ export function projectsViewMetrics(projectList = filteredProjects()) {
   const upcoming = milestones.filter(m =>
     !m.actual_end_date && projectIds.has(m.projectId)
   );
-  const milestonesDue30 = upcoming.filter(m => {
-    const days = Math.round((new Date(m.planned_end_date) - today) / 86400000);
-    return days >= 0 && days <= 30;
-  }).length;
+  const milestonesDue30 = upcoming.filter(m => isDueWithin(m, today, 30)).length;
 
   return { total, red, yellow, green, slippingCount, maxDeviation, milestonesDue30 };
 }
