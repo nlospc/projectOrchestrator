@@ -136,6 +136,18 @@ export function updateMilestone(id, patch, reason = '', expectedRev = null) {
         );
       }
     }
+    const next = db.prepare(`
+      SELECT * FROM milestones
+      WHERE project_id = ? AND sort_order > ?
+      ORDER BY sort_order ASC LIMIT 1
+    `).get(m.project_id, m.sort_order);
+    if (next?.actual_end_date) {
+      if (new Date(patch.actual_end_date) > new Date(next.actual_end_date)) {
+        throw new Error(
+          `actual_end_date (${patch.actual_end_date}) 不能晚于下一里程碑的 actual_end_date (${next.actual_end_date})`
+        );
+      }
+    }
   }
 
   const now = new Date().toISOString();
