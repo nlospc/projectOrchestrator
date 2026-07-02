@@ -17,12 +17,19 @@ export function loadFor(allocation) {
   return allocation.timeRatio * Math.sqrt(complexity / 5) * roleWeight;
 }
 
-export function loadClass(value) {
+// Single source for the configured (or default) low/mid load thresholds.
+// Read by loadClass() and by every view that classifies or labels load.
+export function getLoadThresholds() {
   const t = appSettings.payload.loadThresholds;
-  const highThreshold = (t?.mid != null && Number.isFinite(t.mid)) ? t.mid : 1.2;
-  const medThreshold  = (t?.low != null && Number.isFinite(t.low)) ? t.low : 0.6;
-  if (value >= highThreshold) return "high";
-  if (value >= medThreshold)  return "medium";
+  const mid = (t?.mid != null && Number.isFinite(t.mid)) ? t.mid : 1.2;
+  const low = (t?.low != null && Number.isFinite(t.low)) ? t.low : 0.6;
+  return { low, mid };
+}
+
+export function loadClass(value) {
+  const { low, mid } = getLoadThresholds();
+  if (value >= mid) return "high";
+  if (value >= low) return "medium";
   return "low";
 }
 

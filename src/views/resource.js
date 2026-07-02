@@ -1,7 +1,7 @@
 import { allocations, projects } from "../core/data-store.js";
 import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { csvValue, downloadTextFile } from "../core/files.js";
-import { $, badge, detail, escapeHtml, kpi, loadClass, loadFor, unique } from "../core/utils.js";
+import { $, badge, detail, escapeHtml, getLoadThresholds, kpi, loadClass, loadFor, unique } from "../core/utils.js";
 import { busFactorRows, keyPeopleRiskRows, personStats, projectAllocations, resourceProjects } from "../core/selectors.js";
 import { state } from "../state/app-state.js";
 
@@ -13,9 +13,10 @@ export function resourceOverviewView() {
   const overallocated = people.filter((p) => p.ratio > 1).sort((a, b) => b.ratio - a.ratio);
   const projectCount = list.length;
   const activeProjects = list.filter((p) => p.status !== '项目暂停').length;
-  const high = stats.filter((p) => p.load >= 1.2).length;
-  const mid = stats.filter((p) => p.load >= 0.6 && p.load < 1.2).length;
-  const low = stats.filter((p) => p.load < 0.6).length;
+  const loadThresholds = getLoadThresholds();
+  const high = stats.filter((p) => p.load >= loadThresholds.mid).length;
+  const mid = stats.filter((p) => p.load >= loadThresholds.low && p.load < loadThresholds.mid).length;
+  const low = stats.filter((p) => p.load < loadThresholds.low).length;
   const totalPeople = people.length;
   const outsourcedCount = people.filter((p) => p.outsourced).length;
   const internalCount = totalPeople - outsourcedCount;
@@ -48,7 +49,7 @@ export function resourceOverviewView() {
       <div class="hero-card clickable" data-route="workload">
         <span class="hero-label">高负荷人员</span>
         <span class="hero-value${high > 0 ? ' text-danger' : ''}">${high}</span>
-        <span class="hero-sub">load ≥ 1.2</span>
+        <span class="hero-sub">load ≥ ${loadThresholds.mid}</span>
       </div>
       <div class="hero-card clickable" data-route="workload">
         <span class="hero-label">超分配人员</span>
@@ -109,17 +110,17 @@ export function resourceOverviewView() {
           <div class="workforce-stat">
             <div class="workforce-value" style="color: var(--green);">${low}</div>
             <div class="workforce-bar"><div class="workforce-fill G" style="width: ${totalPeople ? Math.round((low / totalPeople) * 100) : 0}%;"></div></div>
-            <div class="workforce-label">正常负荷<br><span>&lt; 0.6</span></div>
+            <div class="workforce-label">正常负荷<br><span>&lt; ${loadThresholds.low}</span></div>
           </div>
           <div class="workforce-stat">
             <div class="workforce-value" style="color: var(--yellow);">${mid}</div>
             <div class="workforce-bar"><div class="workforce-fill Y" style="width: ${totalPeople ? Math.round((mid / totalPeople) * 100) : 0}%;"></div></div>
-            <div class="workforce-label">中等负荷<br><span>0.6 – 1.2</span></div>
+            <div class="workforce-label">中等负荷<br><span>${loadThresholds.low} – ${loadThresholds.mid}</span></div>
           </div>
           <div class="workforce-stat">
             <div class="workforce-value" style="color: var(--red);">${high}</div>
             <div class="workforce-bar"><div class="workforce-fill R" style="width: ${totalPeople ? Math.round((high / totalPeople) * 100) : 0}%;"></div></div>
-            <div class="workforce-label">超负荷<br><span>≥ 1.2</span></div>
+            <div class="workforce-label">超负荷<br><span>≥ ${loadThresholds.mid}</span></div>
           </div>
         </div>
       </div>
@@ -143,7 +144,7 @@ export function resourceOverviewView() {
           </div>
           <div class="conc-stat clickable" data-route="workload">
             <div class="conc-stat-value${high > 0 ? ' danger' : ''}">${high}</div>
-            <div class="conc-stat-label">超负荷人员<br>(负荷 ≥ 1.2)</div>
+            <div class="conc-stat-label">超负荷人员<br>(负荷 ≥ ${loadThresholds.mid})</div>
           </div>
         </div>
         <hr class="panel-divider">
@@ -201,10 +202,10 @@ export function resourceKpi(label, value, hint, status = "") {
   </article>`;
 }
 
+const LOAD_LEVEL_LABELS = { high: { key: "R", label: "高负荷" }, medium: { key: "Y", label: "中负荷" }, low: { key: "G", label: "低负荷" } };
+
 export function loadLevel(value) {
-  if (value >= 1.2) return { key: "R", label: "高负荷" };
-  if (value >= 0.6) return { key: "Y", label: "中负荷" };
-  return { key: "G", label: "低负荷" };
+  return LOAD_LEVEL_LABELS[loadClass(value)];
 }
 
 export function personChip(person, interactive = true) {
@@ -724,7 +725,8 @@ export function workloadView() {
   const stats = personStats(list);
   const projectIds = list.map((project) => project.id);
   const all = projectAllocations(list);
-  const high = stats.filter((person) => person.load >= 1.2).length;
+  const loadThresholds = getLoadThresholds();
+  const high = stats.filter((person) => person.load >= loadThresholds.mid).length;
   const totalRatio = all.reduce((sum, allocation) => sum + allocation.timeRatio, 0);
   const outsourcedRatio = all.length ? Math.round((all.filter((allocation) => allocation.outsourced).length / all.length) * 100) : 0;
 
@@ -748,7 +750,7 @@ export function workloadView() {
       <div class="hero-card clickable" data-route="people">
         <span class="hero-label">高负载人员</span>
         <span class="hero-value${high > 0 ? ' text-danger' : ''}">${high}</span>
-        <span class="hero-sub">load >= 1.2</span>
+        <span class="hero-sub">load >= ${loadThresholds.mid}</span>
       </div>
       <div class="hero-card clickable">
         <span class="hero-label">外包占比</span>
@@ -763,9 +765,9 @@ export function workloadView() {
       <div class="panel-header">
         <span class="panel-title">人员 x 项目 负荷热力</span>
         <div class="rv-seg-legend">
-          <span><i class="rv-seg-swatch G"></i>低 &lt; 0.6</span>
-          <span><i class="rv-seg-swatch Y"></i>中 0.6-1.2</span>
-          <span><i class="rv-seg-swatch R"></i>高 >= 1.2</span>
+          <span><i class="rv-seg-swatch G"></i>低 &lt; ${loadThresholds.low}</span>
+          <span><i class="rv-seg-swatch Y"></i>中 ${loadThresholds.low}-${loadThresholds.mid}</span>
+          <span><i class="rv-seg-swatch R"></i>高 >= ${loadThresholds.mid}</span>
         </div>
       </div>
       <p class="panel-hint">单元格显示投入比例 / 计算负荷；点击单元格或人员行查看贡献明细。</p>
@@ -940,7 +942,8 @@ export function peopleView() {
   const outsourcedCount = people.filter(p => p.outsourced).length;
   const internalCount = totalPeople - outsourcedCount;
   const externalPct = totalPeople ? Math.round((outsourcedCount / totalPeople) * 100) : 0;
-  const high = people.filter(p => p.load >= 1.2).length;
+  const loadThresholds = getLoadThresholds();
+  const high = people.filter(p => p.load >= loadThresholds.mid).length;
   const overallocated = people.filter(p => p.ratio > 1).length;
   const avgProjects = totalPeople ? (people.reduce((s, p) => s + p.projects.length, 0) / totalPeople).toFixed(1) : '0';
 
@@ -959,7 +962,7 @@ export function peopleView() {
       <div class="hero-card clickable" data-route="workload">
         <span class="hero-label">超负荷人员</span>
         <span class="hero-value${high > 0 ? ' text-danger' : ''}">${high}</span>
-        <span class="hero-sub">负荷 ≥ 1.2</span>
+        <span class="hero-sub">负荷 ≥ ${loadThresholds.mid}</span>
       </div>
       <div class="hero-card clickable" data-route="workload">
         <span class="hero-label">超分配人员</span>
@@ -1042,7 +1045,7 @@ export function openPerson(personName) {
     ${detail("参与项目", items.length)}
     ${detail("总投入比例", `${Math.round(totalRatio * 100)}%`)}
     ${detail("计算负荷", totalLoad.toFixed(2))}
-    ${detail("负荷等级", badge(totalLoad >= 1.2 ? "R" : totalLoad >= 0.6 ? "Y" : "G"))}
+    ${detail("负荷等级", badge(loadLevel(totalLoad).key))}
     ${detail("算法", "R2 workload")}
   </div>
   <section class="panel" style="margin-top:16px">

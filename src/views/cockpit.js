@@ -1,5 +1,5 @@
 import { cockpitMetrics } from "../core/selectors.js";
-import { escapeHtml } from "../core/utils.js";
+import { escapeHtml, getLoadThresholds } from "../core/utils.js";
 
 export function cockpitView() {
   const m = cockpitMetrics();
@@ -8,6 +8,7 @@ export function cockpitView() {
   const ragTotal = confidence.red + confidence.yellow + confidence.green;
   const waveMax = Math.max(wave.d30, wave.d60, wave.d90, 1);
   const totalPeople = workforce.low + workforce.mid + workforce.high;
+  const loadThresholds = getLoadThresholds();
 
   return `
     <div class="hero-strip">
@@ -37,7 +38,7 @@ export function cockpitView() {
       <div class="hero-card clickable" data-route="workload">
         <span class="hero-label">超负荷人员</span>
         <span class="hero-value${concentration.overloaded > 0 ? " text-danger" : ""}">${concentration.overloaded}</span>
-        <span class="hero-sub">负荷 ≥ 1.2 / ${totalPeople} 人</span>
+        <span class="hero-sub">负荷 ≥ ${loadThresholds.mid} / ${totalPeople} 人</span>
       </div>
       <div class="hero-card clickable" data-route="busfactor">
         <span class="hero-label">单点故障项目</span>
@@ -101,7 +102,7 @@ export function cockpitView() {
         <div class="conc-stats">
           <div class="conc-stat clickable" data-route="busfactor"><div class="conc-stat-value${concentration.bf1Count > 0 ? " danger" : ""}">${concentration.bf1Count}</div><div class="conc-stat-label">BF=1 项目<br>(单点故障)</div></div>
           <div class="conc-stat clickable" data-route="workload"><div class="conc-stat-value${concentration.overAllocated > 0 ? " warning" : ""}">${concentration.overAllocated}</div><div class="conc-stat-label">超分配人员<br>(投入 &gt; 100%)</div></div>
-          <div class="conc-stat clickable" data-route="workload"><div class="conc-stat-value${concentration.overloaded > 0 ? " danger" : ""}">${concentration.overloaded}</div><div class="conc-stat-label">超负荷人员<br>(负荷 ≥ 1.2)</div></div>
+          <div class="conc-stat clickable" data-route="workload"><div class="conc-stat-value${concentration.overloaded > 0 ? " danger" : ""}">${concentration.overloaded}</div><div class="conc-stat-label">超负荷人员<br>(负荷 ≥ ${loadThresholds.mid})</div></div>
         </div>
         <div class="cockpit-divider"></div>
         <div class="panel-header"><span class="panel-title sub-title">高风险关键人员</span></div>
@@ -109,7 +110,7 @@ export function cockpitView() {
           ${concentration.keyPersons.length ? concentration.keyPersons.map(kp => `<div class="key-person-row clickable" data-open-person="${escapeHtml(kp.person)}">
             <span><span class="key-person-name">${escapeHtml(kp.person)}</span> <span class="key-person-role">· ${escapeHtml(kp.role)}</span></span>
             <span class="key-person-ratio">${Math.round(kp.ratio * 100)}%</span>
-            <span class="key-person-load ${kp.load >= 1.2 ? "load-high" : kp.load >= 0.6 ? "load-med" : ""}">${kp.load.toFixed(2)}</span>
+            <span class="key-person-load ${kp.load >= loadThresholds.mid ? "load-high" : kp.load >= loadThresholds.low ? "load-med" : ""}">${kp.load.toFixed(2)}</span>
           </div>`).join("") : '<div class="empty-state small"><span class="empty-icon">✓</span><p>暂无高风险关键人员</p></div>'}
         </div>
       </div>
@@ -131,9 +132,9 @@ export function cockpitView() {
         <div class="cockpit-divider"></div>
         <div class="panel-header"><span class="panel-title">人力利用率</span></div>
         <div class="workforce-grid">
-          <div class="workforce-stat"><div class="workforce-value" style="color: var(--green);">${workforce.low}</div><div class="workforce-bar"><div class="workforce-fill G" style="width: ${totalPeople ? Math.round((workforce.low / totalPeople) * 100) : 0}%;"></div></div><div class="workforce-label">正常负荷<br><span>&lt; 0.6</span></div></div>
-          <div class="workforce-stat"><div class="workforce-value" style="color: var(--yellow);">${workforce.mid}</div><div class="workforce-bar"><div class="workforce-fill Y" style="width: ${totalPeople ? Math.round((workforce.mid / totalPeople) * 100) : 0}%;"></div></div><div class="workforce-label">中等负荷<br><span>0.6 – 1.2</span></div></div>
-          <div class="workforce-stat"><div class="workforce-value" style="color: var(--red);">${workforce.high}</div><div class="workforce-bar"><div class="workforce-fill R" style="width: ${totalPeople ? Math.round((workforce.high / totalPeople) * 100) : 0}%;"></div></div><div class="workforce-label">超负荷<br><span>≥ 1.2</span></div></div>
+          <div class="workforce-stat"><div class="workforce-value" style="color: var(--green);">${workforce.low}</div><div class="workforce-bar"><div class="workforce-fill G" style="width: ${totalPeople ? Math.round((workforce.low / totalPeople) * 100) : 0}%;"></div></div><div class="workforce-label">正常负荷<br><span>&lt; ${loadThresholds.low}</span></div></div>
+          <div class="workforce-stat"><div class="workforce-value" style="color: var(--yellow);">${workforce.mid}</div><div class="workforce-bar"><div class="workforce-fill Y" style="width: ${totalPeople ? Math.round((workforce.mid / totalPeople) * 100) : 0}%;"></div></div><div class="workforce-label">中等负荷<br><span>${loadThresholds.low} – ${loadThresholds.mid}</span></div></div>
+          <div class="workforce-stat"><div class="workforce-value" style="color: var(--red);">${workforce.high}</div><div class="workforce-bar"><div class="workforce-fill R" style="width: ${totalPeople ? Math.round((workforce.high / totalPeople) * 100) : 0}%;"></div></div><div class="workforce-label">超负荷<br><span>≥ ${loadThresholds.mid}</span></div></div>
         </div>
       </div>
     </div>`;

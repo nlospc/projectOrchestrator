@@ -35,9 +35,9 @@ test("cockpitMetrics workforce buckets honor configured loadThresholds", () => {
   resetStore();
   const p = { id: "P1", name: "P1", archived: false, biz: "B", dept: "D", status: "产品开发", complexity: 3, pm: "PM" };
   projects.push(p);
-  personInfo.push({ name: "Alice", role: "开发", outsourced: false });
+  personInfo.push({ name: "Alice", role: "后端", outsourced: false });
   allocations.push({
-    projectId: "P1", projectName: "P1", person: "Alice", role: "开发",
+    projectId: "P1", projectName: "P1", person: "Alice", role: "后端",
     outsourced: false, timeRatio: 0.9, complexity: 3, status: "产品开发",
   });
 

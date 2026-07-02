@@ -1,7 +1,7 @@
 import { allocations, appSettings, confirmedLinks, milestones, projects } from './data-store.js';
 import { state } from "../state/app-state.js";
 import { computeSegments } from "./milestones.js";
-import { effectiveHealth, loadFor, parseDate } from "./utils.js";
+import { effectiveHealth, getLoadThresholds, loadFor, parseDate } from "./utils.js";
 
 // ─── Role-category mapping for projectResourceSummary ────────────────────────
 // Roles not listed here fall into "开发" (catch-all for technical staff).
@@ -257,6 +257,7 @@ export function keyPeopleRiskRows(rows) {
 export function cockpitMetrics(projectList = filteredProjects()) {
   const today = state.today ?? new Date();
   const projectIds = new Set(projectList.map(p => p.id));
+  const loadThresholds = getLoadThresholds();
 
   // 1.1 Delivery Confidence
   let red = 0, yellow = 0, green = 0;
@@ -321,7 +322,7 @@ export function cockpitMetrics(projectList = filteredProjects()) {
   const bfRows = busFactorRows();
   const bf1Count = bfRows.filter(r => r.bf <= 1).length;
   const overAllocated = stats.filter(p => p.ratio > 1).length;
-  const overloaded = stats.filter(p => p.load >= 1.2).length;
+  const overloaded = stats.filter(p => p.load >= loadThresholds.mid).length;
   const keyPersons = keyPeopleRiskRows(bfRows).slice(0, 5).map(kp => {
     const personInfo = stats.find(s => s.person === kp.person);
     return {
@@ -360,9 +361,9 @@ export function cockpitMetrics(projectList = filteredProjects()) {
   }));
 
   // 1.7 Workforce Utilization
-  const low = stats.filter(p => p.load < 0.6).length;
-  const mid = stats.filter(p => p.load >= 0.6 && p.load < 1.2).length;
-  const high = stats.filter(p => p.load >= 1.2).length;
+  const low = stats.filter(p => p.load < loadThresholds.low).length;
+  const mid = stats.filter(p => p.load >= loadThresholds.low && p.load < loadThresholds.mid).length;
+  const high = stats.filter(p => p.load >= loadThresholds.mid).length;
 
   return {
     confidence: { index, red, yellow, green, delta: null },
