@@ -1,4 +1,4 @@
-import { allocations, confirmedLinks, milestones, projects } from './data-store.js';
+import { allocations, appSettings, confirmedLinks, milestones, projects } from './data-store.js';
 import { state } from "../state/app-state.js";
 import { computeSegments } from "./milestones.js";
 import { effectiveHealth, loadFor, parseDate } from "./utils.js";
@@ -124,7 +124,7 @@ export function personStats(projectList = resourceProjects()) {
  * Compute project-level RAG from milestone segments.
  *
  * R — any milestone is scenario④ (overdue, A absent) OR scenario② with
- *     deviationDays > state.settings.delayRedThresholdDays
+ *     deviationDays > appSettings.payload.healthRules.deviationDays
  * Y — any milestone is scenario⑤ (eroded), and no R condition fires
  * G — all milestones are scenario① or ③
  * gray — project.archived === true OR no milestones
@@ -140,7 +140,7 @@ export function projectRag(project, today) {
     .sort((a, b) => a.sortOrder - b.sortOrder);
   if (ms.length === 0) return "gray";
 
-  const threshold = state.settings?.delayRedThresholdDays ?? 7;
+  const threshold = appSettings.payload?.healthRules?.deviationDays ?? 7;
   const segments = computeSegments(ms, project, today);
 
   let hasYellow = false;
