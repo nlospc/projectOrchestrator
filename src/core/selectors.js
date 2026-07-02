@@ -305,9 +305,10 @@ export function cockpitMetrics(projectList = filteredProjects()) {
     !m.actual_end_date && projectIds.has(m.projectId)
   );
   const daysUntil = d => Math.round((new Date(d) - today) / 86400000);
-  const d30 = upcoming.filter(m => daysUntil(m.planned_end_date) <= 30).length;
-  const d60 = upcoming.filter(m => daysUntil(m.planned_end_date) <= 60).length;
-  const d90 = upcoming.filter(m => daysUntil(m.planned_end_date) <= 90).length;
+  const inWindow = (m, n) => { const days = daysUntil(m.planned_end_date); return days >= 0 && days <= n; };
+  const d30 = upcoming.filter(m => inWindow(m, 30)).length;
+  const d60 = upcoming.filter(m => inWindow(m, 60)).length;
+  const d90 = upcoming.filter(m => inWindow(m, 90)).length;
 
   // 1.4 Concentration Risk
   const stats = personStats(projectList);
@@ -451,7 +452,7 @@ export function projectsViewMetrics(projectList = filteredProjects()) {
   );
   const milestonesDue30 = upcoming.filter(m => {
     const days = Math.round((new Date(m.planned_end_date) - today) / 86400000);
-    return days <= 30;
+    return days >= 0 && days <= 30;
   }).length;
 
   return { total, red, yellow, green, slippingCount, maxDeviation, milestonesDue30 };
