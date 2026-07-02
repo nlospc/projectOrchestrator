@@ -6,6 +6,14 @@ import { appSettings } from "./data-store.js";
 
 export const $ = (selector) => document.querySelector(selector);
 
+export function debounce(fn, delayMs) {
+  let timer = null;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delayMs);
+  };
+}
+
 export function loadFor(allocation) {
   const status = allocation.status;
   const complexity = allocation.complexity ?? 3;
