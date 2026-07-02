@@ -1,5 +1,6 @@
 import { projectFilterRoutes, routeGroups, routes } from "../config/routes.js";
 import { filteredProjects, personStats } from "../core/selectors.js";
+import { applyResourceFilterCascade } from "../core/resource-filters.js";
 import { $ } from "../core/utils.js";
 import { allocations, apiImportAllocations, apiImportMilestones, apiImportProjects, apiUpsertPerson, apiDeletePerson, apiSaveSettings, appSettings, bootstrap, milestones, personInfo, projects } from "../core/data-store.js";
 import { parseMilestoneCsv, parseMilestoneXlsx, parseProjectCsv, parseResourceAllocationMatrixCsv, parseResourceAllocationXlsx } from "../core/importers.js";
@@ -827,19 +828,13 @@ function bindEvents() {
 
     const resourceFilter = event.target.closest("[data-resource-filter]");
     if (!resourceFilter) return;
-    const rfKey = resourceFilter.dataset.resourceFilter;
-    const rfVal = resourceFilter.value;
-    state.resourceFilters[rfKey] = rfVal;
-    // cascade: system → auto-set family; family → reset system if no longer in family
-    if (rfKey === "system" && rfVal !== "all") {
-      const hit = allocations.find(a => a.system === rfVal);
-      const proj = hit ? projects.find(p => p.id === hit.project_key) : null;
-      if (proj?.family) state.resourceFilters.family = proj.family;
-    } else if (rfKey === "family" && rfVal !== "all" && state.resourceFilters.system !== "all") {
-      const hit = allocations.find(a => a.system === state.resourceFilters.system);
-      const proj = hit ? projects.find(p => p.id === hit.project_key) : null;
-      if (!proj || proj.family !== rfVal) state.resourceFilters.system = "all";
-    }
+    applyResourceFilterCascade(
+      resourceFilter.dataset.resourceFilter,
+      resourceFilter.value,
+      state.resourceFilters,
+      allocations,
+      projects
+    );
     render();
   });
 

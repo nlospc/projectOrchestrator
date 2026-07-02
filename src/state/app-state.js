@@ -17,7 +17,3 @@ export const state = {
 if (!routes.some(([id]) => id === state.route)) {
   state.route = "cockpit";
 }
-
-if (!routes.some(([id]) => id === state.route)) {
-  state.route = "cockpit";
-}
