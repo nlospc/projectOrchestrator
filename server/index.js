@@ -22,7 +22,7 @@ seedIfEmpty();
 
 const app = express();
 app.set('etag', false);
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use('/api', (_req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.set('Pragma', 'no-cache');
