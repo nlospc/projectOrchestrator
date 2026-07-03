@@ -1,7 +1,6 @@
 import { allocations, projects } from "../core/data-store.js";
-import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { csvValue, downloadTextFile } from "../core/files.js";
-import { $, badge, detail, escapeHtml, getLoadThresholds, kpi, loadClass, loadFor, unique } from "../core/utils.js";
+import { $, badge, detail, escapeHtml, getLoadThresholds, getRoleWeights, getStatusWeights, kpi, loadClass, loadFor, unique } from "../core/utils.js";
 import { busFactorRows, keyPeopleRiskRows, personStats, projectAllocations, resourceProjects } from "../core/selectors.js";
 import { state } from "../state/app-state.js";
 
@@ -237,8 +236,8 @@ export function busyRankingRow(person, index, maxLoad) {
 }
 
 export function benchmarkParticipationMatrix() {
-  const statuses = Object.keys(statusWeights);
-  const rows = Object.entries(roleWeights);
+  const statuses = Object.keys(getStatusWeights());
+  const rows = Object.entries(getRoleWeights());
   return `<div class="table-wrap benchmark-table"><table>
     <thead><tr><th>角色 / 阶段</th>${statuses.map((status) => `<th>${status}</th>`).join("")}</tr></thead>
     <tbody>${rows.map(([role, weights]) => `<tr><td><strong>${role}</strong></td>${statuses.map((status) => {

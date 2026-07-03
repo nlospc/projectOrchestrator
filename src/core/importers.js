@@ -1,5 +1,5 @@
 import { projects, personInfo } from "./data-store.js";
-import { roleWeights, statusWeights } from "../data/mock-data.js";
+import { getRoleWeights, getStatusWeights } from "./utils.js";
 import { healthValues, milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, projectExtrasKeys, resourceTemplateSchema } from "./template-schemas.js";
 
 const healthAliases = {
@@ -286,6 +286,8 @@ export function parseOverrideCsv(text, projectRows = projects) {
 }
 
 export function parseResourceAllocationCsv(text, projectRows = []) {
+  const roleWeights = getRoleWeights();
+  const statusWeights = getStatusWeights();
   const projectById = new Map(
     (projectRows.length ? projectRows : projects).map(p => [p.id ?? p.projectId, p])
   );
@@ -374,6 +376,78 @@ export function parseUserInfoCsv(text) {
   });
 
   return { validRows, errors, warnings };
+}
+
+/**
+ * Parse a 项目状态权重 CSV: 项目状态 / 数值.
+ * Returns { weights: {status: number}, errors, warnings } — a full-table
+ * overwrite payload for appSettings.payload.statusWeights.
+ */
+export function parseStatusWeightsCsv(text) {
+  const rows = parseCsv(text);
+  if (!rows.length) return { weights: {}, errors: [{ row: 1, field: "项目状态", message: "文件为空" }], warnings: [] };
+
+  const headers = rows[0].map((h) => String(h ?? "").trim());
+  const statusIdx = headers.indexOf("项目状态");
+  const valueIdx = headers.findIndex((h) => h === "数值" || h === "权重");
+  const errors = [];
+  if (statusIdx === -1) errors.push({ row: 1, field: "项目状态", message: "缺少项目状态列" });
+  if (valueIdx === -1) errors.push({ row: 1, field: "数值", message: "缺少数值/权重列" });
+  if (errors.length) return { weights: {}, errors, warnings: [] };
+
+  const warnings = [];
+  const weights = {};
+  rows.slice(1).forEach((row, i) => {
+    const rowNumber = i + 2;
+    const status = String(row[statusIdx] ?? "").trim();
+    if (!status) return;
+    const value = Number(row[valueIdx]);
+    if (!Number.isFinite(value) || value < 0) {
+      warnings.push({ row: rowNumber, field: "数值", message: `${status} 的数值无效，已忽略该行` });
+      return;
+    }
+    weights[status] = value;
+  });
+  if (!Object.keys(weights).length) errors.push({ row: 2, field: "项目状态", message: "没有可导入的有效数据行" });
+  return { weights, errors, warnings };
+}
+
+/**
+ * Parse a 角色权重表 CSV: 角色 / 项目状态 / 权重 (角色状态键 is derived and ignored).
+ * Returns { weights: {role: {status: number}}, errors, warnings } — a
+ * full-table overwrite payload for appSettings.payload.roleWeights.
+ */
+export function parseRoleWeightsCsv(text) {
+  const rows = parseCsv(text);
+  if (!rows.length) return { weights: {}, errors: [{ row: 1, field: "角色", message: "文件为空" }], warnings: [] };
+
+  const headers = rows[0].map((h) => String(h ?? "").trim());
+  const roleIdx = headers.indexOf("角色");
+  const statusIdx = headers.indexOf("项目状态");
+  const valueIdx = headers.findIndex((h) => h === "权重" || h === "数值");
+  const errors = [];
+  if (roleIdx === -1) errors.push({ row: 1, field: "角色", message: "缺少角色列" });
+  if (statusIdx === -1) errors.push({ row: 1, field: "项目状态", message: "缺少项目状态列" });
+  if (valueIdx === -1) errors.push({ row: 1, field: "权重", message: "缺少权重列" });
+  if (errors.length) return { weights: {}, errors, warnings: [] };
+
+  const warnings = [];
+  const weights = {};
+  rows.slice(1).forEach((row, i) => {
+    const rowNumber = i + 2;
+    const role = String(row[roleIdx] ?? "").trim();
+    const status = String(row[statusIdx] ?? "").trim();
+    if (!role || !status) return;
+    const value = Number(row[valueIdx]);
+    if (!Number.isFinite(value) || value < 0) {
+      warnings.push({ row: rowNumber, field: "权重", message: `${role}|${status} 的权重无效，已忽略该行` });
+      return;
+    }
+    if (!weights[role]) weights[role] = {};
+    weights[role][status] = value;
+  });
+  if (!Object.keys(weights).length) errors.push({ row: 2, field: "角色", message: "没有可导入的有效数据行" });
+  return { weights, errors, warnings };
 }
 
 // Long/flat resource allocation layout: one row per (project, person) pair,
@@ -506,6 +580,8 @@ function pivotLongFormatToWideMatrix(aoa) {
  * projectRows defaults to the live data-store projects array.
  */
 export function parseResourceAllocationXlsx(aoaInput, personInfoList = personInfo, projectRows = []) {
+  const roleWeights = getRoleWeights();
+  const statusWeights = getStatusWeights();
   const pivoted = pivotLongFormatToWideMatrix(aoaInput);
   const aoa = pivoted ? pivoted.aoa : aoaInput;
   const resolvedProjects = projectRows.length ? projectRows : projects;

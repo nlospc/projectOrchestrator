@@ -28,6 +28,33 @@ router.put('/settings', (req, res) => {
         return res.status(422).json({ error: 'loadThresholds.low and mid must be non-negative finite numbers' });
       }
     }
+    const sw = payload.statusWeights;
+    if (sw) {
+      if (typeof sw !== 'object' || Array.isArray(sw)) {
+        return res.status(422).json({ error: 'statusWeights must be an object' });
+      }
+      for (const [status, value] of Object.entries(sw)) {
+        if (!Number.isFinite(value) || value < 0) {
+          return res.status(422).json({ error: `statusWeights.${status} must be a non-negative finite number` });
+        }
+      }
+    }
+    const rw = payload.roleWeights;
+    if (rw) {
+      if (typeof rw !== 'object' || Array.isArray(rw)) {
+        return res.status(422).json({ error: 'roleWeights must be an object' });
+      }
+      for (const [role, statuses] of Object.entries(rw)) {
+        if (typeof statuses !== 'object' || Array.isArray(statuses)) {
+          return res.status(422).json({ error: `roleWeights.${role} must be an object` });
+        }
+        for (const [status, value] of Object.entries(statuses)) {
+          if (!Number.isFinite(value) || value < 0) {
+            return res.status(422).json({ error: `roleWeights.${role}.${status} must be a non-negative finite number` });
+          }
+        }
+      }
+    }
     const result = saveSettings(payload, rev);
     res.json(result);
   } catch (err) {

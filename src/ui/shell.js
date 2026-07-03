@@ -2,10 +2,10 @@ import { projectFilterRoutes, routeGroups, routes } from "../config/routes.js";
 import { filteredProjects, personStats } from "../core/selectors.js";
 import { applyResourceFilterCascade } from "../core/resource-filters.js";
 import { $, debounce, escapeHtml } from "../core/utils.js";
-import { allocations, apiImportAllocations, apiImportMilestones, apiImportProjects, apiUpsertPerson, apiDeletePerson, apiSaveSettings, appSettings, bootstrap, milestones, personInfo, projects } from "../core/data-store.js";
-import { parseMilestoneCsv, parseMilestoneXlsx, parseProjectCsv, parseResourceAllocationMatrixCsv, parseResourceAllocationXlsx } from "../core/importers.js";
+import { allocations, apiImportAllocations, apiImportMilestones, apiImportPersonInfo, apiImportProjects, apiUpsertPerson, apiDeletePerson, apiSaveSettings, appSettings, bootstrap, milestones, personInfo, projects } from "../core/data-store.js";
+import { parseMilestoneCsv, parseMilestoneXlsx, parseProjectCsv, parseResourceAllocationMatrixCsv, parseResourceAllocationXlsx, parseRoleWeightsCsv, parseStatusWeightsCsv, parseUserInfoCsv } from "../core/importers.js";
 import { state } from "../state/app-state.js";
-import { downloadProjectTemplate, downloadResourceTemplate, milestoneTemplateRow, personInfoView, settingsView, uploadView } from "../views/admin.js";
+import { downloadProjectTemplate, downloadResourceTemplate, downloadRoleWeightsCsv, downloadStatusWeightsCsv, milestoneTemplateRow, personInfoView, settingsView, uploadView } from "../views/admin.js";
 import { MILESTONE_TEMPLATE_TYPES, normalizeMilestoneTemplates } from "../core/milestone-templates.js";
 import { dashboardView, drawerTabContent, openProject, projectsView, timeline } from "../views/projects.js";
 import { cockpitView } from "../views/cockpit.js";
@@ -139,6 +139,11 @@ const importHandlers = {
       return parseResourceAllocationXlsx(aoa, personInfo, projects);
     },
     send: apiImportAllocations,
+  },
+  person_info: {
+    label: "Person Info Excel",
+    parse: parseUserInfoCsv,
+    send: apiImportPersonInfo,
   },
 };
 
@@ -486,6 +491,8 @@ function bindEvents() {
     if (actionName === "export-overrides-csv") return triggerDownload("/api/export/overrides");
     if (actionName === "export-allocations-csv") return triggerDownload("/api/export/allocations");
     if (actionName === "export-person-info-csv") return triggerDownload("/api/export/person-info");
+    if (actionName === "export-status-weights-csv") return downloadStatusWeightsCsv();
+    if (actionName === "export-role-weights-csv") return downloadRoleWeightsCsv();
     if (actionName === "export-all-xlsx") return triggerDownload("/api/export/all.xlsx");
     if (actionName === "export-all-csv") {
       triggerDownload("/api/export/projects");
@@ -802,6 +809,41 @@ function bindEvents() {
   document.addEventListener("change", async (event) => {
     if (event.target.closest("[data-settings-path],[data-template-field]")) {
       markSettingsDirty();
+      return;
+    }
+
+    // ── 项目状态权重 / 角色权重表 import (full overwrite of that settings key) ──
+    const weightImportKind = event.target.dataset.weightImport;
+    if (weightImportKind) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const label = weightImportKind === "statusWeights" ? "项目状态权重" : "角色权重表";
+      try {
+        const extension = file.name.split(".").pop()?.toLowerCase();
+        let text;
+        if (extension === "xlsx" || extension === "xls") {
+          const workbook = await readXlsxFile(file);
+          if (!workbook.SheetNames[0]) throw new Error("Excel 文件中没有工作表");
+          text = window.XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
+        } else {
+          text = await readCsvFile(file);
+        }
+        const parseFn = weightImportKind === "statusWeights" ? parseStatusWeightsCsv : parseRoleWeightsCsv;
+        const { weights, errors, warnings } = parseFn(text);
+        if (errors.length) throw new Error(errors[0].message);
+        const recordCount = weightImportKind === "statusWeights"
+          ? Object.keys(weights).length
+          : Object.values(weights).reduce((sum, statuses) => sum + Object.keys(statuses).length, 0);
+        if (!window.confirm(`即将导入 ${recordCount} 条${label}记录，覆盖当前配置，确认？`)) return;
+        const payload = { ...appSettings.payload, [weightImportKind]: weights };
+        await apiSaveSettings(payload);
+        toast(`已覆盖${label}${warnings.length ? `（${warnings.length} 条警告）` : ""}`);
+        render();
+      } catch (err) {
+        toast(`导入失败：${err.message}`);
+      } finally {
+        event.target.value = "";
+      }
       return;
     }
 

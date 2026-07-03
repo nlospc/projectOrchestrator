@@ -269,7 +269,7 @@ Upsert-by-id means re-uploading a corrected sheet updates in place instead of du
 `mock-data.js` becomes the **seed source**, not the runtime store:
 
 - `server/seed.js` reads the current arrays and bulk-inserts them on first boot (only if `projects` is empty). Because IDs are preserved verbatim, the seeded DB is byte-for-byte equivalent to today's mock state — the app looks identical on day one, then diverges as users edit.
-- `roleWeights` / `statusWeights` stay as **static config** in code (they're algorithm constants, not user data) — no table needed.
+- `roleWeights` / `statusWeights` **(superseded)**: originally kept as static config in code with "no table needed." They are now settings-page-editable, stored as `statusWeights`/`roleWeights` keys inside `app_settings.payload` (same singleton-row/JSON-blob mechanism as `loadThresholds`, `healthRules`, etc. — no new table), with import/export CSV support. Defaults live in `src/config/settings-defaults.js`; runtime reads go through `getStatusWeights()`/`getRoleWeights()` in `src/core/utils.js`.
 
 ---
 

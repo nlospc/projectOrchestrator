@@ -1,6 +1,6 @@
-import { roleWeights } from "../data/mock-data.js";
 import { healthByValue } from "../config/definitions.js";
 import { appSettings } from "./data-store.js";
+import { DEFAULT_SETTINGS } from "../config/settings-defaults.js";
 
 
 
@@ -14,10 +14,22 @@ export function debounce(fn, delayMs) {
   };
 }
 
+// Configurable via the Settings page (项目状态权重); falls back to
+// DEFAULT_SETTINGS.statusWeights when nothing has been saved yet.
+export function getStatusWeights() {
+  return appSettings.payload.statusWeights ?? DEFAULT_SETTINGS.statusWeights;
+}
+
+// Configurable via the Settings page (角色权重表); falls back to
+// DEFAULT_SETTINGS.roleWeights when nothing has been saved yet.
+export function getRoleWeights() {
+  return appSettings.payload.roleWeights ?? DEFAULT_SETTINGS.roleWeights;
+}
+
 export function loadFor(allocation) {
   const status = allocation.status;
   const complexity = allocation.complexity ?? 3;
-  const roleWeight = roleWeights[allocation.role]?.[status] ?? 0;
+  const roleWeight = getRoleWeights()[allocation.role]?.[status] ?? 0;
   return allocation.timeRatio * Math.sqrt(complexity / 5) * roleWeight;
 }
 

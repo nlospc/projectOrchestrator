@@ -1,8 +1,7 @@
 import { allocations, milestoneNames, milestones, projects, personInfo, appSettings } from "../core/data-store.js";
-import { roleWeights, statusWeights } from "../data/mock-data.js";
 import { downloadCsvTemplate } from "../core/files.js";
 import { milestoneTemplateSchema, overrideTemplateSchema, projectTemplateSchema, resourceTemplateSchema } from "../core/template-schemas.js";
-import { badge, escapeHtml, loadFor } from "../core/utils.js";
+import { badge, escapeHtml, getRoleWeights, getStatusWeights, loadFor } from "../core/utils.js";
 import { gateDefinitions, gradeDefinitions, healthDefinitions } from "../config/definitions.js";
 import { MILESTONE_TEMPLATE_TYPES, effectiveMilestoneTemplates } from "../core/milestone-templates.js";
 import { state } from "../state/app-state.js";
@@ -103,6 +102,8 @@ function uploadImportSlot(title, description, kind, buttonText, exportAction) {
 }
 
 export function downloadResourceTemplate() {
+  const statusWeights = getStatusWeights();
+  const roleWeights = getRoleWeights();
   const rows = allocations.map((allocation) => {
     const statusWeight = statusWeights[allocation.status] ?? 0.5;
     const roleWeight = roleWeights[allocation.role]?.[allocation.status] ?? statusWeight;
@@ -139,10 +140,37 @@ export function downloadProjectTemplate() {
   window.setTimeout(() => downloadCsvTemplate("PMO_Project_Override_Template.csv", overrideTemplateSchema, overrideRows), 160);
 }
 
+export function downloadStatusWeightsCsv() {
+  const rows = Object.entries(getStatusWeights()).map(([status, weight]) => ({ status, weight }));
+  downloadCsvTemplate("PMO_StatusWeights_Export.csv", [
+    { key: "status", label: "项目状态" },
+    { key: "weight", label: "数值" },
+  ], rows);
+}
+
+export function downloadRoleWeightsCsv() {
+  const rows = [];
+  Object.entries(getRoleWeights()).forEach(([role, statuses]) => {
+    Object.entries(statuses).forEach(([status, weight]) => {
+      rows.push({ role, status, weight, roleStatusKey: `${role}|${status}` });
+    });
+  });
+  downloadCsvTemplate("PMO_RoleWeights_Export.csv", [
+    { key: "role", label: "角色" },
+    { key: "status", label: "项目状态" },
+    { key: "weight", label: "权重" },
+    { key: "roleStatusKey", label: "角色状态键" },
+  ], rows);
+}
+
 export function settingsView() {
   const s = appSettings.payload;
   const hr = s.healthRules ?? {};
   const lt = s.loadThresholds ?? {};
+  const sw = getStatusWeights();
+  const rw = getRoleWeights();
+  const statusList = Object.keys(sw);
+  const roleList = Object.keys(rw);
 
   const liveTag = `<span class="settings-tag tag-live">影响计算</span>`;
   const storeTag = `<span class="settings-tag">仅记录</span>`;
@@ -152,6 +180,11 @@ export function settingsView() {
 
   const numInput = (path, value, step = "1", min = "") =>
     `<input type="number" data-settings-path="${path}" value="${value}" step="${step}"${min ? ` min="${min}"` : ""} style="width:90px">`;
+
+  const importExportBar = (exportAction, weightImportKind) => `<div style="display:flex;gap:8px">
+    <button class="ghost-button" data-action="${exportAction}">导出 CSV</button>
+    <label class="ghost-button" style="cursor:pointer">导入并覆盖<input type="file" accept=".csv,.xlsx,.xls" data-weight-import="${weightImportKind}" hidden></label>
+  </div>`;
 
   return `<div class="settings-grid">
 
@@ -196,6 +229,34 @@ export function settingsView() {
         <label>Bus Factor 目标值 ${liveTag}
           ${numInput("loadThresholds.bfTarget", lt.bfTarget ?? 3, "1", "1")}
         </label>
+      </div>
+    </section>
+
+    <div class="settings-section-sep settings-wide">权重配置</div>
+
+    <section class="panel settings-panel settings-wide">
+      <div class="settings-head">
+        <h2>项目状态权重 ${liveTag}</h2>
+        ${importExportBar("export-status-weights-csv", "statusWeights")}
+      </div>
+      <div class="table-wrap">
+        <table class="def-table">
+          <thead><tr>${statusList.map((status) => `<th>${escapeHtml(status)}</th>`).join("")}</tr></thead>
+          <tbody><tr>${statusList.map((status) => `<td>${numInput(`statusWeights.${status}`, sw[status] ?? 0, "0.01", "0")}</td>`).join("")}</tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel settings-panel settings-wide">
+      <div class="settings-head">
+        <h2>角色权重表 ${liveTag}</h2>
+        ${importExportBar("export-role-weights-csv", "roleWeights")}
+      </div>
+      <div class="table-wrap benchmark-table">
+        <table>
+          <thead><tr><th>角色 / 阶段</th>${statusList.map((status) => `<th>${escapeHtml(status)}</th>`).join("")}</tr></thead>
+          <tbody>${roleList.map((role) => `<tr><td><strong>${escapeHtml(role)}</strong></td>${statusList.map((status) => `<td>${numInput(`roleWeights.${role}.${status}`, rw[role]?.[status] ?? 0, "0.01", "0")}</td>`).join("")}</tr>`).join("")}</tbody>
+        </table>
       </div>
     </section>
 
@@ -291,7 +352,10 @@ export function personInfoView() {
     <section class="panel settings-panel settings-wide">
       <div class="settings-head">
         <h2>人员配置 <span class="badge G">${personInfo.length}</span></h2>
-        <button class="ghost-button" data-action="export-person-info-csv">导出 CSV</button>
+        <div style="display:flex;gap:8px">
+          <button class="ghost-button" data-action="export-person-info-csv">导出 CSV</button>
+          <label class="ghost-button" style="cursor:pointer">导入并覆盖<input type="file" accept=".csv,.xlsx,.xls" data-import="person_info" hidden></label>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="def-table person-info-table">

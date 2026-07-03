@@ -182,6 +182,10 @@ export async function apiImportAllocations(rows, filename) {
   return postImport('/api/import/allocations', rows, filename);
 }
 
+export async function apiImportPersonInfo(rows, filename) {
+  return postImport('/api/import/person-info', rows, filename);
+}
+
 export async function apiUpsertPerson(person) {
   const res = await fetch('/api/person-info', {
     method: 'POST',
