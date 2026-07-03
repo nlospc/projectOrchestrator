@@ -126,7 +126,7 @@ const importHandlers = {
     parseXlsx: (workbook) => {
       const ws = workbook.Sheets[workbook.SheetNames[0]];
       const aoa = window.XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
-      return parseMilestoneXlsx(aoa);
+      return parseMilestoneXlsx(aoa, projects);
     },
     send: apiImportMilestones,
   },

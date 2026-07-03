@@ -205,11 +205,12 @@ export function parseMilestoneCsv(text, projectRows = projects) {
   });
 }
 
-export function parseMilestoneXlsx(aoa) {
+export function parseMilestoneXlsx(aoa, projectRows = projects) {
   // Row 0 = merged group labels (skip)
   // Row 1 = flat column headers
   // Row 2+ = data (one row per project)
   const headers = (aoa[1] || []).map(h => String(h ?? "").trim());
+  const knownProjects = new Set(projectRows.map((project) => project.id ?? project.projectId));
   const dataRows = aoa.slice(2).filter(r => r.some(c => c != null && String(c).trim() !== ""));
 
   const gateNames = ["G0","G1","G2","G3","G4","G5","G6"];
@@ -241,18 +242,34 @@ export function parseMilestoneXlsx(aoa) {
       errors.push({ row: rowNum, field: "projectId", message: "项目ID is required" });
       return;
     }
+    if (!knownProjects.has(projectId)) {
+      errors.push({ row: rowNum, field: "projectId", message: `Project ${projectId} does not exist in the project import` });
+      return;
+    }
+
+    // Excel serial number, Chinese date text (2026年4月20日), or ISO -> "YYYY-MM-DD"
+    const toIso = (val) => {
+      if (val == null || String(val).trim() === "") return null;
+      const trimmed = String(val).trim();
+      const n = Number(trimmed);
+      if (Number.isFinite(n) && n > 0) return xlSerialToIso(n);
+      const cn = parseCnDate(trimmed);
+      if (cn) return cn;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+      return null;
+    };
 
     gateNames.forEach((g) => {
       const cols = gateColMap[g];
-      const planEndRaw = cols.plan_end >= 0 ? row[cols.plan_end] : null;
-      if (planEndRaw == null || String(planEndRaw).trim() === "" || String(planEndRaw).trim() === "0") return;
-
-      const toIso = (val) => {
-        if (val == null || String(val).trim() === "") return null;
-        const n = Number(val);
-        if (Number.isFinite(n) && n > 0) return xlSerialToIso(n);
-        return null;
-      };
+      const cell = (idx) => (idx >= 0 ? row[idx] : null);
+      const hasValue = (val) => val != null && String(val).trim() !== "";
+      const planEndRaw = cell(cols.plan_end);
+      if (!hasValue(planEndRaw) || String(planEndRaw).trim() === "0") {
+        if (hasValue(cell(cols.act_end)) || hasValue(cell(cols.status))) {
+          warnings.push({ row: rowNum, field: `${g}计划结束`, message: `${g} 缺少计划结束日期，但存在实际结束/状态，已跳过该里程碑` });
+        }
+        return;
+      }
 
       const plannedStart = toIso(cols.plan_start >= 0 ? row[cols.plan_start] : null);
       const plannedEnd   = toIso(planEndRaw);
@@ -766,8 +783,8 @@ function normalizeValue(value, field) {
   }
   if (field.type === "xldate") {
     if (!trimmed || trimmed === "0") return { value: "" };
-    const iso = xlSerialToIso(trimmed);
-    if (!iso) return { value: trimmed, warning: `${field.label} 无法识别为Excel日期序号，已跳过` };
+    const iso = xlSerialToIso(trimmed) ?? parseCnDate(trimmed);
+    if (!iso) return { value: trimmed, warning: `${field.label} 无法识别为Excel日期序号或中文日期，已跳过` };
     return { value: iso };
   }
   return { value: trimmed };
