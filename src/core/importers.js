@@ -376,6 +376,92 @@ export function parseUserInfoCsv(text) {
   return { validRows, errors, warnings };
 }
 
+// Long/flat resource allocation layout: one row per (project, person) pair,
+// e.g. 分配ID / 项目唯一键 / 项目 / 角色 / 人员 / 工时投入占比 / ...
+const LONG_FORMAT_COLUMN_ALIASES = {
+  projectId: ["项目唯一键", "项目ID"],
+  projectName: ["项目", "项目名称"],
+  person: ["人员"],
+  timeRatio: ["工时投入占比", "工时占比"],
+};
+const LONG_FORMAT_COLUMN_LABELS = {
+  projectId: "项目唯一键/项目ID",
+  projectName: "项目/项目名称",
+  person: "人员",
+  timeRatio: "工时投入占比",
+};
+
+function findLongFormatColumns(headers) {
+  const find = (aliases) => {
+    for (const alias of aliases) {
+      const idx = headers.indexOf(alias);
+      if (idx !== -1) return idx;
+    }
+    return -1;
+  };
+  return Object.fromEntries(
+    Object.entries(LONG_FORMAT_COLUMN_ALIASES).map(([key, aliases]) => [key, find(aliases)])
+  );
+}
+
+/**
+ * Detects the long/flat resource allocation layout (one row per project+person)
+ * and pivots it into the wide/matrix layout that parseResourceAllocationXlsx expects:
+ * [项目ID, 项目名称, person1, person2, ...] header row + one data row per project.
+ *
+ * Returns null when the sheet doesn't look like the long format at all (so the
+ * caller falls through to normal wide-matrix parsing). Throws when the sheet
+ * looks like the long format but is missing required columns.
+ */
+function pivotLongFormatToWideMatrix(aoa) {
+  const headers = (aoa[1] || []).map((h) => String(h ?? "").trim());
+  const cols = findLongFormatColumns(headers);
+  // 项目ID/项目名称 also appear as literal headers in the wide/matrix format, so they
+  // can't be used to detect long format on their own. 人员 and 工时投入占比 are the
+  // columns unique to the long/flat layout — only trigger on those.
+  const isLongFormat = cols.person !== -1 || cols.timeRatio !== -1;
+  if (!isLongFormat) return null;
+
+  const missingKeys = Object.keys(cols).filter((key) => cols[key] === -1);
+  if (missingKeys.length > 0) {
+    const missingLabels = missingKeys.map((key) => LONG_FORMAT_COLUMN_LABELS[key]).join("、");
+    throw new Error(`资源分配表缺少必需列：${missingLabels}`);
+  }
+
+  const dataRows = aoa.slice(2).filter((r) => r.some((c) => c != null && String(c).trim() !== ""));
+  const projectOrder = [];
+  const projectNameById = new Map();
+  const personOrder = [];
+  const personSeen = new Set();
+  const ratioByProject = new Map();
+
+  dataRows.forEach((row) => {
+    const projectId = String(row[cols.projectId] ?? "").trim();
+    const projectName = String(row[cols.projectName] ?? "").trim();
+    const person = String(row[cols.person] ?? "").trim();
+    if (!projectId || !person) return;
+
+    if (!projectNameById.has(projectId)) {
+      projectNameById.set(projectId, projectName);
+      projectOrder.push(projectId);
+    }
+    if (!personSeen.has(person)) {
+      personSeen.add(person);
+      personOrder.push(person);
+    }
+    if (!ratioByProject.has(projectId)) ratioByProject.set(projectId, new Map());
+    ratioByProject.get(projectId).set(person, row[cols.timeRatio]); // last row wins on duplicate project+person
+  });
+
+  const wideHeaders = ["项目ID", "项目名称", ...personOrder];
+  const wideRows = projectOrder.map((projectId) => {
+    const ratios = ratioByProject.get(projectId);
+    return [projectId, projectNameById.get(projectId), ...personOrder.map((p) => ratios.get(p) ?? null)];
+  });
+
+  return [[], wideHeaders, ...wideRows];
+}
+
 /**
  * Parse new pivot/matrix resource allocation xlsx.
  * Layout:
@@ -383,10 +469,14 @@ export function parseUserInfoCsv(text) {
  *   Row 1 — headers: [项目ID, 项目名称, person1, person2, ...]
  *   Row 2+ — data: [projectId, projectName, timeRatio1, timeRatio2, ...]
  *
+ * Also accepts the long/flat layout (one row per project+person, e.g. 项目唯一键 /
+ * 项目 / 人员 / 工时投入占比 columns) and pivots it into the wide layout above.
+ *
  * personInfoList defaults to the live data-store personInfo array.
  * projectRows defaults to the live data-store projects array.
  */
-export function parseResourceAllocationXlsx(aoa, personInfoList = personInfo, projectRows = []) {
+export function parseResourceAllocationXlsx(aoaInput, personInfoList = personInfo, projectRows = []) {
+  const aoa = pivotLongFormatToWideMatrix(aoaInput) || aoaInput;
   const resolvedProjects = projectRows.length ? projectRows : projects;
   const projectById = new Map(resolvedProjects.map((p) => [p.id ?? p.projectId, p]));
   const personMap = new Map((personInfoList.length ? personInfoList : personInfo).map((p) => [p.name, p]));
