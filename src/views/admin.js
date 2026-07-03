@@ -338,7 +338,11 @@ export function personInfoView() {
     </td>
     <td>
       <span class="person-view-cells">${p.outsourced ? '<span class="badge Y">外包</span>' : '<span class="badge G">内部</span>'}</span>
-      <label class="person-edit-cells person-outsourced-label"><input type="checkbox" class="person-outsourced-input"${p.outsourced ? ' checked' : ''}> 外包</label>
+      <label class="person-edit-cells person-outsourced-label toggle-switch">
+        <input type="checkbox" class="person-outsourced-input"${p.outsourced ? ' checked' : ''}>
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">外包</span>
+      </label>
     </td>
     <td>
       <span class="person-view-cells person-row-actions">
@@ -355,7 +359,11 @@ export function personInfoView() {
   const addRow = `<tr class="person-add-row">
     <td><input id="new-person-name" class="new-person-name-input" type="text" placeholder="姓名"></td>
     <td><select id="new-person-role">${roleOptions('', true)}</select></td>
-    <td><label class="person-outsourced-label"><input id="new-person-outsourced" type="checkbox"> 外包</label></td>
+    <td><label class="person-outsourced-label toggle-switch">
+      <input id="new-person-outsourced" type="checkbox">
+      <span class="toggle-slider"></span>
+      <span class="toggle-text">外包</span>
+    </label></td>
     <td class="person-row-actions">
       <button class="ghost-button" data-action="person-add-save">保存</button>
       <button class="ghost-button" data-action="person-add-cancel">取消</button>
