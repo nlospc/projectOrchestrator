@@ -1,0 +1,29 @@
+# systemd unit for PMO Orchestrator.
+# Install: see docs/deployment.md ("systemd" section).
+# Adjust User/WorkingDirectory/ExecStart paths to your host, then:
+#   sudo cp deploy/pmo-orchestrator.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now pmo-orchestrator
+
+[Unit]
+Description=PMO Orchestrator (milestone & resource cockpit)
+After=network.target
+
+[Service]
+Type=simple
+User=pmo
+Group=pmo
+WorkingDirectory=/opt/pmo-orchestrator
+ExecStart=/usr/bin/node server/index.js
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Restart=always
+RestartSec=3
+# The SQLite store is written to <WorkingDirectory>/data — keep that writable
+# for the service user while the rest of the system stays read-only.
+ReadWritePaths=/opt/pmo-orchestrator/data
+ProtectSystem=full
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

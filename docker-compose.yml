@@ -1,0 +1,11 @@
+services:
+  pmo-orchestrator:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - pmo-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  pmo-data:

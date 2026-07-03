@@ -143,11 +143,14 @@ but not checked on bulk imports — those are intentionally last-write-wins.)
 
 ## Deployment (internal server)
 
-- Run `node server/index.js` (under `pm2` or a systemd unit for
+- Run `node server/index.js` (under systemd, Docker, or `pm2` for
   restart-on-crash). It serves the frontend and the API from one process — no
   separate web server needed.
 - SQLite in WAL mode; no external network dependency. Back up by copying
   `data/pmo.sqlite`.
+- Full instructions — environment prep per OS (Ubuntu/macOS/…), a ready-made
+  systemd unit (`deploy/pmo-orchestrator.service`), and `Dockerfile` +
+  `docker-compose.yml` — live in [`docs/deployment.md`](docs/deployment.md).
 
 ---
 
@@ -156,3 +159,4 @@ but not checked on bulk imports — those are intentionally last-write-wins.)
 - [`docs/PRD_PMO里程碑管理工作台.md`](docs/PRD_PMO里程碑管理工作台.md) — product requirements
 - [`docs/architecture.md`](docs/architecture.md) — architecture notes
 - [`docs/db-persistence-design.md`](docs/db-persistence-design.md) — database & persistence design
+- [`docs/deployment.md`](docs/deployment.md) — environment prep & persistent running (systemd / Docker / pm2)
