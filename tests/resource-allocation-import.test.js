@@ -74,3 +74,58 @@ test("parseResourceAllocationXlsx does not misdetect the wide layout as long/fla
   assert.equal(result.errors.length, 0);
   assert.equal(result.validRows.length, 1);
 });
+
+test("parseResourceAllocationXlsx pivots the long/flat layout when headers sit on row 0 (no group-label row)", () => {
+  // Arrange
+  const aoa = [
+    ["项目唯一键", "项目", "角色", "人员", "工时投入占比"],
+    ["P001", "示例项目", "开发", "张三", 0.5],
+  ];
+
+  // Act
+  const result = parseResourceAllocationXlsx(aoa, personInfo, projects);
+
+  // Assert
+  assert.equal(result.errors.length, 0);
+  assert.equal(result.validRows.length, 1);
+  assert.equal(result.validRows[0].projectId, "P001");
+  assert.equal(result.validRows[0].person, "张三");
+  assert.equal(result.validRows[0].timeRatio, 0.5);
+});
+
+test("parseResourceAllocationXlsx sums 工时投入占比 across duplicate project+person rows and warns", () => {
+  // Arrange: same project+person appears 3 times (separate 分配ID rows) with different ratios
+  const aoa = [
+    [],
+    ["项目唯一键", "项目", "角色", "人员", "工时投入占比"],
+    ["P001", "示例项目", "Agent开发", "张三", 0.05],
+    ["P001", "示例项目", "Agent开发", "张三", 0.1],
+    ["P001", "示例项目", "Agent开发", "张三", 0.4],
+  ];
+
+  // Act
+  const result = parseResourceAllocationXlsx(aoa, personInfo, projects);
+
+  // Assert
+  assert.equal(result.validRows.length, 1);
+  assert.equal(result.validRows[0].timeRatio, 0.55);
+  assert.ok(result.warnings.some((w) => /出现多条分配记录/.test(w.message)));
+});
+
+test("parseResourceAllocationXlsx warns and skips rows missing 项目唯一键 or 人员 instead of silently dropping them", () => {
+  // Arrange: one valid row, two rows with a blank 项目唯一键 (broken source link)
+  const aoa = [
+    [],
+    ["项目唯一键", "项目", "角色", "人员", "工时投入占比"],
+    ["P001", "示例项目", "开发", "张三", 0.5],
+    ["", "未链接项目", "开发", "李四", 0.2],
+    ["", "未链接项目", "开发", "王五", 0.3],
+  ];
+
+  // Act
+  const result = parseResourceAllocationXlsx(aoa, personInfo, projects);
+
+  // Assert
+  assert.equal(result.validRows.length, 1);
+  assert.ok(result.warnings.some((w) => /2 行缺少项目唯一键或人员/.test(w.message)));
+});

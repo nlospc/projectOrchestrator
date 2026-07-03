@@ -404,6 +404,23 @@ function findLongFormatColumns(headers) {
   );
 }
 
+// Long-format headers may sit on row 0 (no group-label row above) or row 1
+// (group-label row above, matching the wide/matrix convention). Scan both
+// candidate rows for the signature 人员/工时投入占比 columns rather than
+// assuming a fixed position.
+const LONG_FORMAT_HEADER_ROW_CANDIDATES = [0, 1];
+
+function locateLongFormatHeaderRow(aoa) {
+  for (const rowIdx of LONG_FORMAT_HEADER_ROW_CANDIDATES) {
+    const headers = (aoa[rowIdx] || []).map((h) => String(h ?? "").trim());
+    const cols = findLongFormatColumns(headers);
+    if (cols.person !== -1 || cols.timeRatio !== -1) {
+      return { headerRowIdx: rowIdx, headers, cols };
+    }
+  }
+  return null;
+}
+
 /**
  * Detects the long/flat resource allocation layout (one row per project+person)
  * and pivots it into the wide/matrix layout that parseResourceAllocationXlsx expects:
@@ -414,13 +431,9 @@ function findLongFormatColumns(headers) {
  * looks like the long format but is missing required columns.
  */
 function pivotLongFormatToWideMatrix(aoa) {
-  const headers = (aoa[1] || []).map((h) => String(h ?? "").trim());
-  const cols = findLongFormatColumns(headers);
-  // 项目ID/项目名称 also appear as literal headers in the wide/matrix format, so they
-  // can't be used to detect long format on their own. 人员 and 工时投入占比 are the
-  // columns unique to the long/flat layout — only trigger on those.
-  const isLongFormat = cols.person !== -1 || cols.timeRatio !== -1;
-  if (!isLongFormat) return null;
+  const located = locateLongFormatHeaderRow(aoa);
+  if (!located) return null;
+  const { headerRowIdx, cols } = located;
 
   const missingKeys = Object.keys(cols).filter((key) => cols[key] === -1);
   if (missingKeys.length > 0) {
@@ -428,18 +441,26 @@ function pivotLongFormatToWideMatrix(aoa) {
     throw new Error(`资源分配表缺少必需列：${missingLabels}`);
   }
 
-  const dataRows = aoa.slice(2).filter((r) => r.some((c) => c != null && String(c).trim() !== ""));
+  const dataRows = aoa.slice(headerRowIdx + 1).filter((r) => r.some((c) => c != null && String(c).trim() !== ""));
   const projectOrder = [];
   const projectNameById = new Map();
   const personOrder = [];
   const personSeen = new Set();
   const ratioByProject = new Map();
+  const dupeWarnings = [];
+  let skippedMissingLink = 0;
 
   dataRows.forEach((row) => {
     const projectId = String(row[cols.projectId] ?? "").trim();
     const projectName = String(row[cols.projectName] ?? "").trim();
     const person = String(row[cols.person] ?? "").trim();
-    if (!projectId || !person) return;
+    if (!projectId || !person) {
+      skippedMissingLink += 1;
+      return;
+    }
+
+    const ratio = Number(row[cols.timeRatio]);
+    if (!Number.isFinite(ratio)) return;
 
     if (!projectNameById.has(projectId)) {
       projectNameById.set(projectId, projectName);
@@ -450,7 +471,16 @@ function pivotLongFormatToWideMatrix(aoa) {
       personOrder.push(person);
     }
     if (!ratioByProject.has(projectId)) ratioByProject.set(projectId, new Map());
-    ratioByProject.get(projectId).set(person, row[cols.timeRatio]); // last row wins on duplicate project+person
+    const personRatios = ratioByProject.get(projectId);
+    // Multiple rows for the same project+person are separate allocation entries
+    // (e.g. different 分配ID) — sum their 工时投入占比 rather than keeping only one.
+    if (personRatios.has(person)) {
+      const summed = personRatios.get(person) + ratio;
+      personRatios.set(person, summed);
+      dupeWarnings.push({ projectId, person, summed });
+    } else {
+      personRatios.set(person, ratio);
+    }
   });
 
   const wideHeaders = ["项目ID", "项目名称", ...personOrder];
@@ -459,7 +489,7 @@ function pivotLongFormatToWideMatrix(aoa) {
     return [projectId, projectNameById.get(projectId), ...personOrder.map((p) => ratios.get(p) ?? null)];
   });
 
-  return [[], wideHeaders, ...wideRows];
+  return { aoa: [[], wideHeaders, ...wideRows], dupeWarnings, skippedMissingLink };
 }
 
 /**
@@ -476,7 +506,8 @@ function pivotLongFormatToWideMatrix(aoa) {
  * projectRows defaults to the live data-store projects array.
  */
 export function parseResourceAllocationXlsx(aoaInput, personInfoList = personInfo, projectRows = []) {
-  const aoa = pivotLongFormatToWideMatrix(aoaInput) || aoaInput;
+  const pivoted = pivotLongFormatToWideMatrix(aoaInput);
+  const aoa = pivoted ? pivoted.aoa : aoaInput;
   const resolvedProjects = projectRows.length ? projectRows : projects;
   const projectById = new Map(resolvedProjects.map((p) => [p.id ?? p.projectId, p]));
   const personMap = new Map((personInfoList.length ? personInfoList : personInfo).map((p) => [p.name, p]));
@@ -487,6 +518,23 @@ export function parseResourceAllocationXlsx(aoaInput, personInfoList = personInf
   const errors = [];
   const warnings = [];
   const validRows = [];
+
+  if (pivoted) {
+    pivoted.dupeWarnings.forEach(({ projectId, person, summed }) => {
+      warnings.push({
+        row: 0,
+        field: 'timeRatio',
+        message: `项目 ${projectId} 人员「${person}」出现多条分配记录，工时投入占比已合并为 ${summed}`,
+      });
+    });
+    if (pivoted.skippedMissingLink > 0) {
+      warnings.push({
+        row: 0,
+        field: 'projectId',
+        message: `${pivoted.skippedMissingLink} 行缺少项目唯一键或人员，已跳过（未计入统计）`,
+      });
+    }
+  }
 
   const personNames = headers.slice(2);
 
