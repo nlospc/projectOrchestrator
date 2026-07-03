@@ -915,6 +915,7 @@ function bindEvents() {
         }
         setUploadStatus(importKind, "busy", `正在导入 ${parsed.validRows.length} 行...`);
         const result = await handler.send(parsed.validRows, file.name);
+        await bootstrap();
         render();
         const warn = parsed.warnings.length ? `（${parsed.warnings.length} 条警告）` : "";
         setUploadStatus(importKind, "success", `已全量覆盖 ${result.count} 行${warn} · ${file.name}`);
