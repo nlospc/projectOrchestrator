@@ -4424,6 +4424,16 @@ button.chart-bar:hover strong {
 }
 
 /* ── Person-info CRUD table ──────────────────────────────────────────────── */
+.person-info-table { font-size: 14px; }
+.person-info-table th,
+.person-info-table td { padding: 10px 12px; }
+.person-info-table thead th {
+  background: var(--gray-bg);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.person-info-table tbody tr:hover { background: var(--gray-bg); }
 .person-info-table td { vertical-align: middle; }
 .person-info-table input,
 .person-info-table select {
@@ -4446,6 +4456,12 @@ button.chart-bar:hover strong {
 }
 .person-edit-cells[hidden] { display: none; }
 .ghost-button.danger { color: var(--red, #c0392b); }
+
+/* add-person row: hidden until "+ 添加人员" is toggled on */
+.person-info-table .person-add-row { display: none; }
+.person-info-table.adding .person-add-row { display: table-row; }
+.person-add-row td { background: var(--gray-bg); }
+.person-add-row .person-row-actions button + button { margin-left: 8px; }
 
 /* ── 业务部门分组表 (biz-*) ──────────────────────── */
 .biz-group-list {

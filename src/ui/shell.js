@@ -587,6 +587,17 @@ function bindEvents() {
       } catch (err) { toast(err.message); }
       return;
     }
+    if (actionName === "person-add-toggle") {
+      state.personAddOpen = !state.personAddOpen;
+      render();
+      if (state.personAddOpen) document.getElementById("new-person-name")?.focus();
+      return;
+    }
+    if (actionName === "person-add-cancel") {
+      state.personAddOpen = false;
+      render();
+      return;
+    }
     if (actionName === "person-add-save") {
       const nameInput = document.getElementById("new-person-name");
       const roleInput = document.getElementById("new-person-role");
@@ -595,9 +606,7 @@ function bindEvents() {
       if (!name) return toast("姓名不能为空");
       try {
         await apiUpsertPerson({ name, role: roleInput?.value ?? '', outsourced: outsourcedInput?.checked ?? false });
-        if (nameInput) nameInput.value = '';
-        if (roleInput) roleInput.value = '';
-        if (outsourcedInput) outsourcedInput.checked = false;
+        state.personAddOpen = false;
         render();
         toast(`已添加 ${name}`);
       } catch (err) { toast(err.message); }

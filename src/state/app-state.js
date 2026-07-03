@@ -6,6 +6,7 @@ export const state = {
   filters: { period: "all", dept: "all", biz: "all", status: "all", health: "all", pm: "all", groupBy: "family", includeArchived: false, granularity: "month", sortBy: "default" },
   resourceFilters: { system: "all", role: "all", outsource: "all", projectFocus: null, biz: "all", family: "all", dept: "all", status: "all", health: "all", peopleSort: "load" },
   drawer: { projectId: null, scrollToMilestoneId: null, activeTab: "milestones" },
+  personAddOpen: false,
   uploads: {},
   today: (() => {
     const param = new URLSearchParams(window.location.search).get("today");

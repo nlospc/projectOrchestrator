@@ -169,7 +169,10 @@ export function settingsView() {
   const lt = s.loadThresholds ?? {};
   const sw = getStatusWeights();
   const rw = getRoleWeights();
-  const statusList = Object.keys(sw);
+  // Union with roleWeights' own status keys so a status introduced only via
+  // a 角色权重表 import (not yet present in 项目状态权重) still renders as an
+  // editable column instead of silently existing only in the saved data.
+  const statusList = [...new Set([...Object.keys(sw), ...Object.values(rw).flatMap((statuses) => Object.keys(statuses))])];
   const roleList = Object.keys(rw);
 
   const liveTag = `<span class="settings-tag tag-live">影响计算</span>`;
@@ -184,6 +187,7 @@ export function settingsView() {
   const importExportBar = (exportAction, weightImportKind) => `<div style="display:flex;gap:8px">
     <button class="ghost-button" data-action="${exportAction}">导出 CSV</button>
     <label class="ghost-button" style="cursor:pointer">导入并覆盖<input type="file" accept=".csv,.xlsx,.xls" data-weight-import="${weightImportKind}" hidden></label>
+    <button class="primary-button" data-action="save-settings">保存设置</button>
   </div>`;
 
   return `<div class="settings-grid">
@@ -348,27 +352,31 @@ export function personInfoView() {
     </td>
   </tr>`).join('');
 
+  const addRow = `<tr class="person-add-row">
+    <td><input id="new-person-name" class="new-person-name-input" type="text" placeholder="姓名"></td>
+    <td><select id="new-person-role">${roleOptions('', true)}</select></td>
+    <td><label class="person-outsourced-label"><input id="new-person-outsourced" type="checkbox"> 外包</label></td>
+    <td class="person-row-actions">
+      <button class="ghost-button" data-action="person-add-save">保存</button>
+      <button class="ghost-button" data-action="person-add-cancel">取消</button>
+    </td>
+  </tr>`;
+
   return `<div class="settings-grid">
     <section class="panel settings-panel settings-wide">
       <div class="settings-head">
         <h2>人员配置 <span class="badge G">${personInfo.length}</span></h2>
         <div style="display:flex;gap:8px">
+          <button class="primary-button" data-action="person-add-toggle">+ 添加人员</button>
           <button class="ghost-button" data-action="export-person-info-csv">导出 CSV</button>
           <label class="ghost-button" style="cursor:pointer">导入并覆盖<input type="file" accept=".csv,.xlsx,.xls" data-import="person_info" hidden></label>
         </div>
       </div>
       <div class="table-wrap">
-        <table class="def-table person-info-table">
+        <table class="def-table person-info-table${state.personAddOpen ? ' adding' : ''}">
           <thead><tr><th>姓名</th><th>角色</th><th>类型</th><th></th></tr></thead>
-          <tbody>${tableRows}</tbody>
+          <tbody>${addRow}${tableRows}</tbody>
         </table>
-      </div>
-      <div class="settings-head" style="margin-top:20px"><h3>添加人员</h3></div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input id="new-person-name" type="text" placeholder="姓名" style="width:120px">
-        <select id="new-person-role"><option value="">-- 角色 --</option>${roleOptions('')}</select>
-        <label><input id="new-person-outsourced" type="checkbox"> 外包</label>
-        <button class="ghost-button" data-action="person-add-save">添加</button>
       </div>
     </section>
   </div>`;
